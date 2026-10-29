@@ -1,0 +1,26 @@
+// Schema-meta fixture — flatc-compilable probe for the
+// grandchild-struct chain. The pinned flatc REJECTS `root_type <struct>`
+// ("root type must be a table"), so the struct-size ground truth is carried
+// by table root Probe's bfbs: struct Wrap (declared here, composed of the
+// DIRECT include's Mid which is composed of the GRANDCHILD include's Leaf)
+// gets its flatc-computed Object.bytesize embedded in this schema's bfbs.
+// Wrap layout (flatc ground truth): mid:Mid(24,align8) at 0, x:int at 24,
+// pad to 32 -> bytesize 32.
+// The struct-rooted variant of this schema used by the FIXED_SIZE test is
+// synthesized from THIS compiled bfbs at test time (reflection object API
+// re-root), keeping flatc's own bytesize values — see
+// gen_schema_meta_reflection_test.py.
+include "grandchild_mid.fbs";
+
+namespace fixmeta;
+
+struct Wrap {
+  mid: Mid;
+  x: int;
+}
+
+table Probe {
+  wrap: Wrap;
+}
+
+root_type Probe;

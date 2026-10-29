@@ -1,0 +1,14 @@
+# Single source of truth for the crate set covered by `cargo fmt --check`.
+# Consumed by:
+#   - scripts/git-hooks/pre-commit       (local hard gate)
+#   - .github/workflows/aorta-lint.yml   (CI hard gate)
+# One crate path per line, relative to repo root. `#` introduces a comment.
+core
+rust
+tools/aorta-cbindgen
+tools/aorta-cli
+tools/aorta-play
+tools/aorta-record
+tools/aorta-introspect
+tools/aorta-tui
+tools/zenohd

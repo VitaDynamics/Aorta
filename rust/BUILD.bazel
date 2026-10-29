@@ -1,0 +1,286 @@
+load("@aorta_crates//:defs.bzl", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+exports_files(["BUILD.bazel"])
+
+# Aorta-owned anchors for the Rust SDK's public third-party crate surface.
+# @aorta_crates is Aorta's PRIVATE crate-universe repo name — no external
+# Bzlmod consumer has that repo mapping, so a downstream repo depending on
+# the SDK cannot write @aorta_crates//:tokio directly (guaranteed failure:
+# Bzlmod repo names resolve per module). These aliases
+# resolve in THIS package — where @aorta_crates is visible — and are the
+# downstream-facing labels (same anchoring pattern as
+# //message/tools:flatbuffers_rust; both anchors point at the same
+# @aorta_crates targets).
+#
+# tokio: required for the #[tokio::main] entry point every SDK example
+# uses. The SDK manifest pins the macros + rt-multi-thread features
+# explicitly (rust/Cargo.toml) so the #[tokio::main] contract is owned
+# by the SDK, not accidentally inherited from the in-tree CLI tools'
+# feature union.
+# flatbuffers: the SDK prelude re-exports flatbuffers::FlatBufferBuilder,
+# so consumers building typed messages name flatbuffers types.
+# bytes: the zero-copy publish_bytes path accepts `bytes::Bytes` (README
+# §3.3.4); the `Into<ZBytes>` impl is bound to the exact bytes crate
+# identity Aorta's zenoh links, so a consumer hub of a different version
+# (or crate identity) cannot satisfy it — consumers must use this alias.
+alias(
+    name = "tokio",
+    actual = "@aorta_crates//:tokio",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "flatbuffers",
+    actual = "@aorta_crates//:flatbuffers",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "bytes",
+    actual = "@aorta_crates//:bytes",
+    visibility = ["//visibility:public"],
+)
+
+rust_library(
+    name = "aorta_sdk",
+    srcs = glob(["src/**/*.rs", "test/**/*.rs"]),
+    crate_name = "aorta_sdk",
+    edition = "2021",
+    deps = all_crate_deps(normal = True) + [
+        "//core:aorta_core",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "aorta_sdk_test",
+    crate = ":aorta_sdk",
+    # SDK lib tests mix session-opening tests and trace-state assertions in one
+    # process; keep the Session::open trace auto-init hook out of the suite.
+    env = {
+        "AORTA_TRACE_AUTO_INIT": "0",
+    },
+    size = "medium",
+)
+
+# The standalone test binaries below pull schema-bound message crates
+# (`//message:..._msg_rs`) that aren't Cargo deps, so they keep the
+# explicit list rather than `all_crate_deps`. They link aorta_core as a
+# NORMAL dependency (no cfg(test) hermetic env lockout), so each one that
+# opens sessions must opt out of the Session::open trace auto-init hook
+# explicitly to keep sink writes out of `bazel test`.
+rust_test(
+    name = "all_types_typed_publish_test",
+    srcs = ["test/all_types_typed_publish_tests.rs"],
+    edition = "2021",
+    deps = [
+        ":aorta_sdk",
+        "//message:all_types_msg_rs",
+        "@aorta_crates//:flatbuffers",
+    ],
+    env = {
+        "AORTA_TRACE_AUTO_INIT": "0",
+    },
+    size = "small",
+)
+
+rust_test(
+    name = "reordered_goal_fixture_roundtrip_test",
+    srcs = ["test/reordered_goal_fixture_roundtrip_tests.rs"],
+    edition = "2021",
+    deps = [
+        ":aorta_sdk",
+        "//message:reordered_goal_probe_msg_rs",
+        "@aorta_crates//:flatbuffers",
+    ],
+    env = {
+        "AORTA_TRACE_AUTO_INIT": "0",
+    },
+    size = "small",
+)
+
+# Example-fixture proof for the generated Rust `[int8]` zero-copy fast path.
+# `all_types.signed_bytes` round-trips values spanning the complete signed-byte
+# range, including the unsafe i8-to-u8 reinterpretation boundary.
+rust_test(
+    name = "all_types_i8_vector_roundtrip_test",
+    srcs = ["test/all_types_i8_vector_roundtrip_tests.rs"],
+    edition = "2021",
+    deps = [
+        ":aorta_sdk",
+        "//message:all_types_msg_rs",
+        "@aorta_crates//:flatbuffers",
+    ],
+    env = {
+        "AORTA_TRACE_AUTO_INIT": "0",
+    },
+    size = "small",
+)
+
+rust_test(
+    name = "all_types_enum_default_test",
+    srcs = ["test/all_types_enum_default_tests.rs"],
+    edition = "2021",
+    deps = [
+        ":aorta_sdk",
+        "//message:all_types_msg_rs",
+        "@aorta_crates//:flatbuffers",
+    ],
+    env = {
+        "AORTA_TRACE_AUTO_INIT": "0",
+    },
+    size = "small",
+)
+
+# Codegen golden: round-trips the type-support matrix rows all_types.fbs omits on the
+# Rust side -- `[bool]`, a union member alias, and a qualified root_type.
+rust_test(
+    name = "all_types_ext_roundtrip_test",
+    srcs = ["test/all_types_ext_roundtrip_tests.rs"],
+    edition = "2021",
+    deps = [
+        ":aorta_sdk",
+        "//message:all_types_ext_msg_rs",
+        "@aorta_crates//:flatbuffers",
+    ],
+    env = {
+        "AORTA_TRACE_AUTO_INIT": "0",
+    },
+    size = "small",
+)
+
+# Codegen golden action: round-trips the struct / [struct]
+# owned-root clone fix (and the golden's other supported rows) through the
+# public ActionWire get_result_response encode/decode path.
+rust_test(
+    name = "shapes_probe_action_roundtrip_test",
+    srcs = ["test/shapes_probe_action_roundtrip_tests.rs"],
+    edition = "2021",
+    deps = [
+        ":aorta_sdk",
+        "//message:shapes_probe_msg_rs",
+        "@aorta_crates//:flatbuffers",
+    ],
+    env = {
+        "AORTA_TRACE_AUTO_INIT": "0",
+    },
+    size = "small",
+)
+
+# GitHub #242: multi-namespace-tree Rust wrapper module assembly. Compiles +
+# round-trips the three cross-tree cases (foxglove nested tables; bare-namespace
+# root + third tree; service side + third tree) that failed to compile pre-fix.
+rust_test(
+    name = "xtree_multi_namespace_roundtrip_test",
+    srcs = ["test/xtree_multi_namespace_roundtrip_tests.rs"],
+    edition = "2021",
+    deps = [
+        ":aorta_sdk",
+        "//message:abcd_froot_msg_rs",
+        "//message:branch_consumer_msg_rs",
+        "//message:camelcase_consumer_msg_rs",
+        "//message:collide_consumer_msg_rs",
+        "//message:deepshadow_consumer_msg_rs",
+        "//message:enum_shadow_consumer_msg_rs",
+        "//message:foreign_root_only_msg_rs",
+        "//message:mixedroot_consumer_msg_rs",
+        "//message:nested_consumer_msg_rs",
+        "//message:sharedfork_consumer_msg_rs",
+        "//message:union_shadow_consumer_msg_rs",
+        "//message:xtree_branch_msg_rs",
+        "//message:xtree_foxglove_msg_rs",
+        "//message:xfoo_consumer_msg_rs",
+        "//message:xtree_service_msg_rs",
+        "//message:xtree_vln_msg_rs",
+        "@aorta_crates//:flatbuffers",
+    ],
+    env = {
+        "AORTA_TRACE_AUTO_INIT": "0",
+    },
+    size = "small",
+)
+
+rust_test(
+    name = "reporter_namespace_fixture_roundtrip_test",
+    srcs = ["test/reporter_namespace_fixture_roundtrip_tests.rs"],
+    edition = "2021",
+    deps = [
+        ":aorta_sdk",
+        "//message:reporter_namespace_probe_msg_rs",
+        "@aorta_crates//:flatbuffers",
+    ],
+    env = {
+        "AORTA_TRACE_AUTO_INIT": "0",
+    },
+    size = "small",
+)
+
+rust_test(
+    name = "point_cloud_typed_pubsub_test",
+    srcs = ["test/point_cloud_typed_pubsub_tests.rs"],
+    edition = "2021",
+    deps = [
+        ":aorta_sdk",
+        "//message:foxglove_point_cloud_msg_rs",
+        "@aorta_crates//:tokio",
+    ],
+    env = {
+        "AORTA_TRACE_AUTO_INIT": "0",
+    },
+    size = "medium",
+)
+
+# Lives in the Cargo-canonical `tests/` dir (so `cargo test` auto-discovers it),
+# but CI is bazel-only, so without an explicit target this — the ONLY coverage of
+# cross-namespace wildcard rejection (a fleet-broadcast safety guard) — never
+# gated a merge. Wire it so a regression that let `*`/`**` through
+# `create_client_for` fails CI instead of surfacing as an accidental fleet-wide
+# RPC fan-out in production.
+rust_test(
+    name = "cross_namespace_sdk_test",
+    srcs = ["tests/cross_namespace_sdk.rs"],
+    edition = "2021",
+    deps = [
+        ":aorta_sdk",
+        "@aorta_crates//:tokio",
+    ],
+    env = {
+        "AORTA_TRACE_AUTO_INIT": "0",
+    },
+    size = "small",
+)
+
+# Same `tests/` vs `test/` glob trap as cross_namespace_sdk_test above:
+# flow_sdk_surface.rs is the ONLY SDK-surface acceptance test for the Flow
+# feature and lives in the Cargo-canonical `tests/` dir, so without
+# an explicit target the bazel-only CI never ran it. It opens real zenoh
+# sessions per test; keep libtest serial (--test-threads=1) like the core
+# session-opening suites.
+rust_test(
+    name = "flow_sdk_surface_test",
+    srcs = ["tests/flow_sdk_surface.rs"],
+    edition = "2021",
+    args = [
+        "--test-threads=1",
+    ],
+    deps = [
+        ":aorta_sdk",
+        "@aorta_crates//:libc",
+        "@aorta_crates//:tokio",
+    ],
+    env = {
+        "AORTA_TRACE_AUTO_INIT": "0",
+    },
+    size = "small",
+)
+
+exports_files([
+    "Cargo.toml",
+])
+
+filegroup(
+    name = "license_workspace_sources",
+    srcs = glob(["**/*"]),
+    visibility = ["//tools/release:__pkg__"],
+)

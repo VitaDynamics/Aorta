@@ -1,0 +1,4 @@
+namespace class;
+table Child { value: int; }
+table Parent { children: [Child]; }
+root_type Parent;

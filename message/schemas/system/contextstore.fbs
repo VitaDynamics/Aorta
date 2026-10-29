@@ -1,0 +1,28 @@
+namespace aorta.ctx;
+
+enum ContextKind: byte {
+  None = 0,
+  Bool = 1,
+  I64 = 2,
+  U64 = 3,
+  F64 = 4,
+  String = 5
+}
+
+table ContextValue {
+  kind: ContextKind;
+
+  bool_value: bool;
+  i64_value: long;
+  u64_value: ulong;
+  f64_value: double;
+  string_value: string;
+
+  stamp_ns: ulong;
+  expires_at_ns: ulong;
+  source_node: string;
+  source_instance_id: string;
+  sequence: ulong;
+}
+
+root_type ContextValue;

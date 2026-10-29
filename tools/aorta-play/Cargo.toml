@@ -1,0 +1,54 @@
+[package]
+name = "aorta-play"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lib]
+name = "aorta_play"
+path = "src/lib.rs"
+
+[[bin]]
+name = "aorta-play"
+path = "src/main.rs"
+
+[features]
+fault-injection = []
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4.5", features = ["derive"] }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time", "sync"] }
+# `CancellationToken` (MCAP Player Proposal §6.6/§6.7): the shutdown handle
+# `run_with_shutdown` takes. `tokio_util::sync` is not feature-gated, so no
+# features are needed.
+tokio-util = "0.7"
+tracing = "0.1"
+# CLI-side log sink for the library's `tracing` events (`--log-level`).
+tracing-subscriber = "0.3"
+# Pass-0 free-space probe (MCAP Player Proposal §6.1) — `statvfs`; std has no
+# equivalent.
+libc = "0.2"
+# Wrapper-side signal ownership (MCAP Player Proposal §6.7):
+# `register_conditional_shutdown` + `low_level::exit`. Wired in a later phase;
+# the dependency is declared here so the CLI wrapper does not need a manifest
+# change to pick it up.
+signal-hook = "0.3"
+# Same in-tree pin/features as `aorta-record`. The player drives
+# `mcap::sans_io::LinearReader` directly (MCAP Player Proposal §6.7); the reader
+# adapter lands in a later phase.
+mcap = { version = "0.24.0", default-features = false, features = ["zstd", "lz4"] }
+crc32fast = "1"
+lz4 = "1"
+zstd = "0.13"
+# High-level Rust API only — never `aorta_core::ffi::*` (tools stay above the FFI layer).
+aorta_core = { path = "../../core" }
+# The MCAP Player Proposal §6.3 schema preflight issues its own `get`
+# (QueryTarget::All + ConsolidationMode::None + one absolute deadline) over the
+# Node's session: core exposes the session but not a fail-closed by-key scan, so
+# the query types are needed directly. Same pin/features as `aorta-record`.
+zenoh = { workspace = true, features = ["shared-memory", "unstable"] }

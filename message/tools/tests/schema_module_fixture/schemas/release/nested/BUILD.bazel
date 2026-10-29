@@ -1,0 +1,33 @@
+load("@middleware//message/tools:schema_package.bzl", "aorta_schema_package")
+load("@middleware//message/tools:registry_compose.bzl", "aorta_registry")
+load("@middleware//message/tools:schema_release.bzl", "aorta_schema_release")
+load("//schemas/release:fragment.bzl", "ROOT")
+package(default_visibility = ["//visibility:public"])
+aorta_schema_package(
+    name = "readings",
+    module_name = "release_fixture",
+    api = 2,
+    srcs = ["release_reading.fbs"],
+    items = ROOT,
+    fragment = "//schemas/release:fragment.bzl",
+    fragment_symbols = {"//schemas/release:fragment.bzl": "ROOT"},
+)
+_FRAGMENTS = [
+    "@middleware//message/schemas/registry/fragments:aorta_base_fragment",
+    "//schemas/release:leaf_fragment",
+    ":readings_fragment",
+]
+aorta_registry(name = "registry", fragments = _FRAGMENTS)
+aorta_schema_release(
+    name = "release",
+    registry = ":registry",
+    fragments = _FRAGMENTS,
+    module_name = "release_fixture",
+    module_revision = "fixture-module-revision",
+    aorta_revision = "fixture-aorta-revision",
+    licenses = {
+        "@middleware//:LICENSE": "aorta",
+        "@middleware//:NOTICE": "aorta",
+        "//:LICENSE": "release_fixture",
+    },
+)

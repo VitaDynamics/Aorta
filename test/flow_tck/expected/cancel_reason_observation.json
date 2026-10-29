@@ -1,0 +1,25 @@
+[
+  {
+    "scenario": "cancel_reason_observation",
+    "seq": 0,
+    "op": "task.spawn",
+    "event": "lifecycle",
+    "phase": "spawned"
+  },
+  {
+    "scenario": "cancel_reason_observation",
+    "seq": 1,
+    "op": "scope.cancel",
+    "event": "lifecycle",
+    "phase": "parent_cancelled"
+  },
+  {
+    "scenario": "cancel_reason_observation",
+    "seq": 2,
+    "op": "task.await",
+    "event": "stopped",
+    "kind": "cancelled",
+    "reason": "shutdown",
+    "raw_reason": 3
+  }
+]

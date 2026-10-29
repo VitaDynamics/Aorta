@@ -1,0 +1,17 @@
+// Local namespace shares a two-segment prefix with a foreign
+// tree. Local `aorta.branch.consumer` reaches foreign `aorta.branch.common`
+// (BranchPhase). The common prefix is aorta.branch (depth 2), so the foreign
+// common module must merge into the consumer's existing branch rather than be
+// emitted again at the root.
+// Example/test only; do NOT consume downstream.
+include "schemas/system/aorta_base.fbs";
+include "schemas/shared/branch_common/branch_common.fbs";
+
+namespace aorta.branch.consumer;
+
+table BranchConsumer {
+  aorta_header : aorta.sys.AortaHeader                        (id: 0);
+  phase        : aorta.branch.common.BranchPhase = UNKNOWN    (id: 1);   // depth-2 shared prefix
+}
+
+root_type BranchConsumer;

@@ -1,0 +1,103 @@
+// Examples - Control Loop Schemas
+//
+// This schema defines message types for the control loop example.
+// Demonstrates a typical robotic control system with feedback, commands, and state estimation.
+
+include "schemas/system/aorta_base.fbs";
+
+namespace examples.control;
+
+// Sensor feedback from robot actuators/encoders
+// Typical usage: High-frequency (100Hz+) with Realtime QoS
+table SensorFeedback {
+  aorta_header: aorta.sys.AortaHeader;
+  
+  // Current position (e.g., joint angle, linear position)
+  position: float;
+  
+  // Current velocity
+  velocity: float;
+  
+  // Optional: Current acceleration
+  acceleration: float = 0.0;
+  
+  // Optional: Motor current/torque
+  effort: float = 0.0;
+  
+  // Sensor reading timestamp in nanoseconds
+  sensor_timestamp_ns: ulong;
+}
+
+// Control command to robot actuators
+// Typical usage: High-frequency (100Hz+) with Realtime QoS
+table ControlCommand {
+  aorta_header: aorta.sys.AortaHeader;
+  
+  // Target/desired position
+  target_position: float;
+  
+  // Target/desired velocity
+  target_velocity: float;
+  
+  // Control effort output (e.g., from PID controller)
+  control_effort: float;
+  
+  // Optional: Feedforward acceleration
+  feedforward_accel: float = 0.0;
+  
+  // Control mode: 0=position, 1=velocity, 2=effort
+  control_mode: ubyte = 0;
+}
+
+// State estimate from Kalman filter or other estimator
+// Typical usage: Medium-frequency (50Hz) with Reliable QoS
+table StateEstimate {
+  aorta_header: aorta.sys.AortaHeader;
+  
+  // Estimated position
+  position: float;
+  
+  // Estimated velocity
+  velocity: float;
+  
+  // Estimated acceleration
+  acceleration: float;
+  
+  // Estimate confidence/covariance (0.0 - 1.0)
+  confidence: float;
+  
+  // Number of sensor samples used
+  sample_count: uint;
+  
+  // Kalman filter innovation (measurement residual)
+  innovation: float = 0.0;
+}
+
+// System monitoring/diagnostics
+// Typical usage: Low-frequency (1-10Hz) with Normal QoS
+table SystemMonitor {
+  aorta_header: aorta.sys.AortaHeader;
+  
+  // Number of feedback messages received in last period
+  feedback_count: ulong;
+  
+  // Number of control commands sent in last period
+  command_count: ulong;
+  
+  // Number of state estimates in last period
+  state_count: ulong;
+  
+  // Average control loop frequency (Hz)
+  loop_frequency: float;
+  
+  // Maximum loop latency in microseconds
+  max_latency_us: ulong;
+  
+  // Control error (target - actual)
+  control_error: float;
+  
+  // System status
+  status: string;
+}
+
+root_type SensorFeedback;

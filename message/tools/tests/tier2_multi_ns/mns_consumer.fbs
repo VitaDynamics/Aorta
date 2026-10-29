@@ -1,0 +1,22 @@
+// Regression: a Tier-2 schema with root-local types in TWO
+// namespaces (`p.alpha` and `p.beta`). `BetaThing` (p.beta) references the SAME-
+// namespace foreign `p.beta.BetaDep` -> flatc emits it BARE in the `p::beta` nest.
+// The patcher must compute each reference against ITS declaring type's namespace
+// (not the first local namespace), or the p.beta alias is misplaced and the
+// reference dangles. The Tier-1 semantic wrapper rejects multiple local
+// namespaces; only the Tier-2 `aorta_fbs_library` path reaches this. Example/test.
+include "mns_dep.fbs";
+
+namespace p.alpha;
+
+table AlphaThing {
+  a : int (id: 0);
+}
+
+namespace p.beta;
+
+table BetaThing {
+  dep : p.beta.BetaDep (id: 0);
+}
+
+root_type p.alpha.AlphaThing;

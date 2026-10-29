@@ -1,0 +1,15 @@
+// Loader test fixture: field-type reconstruction coverage — scalar,
+// long-form scalar vectors ([uint8]/[int8], which canonicalize to
+// [ubyte]/[byte] and drive the u8/i8 vector fast-path correction), string,
+// vector<string>, and a local table reference.
+namespace demo;
+table Child { v: int32; }
+table Recon {
+  n: int32;
+  b: [uint8];
+  s: [int8];
+  txt: string;
+  names: [string];
+  child: Child;
+}
+root_type Recon;

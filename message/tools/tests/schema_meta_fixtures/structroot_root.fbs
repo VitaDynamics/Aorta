@@ -1,0 +1,18 @@
+// Schema-meta fixture — struct-rooted --root INPUT TEXT only.
+// NOT flatc-compilable: the pinned flatc rejects `root_type <struct>`
+// ("root type must be a table"), which is exactly why the old regex-only
+// rust meta path could silently emit a wrong FIXED_SIZE for it — nothing
+// ever validated this text. The matching bfbs fed to the tool is
+// synthesized at test time from grandchild_root.bfbs (flatc-compiled, same
+// struct definitions/bytesizes) re-rooted onto Wrap via the reflection
+// object API. See gen_schema_meta_reflection_test.py.
+include "grandchild_mid.fbs";
+
+namespace fixmeta;
+
+struct Wrap {
+  mid: Mid;
+  x: int;
+}
+
+root_type Wrap;

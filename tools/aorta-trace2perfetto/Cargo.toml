@@ -1,0 +1,31 @@
+[package]
+name = "aorta-trace2perfetto"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+# Off-device converter: reads compact trace CHUNK files (the canonical on-robot
+# format) and emits a ui.perfetto.dev-compatible trace (Chrome Trace Event JSON).
+# It reuses the ONE committed CHUNK binding via `aorta_core::trace::chunk` (DRY:
+# producer and converter share a schema/binding). zstd + serde_json only; no
+# robot-side protobuf dependency (Perfetto/proto is off-device only).
+
+[lib]
+name = "aorta_trace2perfetto"
+path = "src/lib.rs"
+
+[[bin]]
+name = "aorta-trace2perfetto"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4.5", features = ["derive"] }
+aorta_core = { path = "../../core" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+zstd = "0.13"

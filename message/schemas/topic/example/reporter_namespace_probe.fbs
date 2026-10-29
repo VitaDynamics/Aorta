@@ -1,0 +1,16 @@
+// Multi-namespace-tree Rust wrapper fixture. Example/test only.
+
+include "schemas/system/aorta_base.fbs";
+include "schemas/shared/xtree_common/xtree_common.fbs";
+include "schemas/topic/foxglove_schema/Vector3.fbs";
+
+namespace reporter_fixture;
+
+table ReporterNamespaceProbe {
+  aorta_header : aorta.sys.AortaHeader                 (id: 0);
+  phase        : aorta.xtree.common.XtreePhase = UNKNOWN (id: 1);
+  offset       : foxglove.Vector3                      (id: 2);
+  label        : string                                (id: 3);
+}
+
+root_type ReporterNamespaceProbe;

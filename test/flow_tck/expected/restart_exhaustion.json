@@ -1,0 +1,34 @@
+[
+  {
+    "scenario": "restart_exhaustion",
+    "seq": 0,
+    "op": "task.spawn",
+    "event": "lifecycle",
+    "phase": "spawned_supervised"
+  },
+  {
+    "scenario": "restart_exhaustion",
+    "seq": 1,
+    "op": "task.await",
+    "event": "stopped",
+    "kind": "fault",
+    "code": -5,
+    "message": "tck-restart-fault"
+  },
+  {
+    "scenario": "restart_exhaustion",
+    "seq": 2,
+    "op": "scope.stats",
+    "event": "counter",
+    "name": "scope_cancel_reason_raw",
+    "value": 4
+  },
+  {
+    "scenario": "restart_exhaustion",
+    "seq": 3,
+    "op": "scope.stats",
+    "event": "counter",
+    "name": "factory_invocations",
+    "value": 2
+  }
+]

@@ -1,0 +1,22 @@
+# Disposable schema-module fixture.
+#
+# Aorta's root MODULE.bazel declares this module as a `dev_dependency` with a
+# `local_path_override` to THIS directory so that the schema composition regression driver
+# (message/tools/tests/schema_decoupling_cases_test.py) can swap in a
+# disposable, real second module per case with
+# `--override_module=aorta_schema_module_fixture=<case dir>` and exercise the
+# cross-repository gates (L4 mapping, census, include ownership, source
+# contracts, renamed tool imports) against two repository-qualified labels.
+#
+# It contains only synthetic release staging test schemas. It exists only
+# so the module name is resolvable from the root; a consumer of aorta never
+# sees it (dev dependencies of non-root modules are ignored). This is not a
+# product-schema dependency and must never become one — product schema modules
+# depend on aorta, never the other way round.
+module(
+    name = "aorta_schema_module_fixture",
+    version = "0.0.0",
+)
+
+bazel_dep(name = "aorta", version = "0.0.0", repo_name = "middleware")
+bazel_dep(name = "rules_python", version = "1.0.0")

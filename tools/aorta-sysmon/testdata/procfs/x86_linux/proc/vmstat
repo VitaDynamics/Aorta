@@ -1,0 +1,3 @@
+pgfault 100
+pgmajfault 5
+oom_kill 0

@@ -1,0 +1,4 @@
+namespace fx_fastpath_isnone_collision;
+table Child { foo_is_none: int; foo: [int]; }
+table Batch { children: [Child]; }
+root_type Batch;

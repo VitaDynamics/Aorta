@@ -1,0 +1,9 @@
+{
+  mode: "peer",
+  listen: { endpoints: ["tcp/127.0.0.1:0"] },
+  scouting: {
+    multicast: { enabled: false },
+    gossip: { enabled: false },
+  },
+  transport: { shared_memory: { enabled: false } },
+}

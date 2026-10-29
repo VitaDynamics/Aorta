@@ -1,0 +1,57 @@
+[package]
+name = "aorta-sysmon"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lib]
+name = "aorta_sysmon"
+path = "src/lib.rs"
+
+[[bin]]
+name = "aorta-sysmon"
+path = "src/main.rs"
+
+[dependencies]
+# Always-on: snapshot collection + JSON renderer.
+anyhow = "1"
+clap = { version = "4.5", features = ["derive"] }
+libc = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+
+# SDK publish path. The codegen-generated wrapper crate
+# `sysmon_snapshot_msg` is only resolvable under Bazel (it lives under
+# `@aorta//message/bindings/rust:sysmon_snapshot_msg_rs`), so the
+# `sdk-publish` feature is OFF in the cargo manifest and ON via
+# BUILD.bazel's `crate_features`. Cargo lint/test exercises the
+# snapshot pipeline; Bazel exercises the full daemon path.
+[features]
+default = []
+sdk-publish = ["dep:aorta_core", "dep:aorta_sdk", "dep:tokio"]
+
+[dependencies.aorta_core]
+path = "../../core"
+optional = true
+
+[dependencies.aorta_sdk]
+path = "../../rust"
+optional = true
+
+[dependencies.tokio]
+workspace = true
+features = ["rt-multi-thread", "macros", "signal", "time", "sync"]
+optional = true
+
+# perf-event2 wraps Linux's `perf_event_open` syscall and is
+# the only Rust crate aorta-sysmon needs beyond `aorta_core`'s transitive
+# closure. Linux-only: the `target.cfg` gate keeps macOS cargo builds
+# (snapshot-only dev path) from trying to link the syscall stub. Bazel builds
+# resolve this via the matching `crate.spec` entry in `MODULE.bazel`.
+[target.'cfg(target_os = "linux")'.dependencies]
+perf-event2 = "0.7"

@@ -1,0 +1,7 @@
+// Loader test fixture: same-line-table regression (a table declared on ONE
+// line must keep its own fields and not swallow the next table's). flatc
+// parses this natively, so the loader path is inherently immune.
+namespace demo;
+table Inline { a: int32 (id: 0); b: string (id: 1); }
+table After { c: bool (id: 0); }
+root_type After;

@@ -1,0 +1,32 @@
+[
+  {
+    "scenario": "parent_child_cancel_order",
+    "seq": 0,
+    "op": "task.spawn",
+    "event": "lifecycle",
+    "phase": "spawned"
+  },
+  {
+    "scenario": "parent_child_cancel_order",
+    "seq": 1,
+    "op": "scope.cancel",
+    "event": "lifecycle",
+    "phase": "parent_cancelling"
+  },
+  {
+    "scenario": "parent_child_cancel_order",
+    "seq": 2,
+    "op": "task.body",
+    "event": "lifecycle",
+    "phase": "child_observed_cancel"
+  },
+  {
+    "scenario": "parent_child_cancel_order",
+    "seq": 3,
+    "op": "task.await",
+    "event": "stopped",
+    "kind": "cancelled",
+    "reason": "shutdown",
+    "raw_reason": 3
+  }
+]

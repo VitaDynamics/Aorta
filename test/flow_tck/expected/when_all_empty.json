@@ -1,0 +1,9 @@
+[
+  {
+    "scenario": "when_all_empty",
+    "seq": 0,
+    "op": "when_all",
+    "event": "value",
+    "value": "[]"
+  }
+]

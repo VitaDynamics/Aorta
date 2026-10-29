@@ -1,0 +1,218 @@
+load("@rules_python//python:defs.bzl", "py_library")
+load("@rules_python//python:packaging.bzl", "py_package")
+load("@aorta_py_deps//:requirements.bzl", "requirement")
+load("//message/tools:flatbuffers_rules.bzl", "python_msgs_tree")
+load("//message/tools:python_distribution.bzl", "python_distribution_notices", "python_wheel_licenses", "sdk_python_ownership")
+
+# Legal files every published wheel carries under `.dist-info/licenses/`
+# (PEP 639): the Apache-2.0 text the release artifacts share with the C++ SDK
+# bundle, a wheel-specific NOTICE, and the third-party notices for what the
+# wheel actually contains. `//python/stage` builds the payload-only wheels;
+# python_wheel_licenses finishes them here under the canonical wheel name.
+exports_files([
+    "NOTICE.aorta_msgs",
+    "NOTICE.aorta_sdk",
+    "README.md",
+])
+
+# The Aorta Python SDK package: a pure-Python ctypes binding over the L2 C-ABI
+# cdylib (//core:aorta_core_cdylib). See
+# spec/Aorta_Python_SDK_Design_Proposal.md. This py_library is the import target
+# dev/test code depends on; the per-arch py_wheel below (which bundles the cdylib
+# package-relative + py.typed) is the Phase-5 distribution artifact.
+py_library(
+    name = "aorta_py",
+    # The aorta SDK package + the standalone top-level tracing module (the
+    # legacy top-level logging.py/__init__.py were folded into aorta.logging).
+    srcs = glob(
+        ["aorta/**/*.py"],
+        allow_empty = False,
+    ) + ["tracing.py"],
+    # PEP 561 inline-types marker: ships so downstream type-checkers trust the
+    # SDK's inline annotations (no separate .pyi stubs needed for the public API).
+    data = ["aorta/py.typed"],
+    imports = ["."],
+    deps = [requirement("flatbuffers")],
+    visibility = ["//visibility:public"],
+)
+
+# ── Packaging (Phase 5) ───────────────────────────────────────────────────────
+# Platform discriminators: the robot + CI targets are linux (aarch64 via
+# --config=robot, x86_64 in CI); macOS arm64 is a development host only, not a
+# supported platform. Kept mutually
+# exclusive (os AND cpu) so the wheel-tag / cdylib-extension selects below are
+# never ambiguous.
+config_setting(
+    name = "linux_aarch64",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:aarch64",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "linux_x86_64",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# OS-only macos discriminator drives the cdylib *extension* (both mac arches use
+# .dylib); the wheel *tag* additionally splits by CPU (below) so an Intel-mac
+# build is not mis-tagged arm64.
+config_setting(
+    name = "macos",
+    constraint_values = ["@platforms//os:macos"],
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "macos_aarch64",
+    constraint_values = [
+        "@platforms//os:macos",
+        "@platforms//cpu:aarch64",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "macos_x86_64",
+    constraint_values = [
+        "@platforms//os:macos",
+        "@platforms//cpu:x86_64",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Copy the L2 cdylib to the package-relative path the loader searches
+# (aorta/libaorta_core.{so,dylib}; see python/aorta/_ffi/loader.py
+# _package_relative_candidates). `genrule.outs` is not configurable, so one
+# genrule per extension; the (configurable) `data` select below picks exactly
+# one, so only the matching arch's copy is ever built — a --config=robot
+# (linux) build bundles libaorta_core.so, a host (macOS) build the .dylib.
+genrule(
+    name = "bundled_cdylib_so",
+    srcs = ["//core:aorta_core_cdylib"],
+    outs = ["aorta/libaorta_core.so"],
+    cmd = "cp $(location //core:aorta_core_cdylib) $@",
+)
+
+genrule(
+    name = "bundled_cdylib_dylib",
+    srcs = ["//core:aorta_core_cdylib"],
+    outs = ["aorta/libaorta_core.dylib"],
+    cmd = "cp $(location //core:aorta_core_cdylib) $@",
+)
+
+# The SDK package + the bundled cdylib, as one importable unit. With
+# imports=["."] the data file at python/aorta/libaorta_core.* maps to
+# aorta/libaorta_core.* in the import tree — exactly where the loader looks.
+py_library(
+    name = "aorta_py_bundled",
+    data = select({
+        ":macos": [":bundled_cdylib_dylib"],
+        "//conditions:default": [":bundled_cdylib_so"],
+    }),
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [":aorta_py"],
+)
+
+# Collect the transitive sources + data (cdylib + py.typed) of the bundled
+# library into one packageable target. `packages = ["python"]` filters to this
+# workspace's python/ tree by pre-strip path, which EXCLUDES the external
+# flatbuffers pip dep (it lands under site-packages/…, not python/…) — flatbuffers
+# is a Requires-Dist, not bundled. py_wheel packages a dep's DefaultInfo.files,
+# which is empty for a plain py_library, so this py_package is required.
+py_package(
+    name = "aorta_pkg",
+    packages = ["python"],
+    visibility = ["//visibility:public"],
+    deps = [":aorta_py_bundled"],
+)
+
+# The published per-arch SDK wheel: //python/stage:aorta_sdk_wheel (payload,
+# platform tag, Requires-Dist) plus the license files. The third-party notices
+# are rendered per target triple from the release job's cargo-about evidence,
+# restricted to the crates linked into the bundled libaorta_core
+# (//tools/release:aorta_sdk_wheel_third_party_notices), so a wheel cannot be
+# built without that evidence — the same fail-closed rule as the C++ SDK bundle.
+python_wheel_licenses(
+    name = "aorta_sdk_wheel",
+    wheel = "//python/stage:aorta_sdk_wheel",
+    license_files = {
+        "//tools/release:LICENSE": "LICENSE",
+        "NOTICE.aorta_sdk": "NOTICE",
+        "//tools/release:aorta_sdk_wheel_third_party_notices": "THIRD_PARTY_NOTICES.md",
+    },
+    visibility = ["//visibility:public"],
+)
+
+# ── Generated message distribution (aorta_msgs) ───────────────────────────────
+# The same owner-aware assembler used by product/custom wheels selects exactly
+# the base registry's Python-enabled schemas. Direct flatc outputs determine
+# file owners; include-generated copies never confer distribution ownership.
+python_msgs_tree(
+    name = "aorta_msgs_tree",
+    registry = "//message:base_registry",
+    fragments = ["//message/schemas/registry/fragments:aorta_base_fragment"],
+    module_name = "aorta",
+)
+
+py_library(
+    name = "aorta_msgs_lib",
+    data = [":aorta_msgs_tree"],
+    imports = ["aorta_msgs_tree"],
+    deps = [requirement("flatbuffers")],
+)
+
+py_package(
+    name = "aorta_msgs_pkg",
+    # Keep the assembled tree; the flatbuffers pip dep (site-packages/…) is
+    # filtered out — it is a Requires-Dist, not bundled.
+    packages = ["python/aorta_msgs_tree"],
+    visibility = ["//visibility:public"],
+    deps = [":aorta_msgs_lib"],
+)
+
+filegroup(
+    name = "aorta_msgs_ownership",
+    srcs = [":aorta_msgs_tree"],
+    output_group = "ownership",
+    visibility = ["//visibility:public"],
+)
+
+sdk_python_ownership(
+    name = "aorta_sdk_ownership",
+    package = ":aorta_pkg",
+    visibility = ["//visibility:public"],
+)
+
+# The only third-party material in aorta_msgs is the code generated from the
+# foxglove-sdk derived schemas; the notice is derived from the ownership
+# manifest so it names exactly the modules those schemas own.
+python_distribution_notices(
+    name = "aorta_msgs_third_party_notices",
+    distribution = "aorta_msgs",
+    out = "aorta_msgs/THIRD_PARTY_NOTICES.md",
+    ownership = ":aorta_msgs_ownership",
+    upstream_license = "//:THIRD_PARTY_LICENSES/foxglove-sdk.LICENSE",
+    visibility = ["//message/tools:__pkg__"],
+)
+
+# The published pure-Python message wheel: //python/stage:aorta_msgs_wheel plus
+# the license files, including the byte-identical upstream Foxglove license.
+python_wheel_licenses(
+    name = "aorta_msgs_wheel",
+    wheel = "//python/stage:aorta_msgs_wheel",
+    license_files = {
+        "//tools/release:LICENSE": "LICENSE",
+        "NOTICE.aorta_msgs": "NOTICE",
+        ":aorta_msgs_third_party_notices": "THIRD_PARTY_NOTICES.md",
+        "//:THIRD_PARTY_LICENSES/foxglove-sdk.LICENSE": "THIRD_PARTY_LICENSES/foxglove-sdk.LICENSE",
+    },
+    visibility = ["//visibility:public"],
+)

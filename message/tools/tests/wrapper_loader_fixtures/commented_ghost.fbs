@@ -1,0 +1,8 @@
+// Loader test fixture: comment-blind regression (a block-commented type must
+// not parse as live). flatc drops comments, so the loader never sees Ghost.
+namespace demo;
+/*
+table Ghost { x: int32; }
+*/
+table Real { y: int32; }
+root_type Real;

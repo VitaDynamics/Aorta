@@ -1,0 +1,10 @@
+load("@middleware//message/tools:schema_package.bzl", "aorta_schema_package")
+load("@middleware//message/tools:registry_compose.bzl", "aorta_registry")
+load("@middleware//message/tools:schema_release.bzl", "aorta_schema_release")
+package(default_visibility = ["//visibility:public"])
+aorta_schema_package(
+    name = "moves", srcs = ["move.fbs"], api = 2, module_name = "release_fixture",
+    items = [{"pkg": "//schemas/action/move", "stem": "move", "root_fbs": "move.fbs", "provenance": "external", "action_schema": True, "action_name": "Move", "rust": True, "cpp": True, "python": True, "rust_wrapper": True, "bfbs": True, "schema_meta_rust": True, "dep_fbs": ["@middleware//message/schemas/shared/action_common:action_common.fbs", "@middleware//message/schemas/system:aorta_base.fbs"]}],
+)
+aorta_registry(name = "registry", fragments = [":moves_fragment", "@middleware//message/schemas/registry/fragments:aorta_base_fragment"])
+aorta_schema_release(name = "release", registry = ":registry", fragments = [":moves_fragment", "@middleware//message/schemas/registry/fragments:aorta_base_fragment"], module_name = "release_fixture", module_revision = "review-module", aorta_revision = "review-aorta", licenses = {"//:LICENSE": "release_fixture", "@middleware//:NOTICE": "aorta", "@middleware//:LICENSE": "aorta"})

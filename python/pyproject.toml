@@ -1,0 +1,35 @@
+# Dev-time pytest + coverage config for the Aorta Python SDK.
+#
+# Bazel is the authoritative build/test system; this file drives the local
+# developer TDD loop only (`pytest` from the `python/` directory). The cdylib is
+# discovered by tests/conftest.py (AORTA_CORE_FFI_LIB or the Bazel-built
+# bazel-bin/core/libaorta_core.{so,dylib}).
+#
+# The coverage gate is 100% line + branch on the hand-written `aorta` package
+# (Python SDK design proposal §10.2). Generated code, examples, and the bundled
+# cdylib are out of scope for coverage.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=aorta --cov-branch --cov-report=term-missing --cov-fail-under=100"
+
+[tool.coverage.run]
+branch = true
+source = ["aorta"]
+omit = [
+    "*/tests/*",
+    "*/_schema_meta.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    # Abstract-method stubs have no executable body (subclasses override). Newer
+    # coverage.py emits an arc for one-line ``def …: ...`` stubs; exclude the
+    # whole decorated method (coverage's documented-standard pattern) so the gate
+    # is robust across coverage versions. Concrete codecs are fully tested.
+    "@(abc\\.)?abstractmethod",
+]

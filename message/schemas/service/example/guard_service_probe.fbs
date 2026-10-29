@@ -1,0 +1,34 @@
+// Cross-namespace wrapper guard owner fixture. Example/test only.
+
+include "schemas/system/aorta_base.fbs";
+include "schemas/shared/service_common/status.fbs";
+
+namespace aorta.services.fixture_guard;
+
+enum GuardResource : ubyte { NONE = 0, SAMPLE = 1 }
+
+table GuardLeaf {
+  value : int32 (id: 0);
+}
+
+table GuardMeta {
+  label : string (id: 0);
+}
+
+union GuardPayload {
+  GuardLeaf,
+  GuardMeta,
+}
+
+table GuardServiceProbeRequest {
+  aorta_header : aorta.sys.AortaHeader (id: 0);
+  payload      : GuardPayload          (id: 2);
+  label        : string                (id: 3);
+}
+
+table GuardServiceProbeResponse {
+  aorta_header : aorta.sys.AortaHeader                (id: 0);
+  status       : aorta.services.common.ServiceStatus (id: 1);
+}
+
+root_type GuardServiceProbeRequest;

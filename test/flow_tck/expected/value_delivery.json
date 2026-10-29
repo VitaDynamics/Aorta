@@ -1,0 +1,16 @@
+[
+  {
+    "scenario": "value_delivery",
+    "seq": 0,
+    "op": "task.spawn",
+    "event": "lifecycle",
+    "phase": "spawned"
+  },
+  {
+    "scenario": "value_delivery",
+    "seq": 1,
+    "op": "task.await",
+    "event": "value",
+    "value": "7"
+  }
+]

@@ -1,0 +1,2 @@
+namespace release.fixture;
+struct Command { enabled:bool; value:float; }

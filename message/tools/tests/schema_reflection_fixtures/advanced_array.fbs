@@ -1,0 +1,24 @@
+// schema_reflection loader fixture: exercises the
+// `AdvancedArrayFeatures` advanced_features bit (a fixed-length array field
+// inside a struct). NOT a real Aorta message schema (not registered in
+// message/schemas/registry.bzl) — used only by schema_reflection_test.py.
+//
+// `schema_reflection.py` DOES model `Array`-shaped fields (`_field_shape`
+// resolves `Array`'s element via the same `_scalar_or_named_shape` helper
+// `Vector`'s element uses) — this fixture's root object loads successfully
+// and `struct_def.fields[0].shape == "array<scalar:int,4>"`
+// (`RealCompiledFixtureTest.test_advanced_array_features_fixture_loads_
+// correctly`). The same shape is used for fixed-size vectors in real
+// schemas, for example a quaternion stored as `[float:4]` inside a struct.
+
+namespace fx;
+
+struct Foo {
+  vals: [int32:4];
+}
+
+table Root {
+  f: Foo (id: 0);
+}
+
+root_type Root;

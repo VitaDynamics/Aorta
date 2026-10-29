@@ -1,0 +1,18 @@
+// Schema with both a local type (`Marker` in
+// `mrlocal.inner`) AND a foreign `root_type` (`mrforeign.deep.ForeignRoot`) in a
+// DIFFERENT namespace. flatc emits TWO pub-mod nests in one file:
+//   - a foreign branch containing root helpers and a bare foreign-root reference;
+//   - a local branch containing the local marker type.
+// The single-linear-chain premise breaks: aliases must be organised by the ACTUAL
+// emission namespace of each referencing site (root helpers -> root type's leaf,
+// local field refs -> local leaf). Round-trips through BOTH the foreign root
+// helpers and the local `Marker`. Example/test only; do NOT consume downstream.
+include "schemas/shared/mixedroot_dep/mixedroot_dep.fbs";
+
+namespace mrlocal.inner;
+
+table Marker {
+  value : int (id: 0);
+}
+
+root_type mrforeign.deep.ForeignRoot;

@@ -1,0 +1,15 @@
+// Schema-meta fixture — POSITIVE control for the tightened
+// HAS_AORTA_HEADER semantic: a field named `aorta_header` typed EXACTLY
+// `aorta.sys.AortaHeader` must stay true (guards the tighten against
+// over-tightening; every real registry schema with a header has this
+// shape).
+include "header_aorta_sys.fbs";
+
+namespace fixmeta.hdr2;
+
+table RightMsg {
+  aorta_header: aorta.sys.AortaHeader;
+  payload: int;
+}
+
+root_type RightMsg;

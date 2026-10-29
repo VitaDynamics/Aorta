@@ -1,0 +1,21 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+# cbindgen driver behind //core:aorta_ffi_header. A standalone crate so the
+# MPL-2.0 cbindgen dependency never reaches aorta_core's dependency closure
+# (see Cargo.toml). Exec-configuration tool only; nothing links against it.
+rust_binary(
+    name = "aorta_cbindgen",
+    srcs = ["src/main.rs"],
+    edition = "2021",
+    deps = ["@aorta_crates//:cbindgen"],
+    visibility = ["//core:__pkg__"],
+)
+
+# Expose Cargo.toml so MODULE.bazel's crate.from_cargo can read this member.
+exports_files(["Cargo.toml"])
+
+filegroup(
+    name = "license_workspace_sources",
+    srcs = glob(["**/*"]),
+    visibility = ["//tools/release:__pkg__"],
+)

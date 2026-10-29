@@ -1,0 +1,14 @@
+// Canonical-order perturbation fixture
+// (loader-path port of gen_message_wrapper_canonical_order_test.py): a
+// fixture-local declaration of `aorta.sys.AortaHeader` (same QUALIFIED name
+// as the real message/schemas/system/aorta_base.fbs table; the emitters'
+// `is_header_field` check keys on the qualified name, so a self-contained
+// fixture copy avoids a cross-package srcs label on the production schema
+// tree — same pattern as tests/schema_meta_fixtures/header_aorta_sys.fbs).
+namespace aorta.sys;
+
+table AortaHeader {
+  publish_stamp_ns: ulong;
+  publisher_node: string;
+  sequence: ulong;
+}

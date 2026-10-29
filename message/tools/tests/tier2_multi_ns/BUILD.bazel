@@ -1,0 +1,32 @@
+load("//message/tools:aorta_flatbuffers.bzl", "aorta_fbs_library")
+load("@rules_rust//rust:defs.bzl", "rust_test")
+
+# Regression: a Tier-2 schema with root-local types in TWO
+# namespaces referencing a same-namespace foreign type. The Tier-1 message wrapper
+# hard-fails multiple local namespaces; the public Tier-2 `aorta_fbs_library` does
+# not, so this is the shape that reaches the patcher with multiple emission
+# namespaces. The rust_test compiling is the proof that each reference lands in its
+# OWN namespace nest.
+package(default_visibility = ["//visibility:private"])
+
+aorta_fbs_library(
+    name = "mns_dep",
+    srcs = ["mns_dep.fbs"],
+)
+
+aorta_fbs_library(
+    name = "mns_consumer",
+    srcs = ["mns_consumer.fbs"],
+    deps = [":mns_dep"],
+)
+
+rust_test(
+    name = "tier2_multi_ns_test",
+    srcs = ["tier2_multi_ns_test.rs"],
+    edition = "2021",
+    deps = [
+        ":mns_consumer_rust",
+        "//message/tools:flatbuffers_rust",
+    ],
+    size = "small",
+)

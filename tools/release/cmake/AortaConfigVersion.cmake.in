@@ -1,0 +1,16 @@
+# Rendered by //core:core_abi from AORTA_ABI_VERSION (core/src/ffi/c_api/mod.rs):
+# the package major version is the Core ABI generation.
+set(PACKAGE_VERSION "@AORTA_CORE_ABI_VERSION@.0.0")
+
+# CMake convention: a versionless find_package(Aorta CONFIG REQUIRED) matches
+# any package version. Only a requested major has to equal the Core ABI.
+if(NOT PACKAGE_FIND_VERSION)
+  set(PACKAGE_VERSION_COMPATIBLE TRUE)
+elseif(PACKAGE_FIND_VERSION_MAJOR EQUAL @AORTA_CORE_ABI_VERSION@)
+  set(PACKAGE_VERSION_COMPATIBLE TRUE)
+  if(PACKAGE_FIND_VERSION VERSION_EQUAL PACKAGE_VERSION)
+    set(PACKAGE_VERSION_EXACT TRUE)
+  endif()
+else()
+  set(PACKAGE_VERSION_UNSUITABLE TRUE)
+endif()

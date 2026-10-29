@@ -1,0 +1,98 @@
+// Aorta System Monitor — alert messages.
+//
+// Publisher: the Aorta system-monitor daemon (`aorta-sysmon`).
+//
+// Distinct root type from `SysmonSnapshot`. Alerts publish on a
+// configurable separate topic suffix (default
+// `sysmon/{host_name}/alerts`) so that downstream
+// consumers can subscribe to alerts without also pulling in the much
+// larger snapshot stream.
+//
+// One `SysmonAlert` message per (alert-kind, alert-source) event per
+// tick. PSI alert payloads carry the resource line that crossed the
+// threshold; process-top alert payloads identify the process; collector
+// errors surface in their own arm. The union discriminator is the
+// FlatBuffers-standard `payload_type` field.
+//
+// Enum defaults are pinned to the FIRST variant for every enum, because
+// some decoders mis-read a non-first-variant enum default on the wire.
+// `AlertKind::PSI_STALL = 0` and `AlertSeverity::INFO = 0` therefore
+// both sit at index 0.
+
+include "schemas/system/aorta_base.fbs";
+
+namespace aorta.sysmon;
+
+// Kind of event that fired the alert. Drives downstream routing.
+enum AlertKind: ubyte {
+  PSI_STALL = 0,
+  PROCESS_TOP = 1,
+  COLLECTOR_ERROR = 2,
+}
+
+// Severity hint. Producers may emit alerts at any severity; consumers
+// can choose to filter (e.g. show only WARN+).
+enum AlertSeverity: ubyte {
+  INFO = 0,
+  WARN = 1,
+  ERROR = 2,
+}
+
+// PSI-stall arm: a `(resource, line)` pair exceeded its `stall_ratio`
+// threshold over `window_ms`. `value` is the stall ratio actually
+// observed at fire time (0..1, dimensionless), `threshold` is the
+// configured trigger.
+table AlertPsi {
+  resource:    string  (id: 0);   // "cpu" | "memory" | "io"
+  line:        string  (id: 1);   // "some" | "full"
+  stall_ratio: float = 0 (id: 2); // observed, 0..1
+  threshold:   float = 0 (id: 3); // configured, 0..1
+  window_ms:   uint  = 0 (id: 4);
+}
+
+// Process-top arm: a process exceeded a per-metric threshold. The
+// metric name matches the corresponding `ProcessStat` field
+// (`cpu_percent_host`, `rss_bytes`, `fd_count`).
+table AlertProcessTop {
+  pid:        int     (id: 0);
+  comm:       string  (id: 1);
+  metric:     string  (id: 2);
+  value:      double = 0 (id: 3);
+  threshold:  double = 0 (id: 4);
+  // The K-rank at which this process landed in the sort (1-based).
+  // `top_k = 1` means "the worst offender for this metric this tick".
+  top_k:      uint   = 0 (id: 5);
+}
+
+// Collector-error arm: a per-family failure that the operator should
+// see. `family` matches `MetricCapability.family` strings.
+table AlertCollector {
+  family: string (id: 0);
+  detail: string (id: 1);
+}
+
+union AlertPayload {
+  AlertPsi,
+  AlertProcessTop,
+  AlertCollector,
+}
+
+table SysmonAlert {
+  aorta_header:  aorta.sys.AortaHeader (id: 0);
+  schema_version:uint    = 1 (id: 1);
+  host_name:     string      (id: 2);
+  host_id:       string      (id: 3);
+  // Wall clock at fire time, nanoseconds since UNIX epoch.
+  observed_at_ns:ulong   = 0 (id: 4);
+  // Monotonic clock at fire time, nanoseconds (correlates with the
+  // owning `SysmonSnapshot.monotonic_ns` for the same tick).
+  monotonic_ns:  ulong   = 0 (id: 5);
+  kind:          AlertKind     = PSI_STALL (id: 6);
+  severity:      AlertSeverity = INFO      (id: 7);
+  // FlatBuffers always emits `payload_type` (the union tag) at the slot
+  // immediately preceding `payload`; declaring the union here makes the
+  // tag implicit at id 8 and the body at id 9.
+  payload:       AlertPayload (id: 9);
+}
+
+root_type SysmonAlert;

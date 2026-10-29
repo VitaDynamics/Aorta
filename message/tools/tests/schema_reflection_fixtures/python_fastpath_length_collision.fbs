@@ -1,0 +1,4 @@
+namespace fx_fastpath_length_collision;
+table Child { foo_LENGTH: int; foo: [int]; }
+table Batch { children: [Child]; }
+root_type Batch;

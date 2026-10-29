@@ -1,0 +1,41 @@
+// Canonical-order perturbation fixture, variant
+// "original": include a-then-b; top-level declarations enum, then RootFoo,
+// then RootBar, then the two header-bearing tables (A before B).
+// RootHeaderA/RootHeaderB both carry `aorta_header` -- the ordering fix target
+// (`typed_tables`, driving HeaderInjector/TypedPublishMessage/
+// TypedPublishTraits emission order) is otherwise never exercised, since
+// RootFoo/RootBar carry no header field. See root_perturbed.fbs for the
+// swapped-order counterpart; `gen_message_wrapper_canonical_order_test.py`
+// asserts both compile to byte-identical wrapper output.
+include "perturb_aorta_sys.fbs";
+include "perturb_inc_a.fbs";
+include "perturb_inc_b.fbs";
+
+namespace perturb.root;
+
+enum RootBaz: ubyte {
+  ONE = 0,
+  TWO = 1,
+}
+
+table RootFoo {
+  foo_value: int32 (id: 0);
+  a_ref: perturb.inc.IncATable (id: 1);
+  b_ref: perturb.inc.IncBTable (id: 2);
+}
+
+table RootBar {
+  bar_value: int32 (id: 0);
+}
+
+table RootHeaderA {
+  aorta_header: aorta.sys.AortaHeader (id: 0);
+  value: int32 (id: 1);
+}
+
+table RootHeaderB {
+  aorta_header: aorta.sys.AortaHeader (id: 0);
+  value: int32 (id: 1);
+}
+
+root_type RootFoo;

@@ -1,0 +1,127 @@
+# EDU-class external schema root fixture.
+#
+# This package is the in-repo seed of the EDU quickstart: it is written the way
+# a USER's `//schemas` package is written — a pure-data fragment, sources under
+# `src/`, ONE `aorta_external_schema_package` call — and it exercises the whole
+# public contract end to end in C++, Rust and Python across the three schema
+# categories (message / service / action) plus an include-only file.
+#
+# The matrix is complete: message / service / action ×
+# C++ / Rust / Python, nine cells, every one BUILT and RUN.
+#
+# It is EDU class on purpose: `expected_provenance = "external"`, it is NOT in
+# `@aorta//message:schemas/external_roots.bzl`, and it lives outside
+# `message/schemas/**`, so it owns no canonical slot and can never reach a
+# release artifact. The internal-class counterpart (which does) lives in
+# message/tools/tests/external_root_internal.
+#
+# The only differences from a real out-of-tree EDU repo are the ones an in-repo
+# fixture cannot avoid: the Aorta deps are spelled `//message/...` instead of
+# `@aorta//message/...`, and there is no MODULE.bazel of its own.
+
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_test")
+load("@rules_python//python:defs.bzl", "py_test")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("//message/tools:external_schema_root.bzl", "aorta_external_schema_package")
+load(":registry.bzl", "EDU_SCHEMAS")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(["registry.bzl"])
+
+aorta_external_schema_package(
+    name = "edu_msgs",
+    expected_provenance = "external",
+    fragment = ":registry.bzl",
+    fragment_symbol = "EDU_SCHEMAS",
+    items = EDU_SCHEMAS,
+    # A same-package root passes a glob so a forgotten file cannot hide: the
+    # inventory is the physical truth the lint compares the fragment against.
+    source_inventory = glob(
+        ["src/**/*.fbs"],
+        allow_empty = False,
+    ),
+    source_package = "//message/tools/tests/external_root_edu/schemas",
+    source_prefix = "src",
+)
+
+# G3 cell: C++ × {message, service, action} — build AND run, against the real
+# SDK (typed publish/subscribe traits, SchemaMeta<T>, aggregate action traits).
+cc_test(
+    name = "cpp_smoke",
+    srcs = ["cpp_smoke.cc"],
+    deps = [
+        ":edu_msgs_cc",
+        "//cpp:aorta_cpp",
+    ],
+)
+
+# Prints `<stem> <hash>` for every schema so the parity test can compare the
+# C++ hash with the Python one and with sha256(bfbs) in ONE assertion.
+cc_binary(
+    name = "cpp_hash_probe",
+    srcs = ["cpp_hash_probe.cc"],
+    deps = [
+        ":edu_msgs_cc",
+        "//cpp:aorta_cpp",
+    ],
+)
+
+# G3 cell: Python × {message, service, action} — imports the generated message
+# classes and schema-meta modules through the `PyInfo`-carrying `:<name>_py`,
+# injects the typed service schema, and drives the action object-API codec.
+py_test(
+    name = "python_smoke",
+    srcs = ["python_smoke.py"],
+    main = "python_smoke.py",
+    deps = [
+        ":edu_msgs_py",
+        "//python:aorta_py",
+    ],
+)
+
+# G3 cell: Rust × {message, service, action} — build AND run, against the real
+# SDK (typed publish/subscribe, typed-RPC marker bounds, ActionWire codec).
+#
+# The dep set is deliberately the EDU one: the root facade crate plus the SDK.
+# An out-of-tree user has no access to Aorta's private `@aorta_crates`, so a
+# fixture that needed it would not be proving the EDU contract.
+rust_test(
+    name = "rust_smoke",
+    size = "small",
+    srcs = ["rust_smoke.rs"],
+    edition = "2021",
+    deps = [
+        ":edu_msgs_rs",
+        "//rust:aorta_sdk",
+    ],
+)
+
+# Prints `<stem> <hash>` for every schema so the parity test can compare the
+# Rust hash with the C++/Python ones and with sha256(bfbs) in ONE assertion.
+rust_binary(
+    name = "rust_hash_probe",
+    srcs = ["rust_hash_probe.rs"],
+    edition = "2021",
+    deps = [
+        ":edu_msgs_rs",
+        "//rust:aorta_sdk",
+    ],
+)
+
+# Schema identity gate, FOUR-way: C++ SchemaHashHex() == Rust
+# SchemaMeta::schema_hash() == Python SCHEMA_HASH_HEX == sha256(bfbs) for
+# every schema in the root.
+py_test(
+    name = "schema_hash_parity_test",
+    srcs = ["schema_hash_parity_test.py"],
+    data = [
+        ":cpp_hash_probe",
+        ":edu_demo_job_bfbs",
+        ":edu_demo_service_bfbs",
+        ":edu_demo_text_bfbs",
+        ":rust_hash_probe",
+    ],
+    main = "schema_hash_parity_test.py",
+    deps = [":edu_msgs_py"],
+)

@@ -1,0 +1,40 @@
+// Canonical-order perturbation fixture, variant
+// "perturbed": include b-then-a (swapped); top-level declarations RootBar,
+// then the header tables in B-then-A order (swapped relative to
+// root_original.fbs), then RootFoo, then enum (all reordered). Field order
+// within every table is UNCHANGED -- only include order and top-level type
+// declaration order move. See root_original.fbs's docstring for the full
+// rationale; `gen_message_wrapper_canonical_order_test.py` asserts both
+// compile to byte-identical wrapper output.
+include "perturb_aorta_sys.fbs";
+include "perturb_inc_b.fbs";
+include "perturb_inc_a.fbs";
+
+namespace perturb.root;
+
+table RootBar {
+  bar_value: int32 (id: 0);
+}
+
+table RootHeaderB {
+  aorta_header: aorta.sys.AortaHeader (id: 0);
+  value: int32 (id: 1);
+}
+
+table RootHeaderA {
+  aorta_header: aorta.sys.AortaHeader (id: 0);
+  value: int32 (id: 1);
+}
+
+table RootFoo {
+  foo_value: int32 (id: 0);
+  a_ref: perturb.inc.IncATable (id: 1);
+  b_ref: perturb.inc.IncBTable (id: 2);
+}
+
+enum RootBaz: ubyte {
+  ONE = 0,
+  TWO = 1,
+}
+
+root_type RootFoo;

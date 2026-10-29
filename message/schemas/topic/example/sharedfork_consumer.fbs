@@ -1,0 +1,17 @@
+// Single-local-namespace fixture (`sfork.leaf`)
+// consumer whose foreign `root_type` is `sfork.mid.leaf.ForeignRoot` (a DIFFERENT
+// namespace SHARING the `sfork` prefix). flatc keeps the longest common prefix and
+// forks, emitting two modules with the same leaf name. The foreign-root and
+// local aliases belong in different branches, so placement must use the full
+// namespace path rather than the first matching leaf.
+// Round-trips through the foreign root helpers AND the local LocalHolder.
+// Example/test only; do NOT consume downstream.
+include "schemas/shared/sharedfork_dep/sharedfork_dep.fbs";
+
+namespace sfork.leaf;
+
+table LocalHolder {
+  dep : sfork.leaf.LocalDep (id: 0);
+}
+
+root_type sfork.mid.leaf.ForeignRoot;

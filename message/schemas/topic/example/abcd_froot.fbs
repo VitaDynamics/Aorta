@@ -1,0 +1,12 @@
+// Foreign-root-only fixture
+// whose foreign root type is `deep.ABCD` AND which declares `file_identifier
+// "ABCD"`. flatc emits, in the same file:
+//   - same-namespace bare type references that need an absolute dependency path;
+//   - a string literal whose bytes are the on-wire file identifier.
+// Type rewriting must leave the identifier string unchanged. A round-trip test
+// asserts that its bytes stay "ABCD".
+// Example/test only; do NOT consume downstream.
+include "schemas/shared/abcd_dep/abcd_dep.fbs";
+
+root_type deep.ABCD;
+file_identifier "ABCD";

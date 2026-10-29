@@ -1,0 +1,65 @@
+load("@rules_cc//cc:defs.bzl", "cc_test")
+load("//message/tools:aorta_flatbuffers.bzl", "aorta_action_library", "aorta_fbs_library")
+
+# Local (Tier-2) action schema: only the goal/result/feedback domain tables are
+# authored; the macro expands the protocol and emits the MapUploadAction traits.
+aorta_action_library(
+    name = "map_upload_action",
+    srcs = ["map_upload.fbs"],
+    action_name = "slam/map_asset/upload",
+    deps = ["//message/schemas/shared/action_common:action_common"],
+)
+
+cc_test(
+    name = "tier2_action_codegen_test",
+    srcs = ["tier2_action_codegen_test.cc"],
+    deps = [
+        ":map_upload_action_cc",
+        "//cpp:aorta_cpp_headers",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+# Two Tier-2 actions sharing one enum via a local (same-package) include, the
+# map_asset upload/download + MapTransferPhase shape. Guards local-include
+# resolution through the expanded-fbs genrule and co-inclusion of both headers.
+aorta_fbs_library(
+    name = "xfer_types",
+    srcs = ["xfer_types.fbs"],
+    cpp_wrapper = True,
+)
+
+aorta_action_library(
+    name = "xfer_upload_action",
+    srcs = ["xfer_upload.fbs"],
+    action_name = "xfer/upload",
+    deps = [
+        ":xfer_types",
+        "//message/schemas/shared/action_common:action_common",
+    ],
+)
+
+aorta_action_library(
+    name = "xfer_download_action",
+    srcs = ["xfer_download.fbs"],
+    action_name = "xfer/download",
+    deps = [
+        ":xfer_types",
+        "//message/schemas/shared/action_common:action_common",
+    ],
+)
+
+cc_test(
+    name = "shared_enum_action_test",
+    srcs = ["shared_enum_action_test.cc"],
+    deps = [
+        ":xfer_download_action_cc",
+        ":xfer_upload_action_cc",
+        "//cpp:aorta_cpp_headers",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)

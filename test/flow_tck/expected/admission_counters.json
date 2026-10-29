@@ -1,0 +1,18 @@
+[
+  {
+    "scenario": "admission_counters",
+    "seq": 0,
+    "op": "queue.stats",
+    "event": "counter",
+    "name": "admission_refused",
+    "value": 3
+  },
+  {
+    "scenario": "admission_counters",
+    "seq": 1,
+    "op": "queue.stats",
+    "event": "counter",
+    "name": "deadline_dropped",
+    "value": 2
+  }
+]

@@ -1,0 +1,18 @@
+// Three namespace trees with a bare-namespace root.
+//
+// Root namespace `xvln` (a synthetic single-component namespace) including
+// aorta.sys (via aorta_base) AND aorta.xtree.common (a THIRD tree). Both
+// dependency crates share the aorta root, exercising recursive module assembly
+// for disjoint and shared namespace trees. Example/test only; do NOT consume
+// downstream.
+include "schemas/system/aorta_base.fbs";
+include "schemas/shared/xtree_common/xtree_common.fbs";
+
+namespace xvln;
+
+table XvlnPath {
+  aorta_header : aorta.sys.AortaHeader                       (id: 0);
+  phase        : aorta.xtree.common.XtreePhase = UNKNOWN     (id: 1);   // third tree
+}
+
+root_type XvlnPath;

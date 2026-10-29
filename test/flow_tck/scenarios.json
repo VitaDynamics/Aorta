@@ -1,0 +1,315 @@
+{
+  "_comment": "Flow TCK scenario manifest (SCHEMA.md v1). planes lists which emitters run; a single-plane row is a plane-qualified family per SCHEMA.md and the RFC carries the same qualification. runs (optional) = multiple invocations of the SAME plane that must all match the expectation (env variants).",
+  "scenarios": [
+    {
+      "id": "cancel_reason_observation",
+      "family": "cancel-reason",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 0
+    },
+    {
+      "id": "value_delivery",
+      "family": "success",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 1
+    },
+    {
+      "id": "move_only_value",
+      "family": "success",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 1
+    },
+    {
+      "id": "cancel_reason_explicit",
+      "family": "cancel-reason",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 1
+    },
+    {
+      "id": "budget_expiry_entry",
+      "family": "budget",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 1
+    },
+    {
+      "id": "budget_expiry_checkpoint",
+      "family": "budget",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 1
+    },
+    {
+      "id": "budget_expiry_parked",
+      "family": "budget",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 1
+    },
+    {
+      "id": "fault_message_exact",
+      "family": "fault-message",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 1
+    },
+    {
+      "id": "parent_child_cancel_order",
+      "family": "cancel-order",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 1
+    },
+    {
+      "id": "sibling_fail_fast",
+      "family": "supervision",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 1
+    },
+    {
+      "id": "isolated_child_failure",
+      "family": "supervision",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 1
+    },
+    {
+      "id": "when_all_empty",
+      "family": "when",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 1
+    },
+    {
+      "id": "when_all_multi",
+      "family": "when",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 1
+    },
+    {
+      "id": "when_all_fault",
+      "family": "when",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 1
+    },
+    {
+      "id": "when_any_first_wins",
+      "family": "when",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 1
+    },
+    {
+      "id": "when_any_empty",
+      "family": "when",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 1
+    },
+    {
+      "id": "close_vs_racing_spawn",
+      "family": "close-race",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 1,
+      "note": "Deterministic HALF of the family: sequential close-then-spawn pins the refusal semantics (reason byte). The concurrent interleaving is close_spawn_race."
+    },
+    {
+      "id": "close_spawn_race",
+      "family": "close-race",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 3,
+      "note": "The RACING half: N iterations of scope.close() racing a concurrent spawn attempt from another execution context; invariants aggregated over all iterations (admitted children never lost, refused handles always resolve, close always completes). The timing-dependent admitted/refused split is emitted as debug.* records only (driver-dropped)."
+    },
+    {
+      "id": "restart_success",
+      "family": "restart",
+      "planes": [
+        "rust"
+      ],
+      "wave": 1,
+      "qualification": "Restart supervision is a Rust-plane capability (D2); C++ Supervision has no kRestart."
+    },
+    {
+      "id": "restart_exhaustion",
+      "family": "restart",
+      "planes": [
+        "rust"
+      ],
+      "wave": 1,
+      "qualification": "Restart supervision is a Rust-plane capability (D2); C++ Supervision has no kRestart."
+    },
+    {
+      "id": "stale_handle",
+      "family": "stale-handle",
+      "planes": [
+        "cpp"
+      ],
+      "wave": 1,
+      "qualification": "Rust prevents stale handle reuse structurally (join/await consume by move); the runtime-observable second-consume refusal exists only on the C++ plane."
+    },
+    {
+      "id": "lanes_rollback",
+      "family": "lanes-rollback",
+      "planes": [
+        "cpp"
+      ],
+      "wave": 1,
+      "runs": [
+        {
+          "env": {}
+        },
+        {
+          "env": {
+            "AORTA_CPP_LANES": "0"
+          }
+        }
+      ],
+      "qualification": "Lane pool + rollback executor are C++-plane surfaces (Rust runs on tokio; no lanes)."
+    },
+    {
+      "id": "shutdown_clean",
+      "family": "shutdown",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 2
+    },
+    {
+      "id": "shutdown_grace_expired",
+      "family": "shutdown",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 2
+    },
+    {
+      "id": "admission_counters",
+      "family": "counters",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 3,
+      "qualification": "Counter TIER is plane-native (Rust event-queue AdmissionStats vs C++ lane-pool LaneStats \u2014 a differentiated-scheduler consequence); the emitted records use unified logical names (admission_refused, deadline_dropped) derived from each plane's observed native counters, so the expectation stays single-file."
+    },
+    {
+      "id": "budget_expiry_rpc_call",
+      "family": "budget-rpc",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 3
+    },
+    {
+      "id": "budget_expiry_queued_server",
+      "family": "budget-rpc",
+      "planes": [
+        "rust",
+        "cpp"
+      ],
+      "wave": 3
+    },
+    {
+      "id": "serial_mutual_exclusion",
+      "family": "serial-domain",
+      "planes": [
+        "cpp"
+      ],
+      "wave": 1,
+      "qualification": "C++-plane capability (proposal \u00a77); the Rust plane's equivalent is type-system-enforced sharing or actor tasks."
+    },
+    {
+      "id": "serial_combinator_inheritance",
+      "family": "serial-domain",
+      "planes": [
+        "cpp"
+      ],
+      "wave": 1,
+      "qualification": "C++-plane capability (proposal \u00a77); the Rust plane's equivalent is type-system-enforced sharing or actor tasks."
+    },
+    {
+      "id": "serial_offload_reentry",
+      "family": "serial-domain",
+      "planes": [
+        "cpp"
+      ],
+      "wave": 1,
+      "qualification": "C++-plane capability (proposal \u00a77); the Rust plane's equivalent is type-system-enforced sharing or actor tasks."
+    },
+    {
+      "id": "serial_teardown_drop",
+      "family": "serial-domain",
+      "planes": [
+        "cpp"
+      ],
+      "wave": 1,
+      "qualification": "C++-plane capability (proposal \u00a77); the Rust plane's equivalent is type-system-enforced sharing or actor tasks. The row rendezvouses on the arbiter-arm ledger (the frame is PROVABLY parked before the stop); the delivery channel is the stop bridge's revoke sweep -> CLOSED-gate stamp (\u00a76.3). The queued-marker DROP path has its own seams-gated witness (F-9 row, flow_serial_stopwindow_test)."
+    },
+    {
+      "id": "serial_cross_runtime_refusal",
+      "family": "serial-domain",
+      "planes": [
+        "cpp"
+      ],
+      "wave": 1,
+      "qualification": "C++-plane capability (proposal \u00a77); the Rust plane's equivalent is type-system-enforced sharing or actor tasks."
+    },
+    {
+      "id": "serial_late_completion_degradation",
+      "family": "serial-domain",
+      "planes": [
+        "cpp"
+      ],
+      "wave": 3,
+      "qualification": "C++-plane capability (proposal \u00a77); the Rust plane's equivalent is type-system-enforced sharing or actor tasks. Opens a loopback Zenoh session (the \u00a76.5 pin path: a call reply lands after ~Runtime). The row proves BOTH layers: delivery stamped CANCEL and the actual {7} reply landed OK (a reply-send failure resolved by some other completion cannot fake it)."
+    }
+  ]
+}

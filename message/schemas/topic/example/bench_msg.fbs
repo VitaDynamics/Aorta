@@ -1,0 +1,13 @@
+include "schemas/system/aorta_base.fbs";
+
+namespace bench;
+
+table BenchMsg {
+  aorta_header: aorta.sys.AortaHeader (id: 0);
+  send_timestamp_ns: ulong (id: 1);
+  payload_size: uint (id: 2);
+  payload: [ubyte] (id: 3);
+  bench_seq: ulong (id: 4);
+}
+
+root_type BenchMsg;

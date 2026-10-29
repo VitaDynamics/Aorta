@@ -1,0 +1,22 @@
+// Includer side of the codegen guard-symmetry fixture.
+//
+// Paired with `guard_fixture_owner.fbs` in the same namespace to exercise table
+// and union guard symmetry across generated wrappers.
+//
+// Do not add real fields or reuse this schema for anything other than the
+// guard-symmetry probes.
+
+include "schemas/system/aorta_base.fbs";
+include "schemas/topic/example/guard_fixture_owner.fbs";
+
+namespace aorta.example.guard_fixture;
+
+table FixtureIncluderRoot {
+  aorta_header: aorta.sys.AortaHeader (id: 0);
+  // id 1 is reserved for the flatc-synthesized `payload_ref_type`
+  // discriminator of the `payload_ref` union field below (must be id 2 - 1).
+  payload_ref:  FixtureUnion          (id: 2);
+  leaf_ref:     FixtureLeaf           (id: 3);
+}
+
+root_type FixtureIncluderRoot;

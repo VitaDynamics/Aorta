@@ -1,0 +1,34 @@
+// Loader-path port of
+// gen_message_wrapper_union_semantics_test.py's (retired)
+// UnionAliasTargetTest's action-shaped fixture (`_action_fixture_files`) --
+// exercises the action-specific "owned"/root-cloning union alias/target
+// emission call sites (Rust `clone_*_owned_from_root`, C++ copy-helper
+// switch), which the simpler non-action union_alias.fbs fixture cannot
+// reach (root-cloning is scoped to Result/FeedbackData, not Goal). The union
+// member alias (`Renamed:RealTarget`) differs from its target -- the whole
+// point of this fixture.
+include "schemas/shared/action_common/action_common.fbs";
+
+namespace demo.action;
+
+table RealTarget {
+  a: int32 (id: 0);
+}
+
+union Choice {
+  Renamed: RealTarget,
+}
+
+table ProbeGoal {
+  x: int32 (id: 0);
+}
+
+table ProbeResult {
+  payload: Choice (id: 1);
+}
+
+table ProbeFeedbackData {
+  y: int32 (id: 0);
+}
+
+root_type ProbeGoal;

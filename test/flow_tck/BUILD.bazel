@@ -1,0 +1,27 @@
+# The cross-plane Flow TCK gate: run every manifest scenario
+# through both plane emitters and diff the normalized NDJSON records.
+# PR CI picks this up via `bazel test //...`.
+sh_test(
+    name = "flow_tck",
+    srcs = ["run_tck.sh"],
+    data = [
+        "driver.py",
+        "scenarios.json",
+        "//cpp:flow_tck_emitter",
+        "//rust/examples:flow_tck_emitter",
+    ] + glob(["expected/*.json"]),
+    env = {
+        "AORTA_TCK_RUST_BIN": "$(rootpath //rust/examples:flow_tck_emitter)",
+        "AORTA_TCK_CPP_BIN": "$(rootpath //cpp:flow_tck_emitter)",
+        # Deliberately NO MAX_WAVE / AORTA_TCK_REQUIRE_ALL here: a
+        # coverage pin living only in this
+        # `env` dict is a single-file bypass — whoever can edit this
+        # BUILD file could silently narrow coverage back to green. Full
+        # coverage is HARDCODED in run_tck.sh, keyed off TEST_SRCDIR
+        # (which Bazel's test wrapper injects unconditionally, not this
+        # `env` attribute), independent of anything set here.
+    },
+    # Wave-3 RPC scenarios open loopback Zenoh sessions (the same class as
+    # //rust:flow_sdk_surface_test); 28 scenario-run units total.
+    size = "large",
+)

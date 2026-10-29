@@ -1,0 +1,9 @@
+// Foreign table `same.pkg.ABCD` referenced by
+// enum_shadow_consumer as a SAME-namespace field. Its bare name `ABCD` collides
+// with a local enum variant of the same name in the consumer. Type rewriting
+// must leave the enum variant definition unchanged. Example/test only.
+namespace same.pkg;
+
+table ABCD {
+  v : int (id: 0);
+}

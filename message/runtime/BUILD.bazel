@@ -1,0 +1,20 @@
+load("@aorta_py_deps//:requirements.bzl", "requirement")
+load("@rules_python//python:defs.bzl", "py_library")
+
+filegroup(
+    name = "python_fastpath_sources",
+    srcs = [
+        "aorta_msgs_runtime/__init__.py",
+        "aorta_msgs_runtime/_struct_vector.py",
+        "aorta_msgs_runtime/_table_vector.py",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
+    name = "python_fastpath",
+    srcs = [":python_fastpath_sources"],
+    imports = ["."],
+    deps = [requirement("flatbuffers")],
+    visibility = ["//visibility:public"],
+)

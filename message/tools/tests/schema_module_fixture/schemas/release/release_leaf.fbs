@@ -1,0 +1,5 @@
+include "schemas/release/commands.fbs";
+include "schemas/system/aorta_base.fbs";
+namespace release.fixture;
+table ReleaseLeaf { header:aorta.sys.AortaHeader; value:int; }
+root_type ReleaseLeaf;

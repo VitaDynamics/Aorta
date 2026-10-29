@@ -1,0 +1,9 @@
+// Loader test fixture: a union member ALIAS (`LeafAlias: Leaf`) whose
+// name differs from the target type. The alias drives the discriminant/accessor
+// name flatc generates; the target drives the Msg-type lookup.
+namespace demo;
+table Leaf { v: int32; }
+table Node { w: int32; }
+union Shape { LeafAlias: Leaf, Node }
+table Holder { s: Shape; }
+root_type Holder;

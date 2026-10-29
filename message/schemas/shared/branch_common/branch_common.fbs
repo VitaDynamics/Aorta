@@ -1,0 +1,14 @@
+// Shared branch-domain common enum fixture.
+//
+// A shared-leaf schema in namespace aorta.branch.common. Its consumer,
+// branch_consumer (namespace aorta.branch.consumer), shares a TWO-segment
+// prefix with it. The foreign common branch must merge into the deepest shared
+// local branch without duplicating it. Example/test only.
+namespace aorta.branch.common;
+
+/// A shared enum for the depth-2 common-prefix case.
+enum BranchPhase : ubyte {
+  UNKNOWN = 0,
+  OPEN    = 1,
+  CLOSED  = 2,
+}

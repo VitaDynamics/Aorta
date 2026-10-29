@@ -1,0 +1,16 @@
+// Telemetry: shared tables used across telemetry family schemas.
+//
+// Factored out of telemetry_node_identity.fbs / telemetry_resource_inventory.fbs
+// so telemetry_vital_snapshot.fbs can `include` both without a duplicate
+// `aorta.telemetry.KeyValue` definition. Like the other telemetry schemas this
+// is intentionally NOT registered in `message/schemas/registry.bzl`; the Rust
+// bindings are committed as `core/src/telemetry/telemetry_common_generated.rs`.
+// No standalone BFBS constant — `KeyValue` is never published on its own, it
+// only travels nested inside the family records that include it.
+
+namespace aorta.telemetry;
+
+table KeyValue {
+  key: string;
+  value: string;
+}

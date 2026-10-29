@@ -1,0 +1,45 @@
+load("@aorta_crates//:defs.bzl", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
+
+# Offline trace waterfall viewer (D1). File-driven only: discovers persisted
+# `.atrc` files via the writer's `AORTA_TRACE_DIR` resolution
+# (//core:aorta_core) and decodes them through the SAME reader + pairing path
+# as the converter (//tools/aorta-trace2perfetto) — one decode path, no Zenoh.
+rust_library(
+    name = "aorta_trace_tui",
+    srcs = glob(
+        ["src/**/*.rs"],
+        exclude = ["src/main.rs"],
+    ),
+    crate_name = "aorta_trace_tui",
+    edition = "2021",
+    deps = all_crate_deps(normal = True) + [
+        "//core:aorta_core",
+        "//tools/aorta-trace2perfetto:aorta_trace2perfetto",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+rust_binary(
+    name = "aorta-trace-tui",
+    srcs = ["src/main.rs"],
+    edition = "2021",
+    deps = all_crate_deps(normal = True) + [
+        ":aorta_trace_tui",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "aorta_trace_tui_test",
+    crate = ":aorta_trace_tui",
+)
+
+# Expose Cargo.toml so MODULE.bazel's crate.from_cargo can read this member.
+exports_files(["Cargo.toml"])
+
+filegroup(
+    name = "license_workspace_sources",
+    srcs = glob(["**/*"]),
+    visibility = ["//tools/release:__pkg__"],
+)

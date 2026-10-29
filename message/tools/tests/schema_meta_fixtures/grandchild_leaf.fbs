@@ -1,0 +1,9 @@
+// Schema-meta fixture — GRANDCHILD include level.
+// Leaf struct layout (flatc ground truth): a:int at 0, pad to 8,
+// b:long at 8 -> bytesize 16, alignment 8.
+namespace fixmeta;
+
+struct Leaf {
+  a: int;
+  b: long;
+}

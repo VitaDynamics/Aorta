@@ -1,0 +1,11 @@
+[
+  {
+    "scenario": "when_any_empty",
+    "seq": 0,
+    "op": "when_any",
+    "event": "stopped",
+    "kind": "cancelled",
+    "reason": "explicit",
+    "raw_reason": 1
+  }
+]

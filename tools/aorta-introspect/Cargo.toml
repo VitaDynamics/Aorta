@@ -1,0 +1,28 @@
+[package]
+name = "aorta-introspect"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+build = "build.rs"
+publish = false
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lib]
+name = "aorta_introspect"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = "1"
+aorta_core = { path = "../../core" }
+flatbuffers = "25.12.19"
+flatbuffers-reflection = "0.1.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { workspace = true, features = ["sync", "time"] }
+uuid = { version = "1.11", features = ["v4"] }
+zenoh = { workspace = true, features = ["shared-memory", "unstable"] }
+
+[build-dependencies]
+cc = "1"

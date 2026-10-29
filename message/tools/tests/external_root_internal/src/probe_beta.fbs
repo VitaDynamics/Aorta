@@ -1,0 +1,13 @@
+// Depends on its SIBLING canonical slot (`probe_alpha.fbs`), so the canonical
+// artifact's include closure has to resolve an intra-root edge as well as the
+// cross-package one.
+include "probe_alpha.fbs";
+
+namespace aorta.fixture.probe;
+
+table ProbeBeta {
+  alpha: ProbeAlpha;
+  count: uint32;
+}
+
+root_type ProbeBeta;

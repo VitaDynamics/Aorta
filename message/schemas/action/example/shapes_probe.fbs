@@ -1,0 +1,84 @@
+// Action fixture covering structs, vectors, strings, enums, tables, unions,
+// optional scalars, required fields, and non-uniform boolean vectors.
+// It exercises owned-root cloning and typed builders in both languages.
+// Example/test only; do not consume downstream.
+
+include "schemas/shared/action_common/action_common.fbs";
+// The base schema is included directly because the generated action wrapper
+// exposes the header type while the action-common schema does not include it.
+include "schemas/system/aorta_base.fbs";
+
+namespace aorta.action.example;
+
+/// Fixed-shape point -- exercised as struct and [struct].
+struct Point {
+  x : float;
+  y : float;
+  z : float;
+}
+
+/// Quantized grade -- exercised as enum and [enum].
+enum Grade : ubyte {
+  UNKNOWN = 0,
+  LOW     = 1,
+  HIGH    = 2,
+}
+
+/// Union arm tables (must be tables, not structs).
+table Leaf {
+  id    : uint   (id: 0);
+  label : string (id: 1);
+}
+
+table Branch {
+  weight : float (id: 0);
+}
+
+/// Union with a MEMBER ALIAS (`Chosen: Leaf`): the alias drives the flatc
+/// discriminant enum/accessor name; the target drives the Msg-type lookup.
+/// The member alias deliberately differs from its target table name.
+union ShapeChoice {
+  Chosen : Leaf,
+  Branch,
+}
+
+table ShapesProbeGoal {
+  // The generated action protocol wrapper carries goal identity.
+  target : Point (id: 0);   // struct in Goal
+}
+
+table ShapesProbeFeedbackData {
+  stage     : Grade = UNKNOWN (id: 0);
+  progress  : float           (id: 1);
+  cursor    : Point           (id: 2);   // struct in feedback -> owned-root clone
+  waypoints : [Point]         (id: 3);   // [struct] in feedback -> owned-root clone
+}
+
+table ShapesProbeResult {
+  grade   : Grade = UNKNOWN (id: 0);
+  origin  : Point           (id: 1);   // struct in result -> owned-root clone
+  path    : [Point]         (id: 2);   // [struct] in result -> owned-root clone
+  note    : string          (id: 3);   // string
+  labels  : [string]        (id: 4);   // [string]
+  best    : Leaf            (id: 5);   // table
+  leaves  : [Leaf]          (id: 6);   // [table]
+  // union field: the flatc discriminator `choice_type` takes id-1 (7), so the
+  // value id jumps to 8 (id 7 is reserved for the synthesized discriminator).
+  choice  : ShapeChoice     (id: 8);   // union with member alias
+  grades  : [Grade]         (id: 9);   // [enum]
+  // Optional scalar used to exercise optional-value cloning in both languages.
+  score   : int32 = null    (id: 10);  // optional scalar -> owned-root clone
+  // Non-uniform [bool] exercises the action copy-helper path.
+  flags   : [bool]          (id: 11);  // [bool] through action copy helper
+  // One required field covers each owned-root accessor shape.
+  req_point  : Point    (id: 19, required);  // required struct
+  req_note   : string   (id: 12, required);  // required string   -> &str
+  req_best   : Leaf     (id: 13, required);  // required table    -> Leaf<'a>
+  req_scores : [int32]  (id: 14, required);  // required [scalar] -> Vector
+  req_tags   : [string] (id: 15, required);  // required [string] -> Vector
+  req_marks  : [Point]  (id: 16, required);  // required [struct] -> Vector
+  req_grades : [Grade]  (id: 17, required);  // required [enum]   -> Vector
+  req_leaves : [Leaf]   (id: 18, required);  // required [table]  -> Vector
+}
+
+root_type ShapesProbeGoal;

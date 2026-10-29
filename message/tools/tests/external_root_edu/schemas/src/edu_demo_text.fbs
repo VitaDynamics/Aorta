@@ -1,0 +1,17 @@
+// EDU external-root fixture: a plain topic message.
+//
+// NOTE the stem does NOT end in `_msg`: inside one external-root package the
+// schema alias `<stem>_cc` and the typed binding `<message base>_cc` share a
+// namespace, and `<stem>=..._msg` makes those two names collide. The macro
+// rejects that at analysis time; rename the schema or set `cpp_wrapper_name`.
+include "schemas/system/aorta_base.fbs";
+
+namespace edu.demo;
+
+table EduDemoText {
+  aorta_header: aorta.sys.AortaHeader;
+  text: string;
+  count: uint32;
+}
+
+root_type EduDemoText;

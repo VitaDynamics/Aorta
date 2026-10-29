@@ -1,0 +1,48 @@
+// Loader-path port of the OLD text-parser's
+// union-variant-ordering test (gen_message_wrapper_union_semantics_test.py's
+// `UnionVariantOrderingTest`, retired). The
+// old parser REPLAYED flatc's `EnumValBuilder` arithmetic in Python to
+// compute each variant's numeric discriminant from declaration position +
+// explicit `= N` overrides; the loader has no such replay -- it reads
+// flatc's OWN computed value directly from the compiled bfbs
+// (`schema_reflection.UnionDef.variants`, sorted by `(value, alias)`). This
+// fixture keeps a REAL regression guard for OUR sort key (a bug in
+// `_union_variants_from_enum`'s sort could silently break behavior for any
+// schema using an explicit override -- none does today, so it would
+// otherwise go unnoticed) using flatc's actual, compiled ground truth
+// instead of a hand-replayed approximation of it.
+//
+// Declaration order: A, B, C, D. Values: A=5 (explicit), B=6 (5+1,
+// implicit), C=1 (explicit), D=2 (1+1, implicit). Sorted by value: C(1),
+// D(2), A(5), B(6) -- position and value diverge once ANY variant carries
+// an explicit override, which is exactly what this fixture pins.
+namespace demo;
+
+table A {
+  a: int32 (id: 0);
+}
+
+table B {
+  a: int32 (id: 0);
+}
+
+table C {
+  a: int32 (id: 0);
+}
+
+table D {
+  a: int32 (id: 0);
+}
+
+union Picked {
+  A = 5,
+  B,
+  C = 1,
+  D,
+}
+
+table Holder {
+  payload: Picked (id: 1);
+}
+
+root_type Holder;

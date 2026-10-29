@@ -1,0 +1,9 @@
+include "schemas/release/release_leaf.fbs";
+namespace aorta.sys.custom;
+table CustomHeader { leaf:release.fixture.ReleaseLeaf; }
+namespace release.fixture.custom;
+table CustomReading { header:aorta.sys.custom.CustomHeader; }
+namespace aorta.capture.custom;
+struct CustomCommand { value:int; }
+table CustomFrame { reading:release.fixture.custom.CustomReading; leaves:[release.fixture.ReleaseLeaf]; }
+root_type CustomFrame;

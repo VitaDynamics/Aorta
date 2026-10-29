@@ -1,0 +1,48 @@
+# Probe: the external-user shape, expressed with the collapsed
+# macro. One pure-data fragment, sources in the package, ONE macro call, plus
+# the L2 metadata target the consumer's `aorta_registry` composes.
+#
+# This is the whole BUILD file a schema module or an external user writes.
+
+load("//message/tools:schema_package.bzl", "aorta_schema_package")
+load(":fragment.bzl", "PROBE_SCHEMAS")
+
+package(default_visibility = ["//visibility:public"])
+
+aorta_schema_package(
+    module_name = "aorta",
+    name = "probe_msgs",
+    api = 2,
+    fragment = ":fragment.bzl",
+    lint_dependencies = ["//message/schemas/registry/fragments:aorta_base_fragment"],
+    fragment_symbols = {":fragment.bzl": "PROBE_SCHEMAS"},
+    items = PROBE_SCHEMAS,
+    srcs = glob(
+        ["*.fbs"],
+        allow_empty = False,
+    ),
+)
+
+# The CONSUMER-root role, played here by the fixture itself because an in-repo
+# fixture has no separate root module (the same limitation review §F5 records
+# for the EDU fixture: a real R3 gate needs a standalone root). It composes
+# aorta's base fragment with this package's, which is the two-module shape a
+# schema module + aorta produce, and is what actually exercises cross-module
+# conflict detection.
+load("//message/tools:registry_compose.bzl", "aorta_registry")
+
+aorta_registry(
+    name = "composed_registry",
+    fragments = [
+        "//message/schemas/registry/fragments:aorta_base_fragment",
+        ":probe_msgs_fragment",
+    ],
+)
+
+# Real audit transport for the runfiles corruption regression test.
+filegroup(
+    name = "surface_audit",
+    testonly = True,
+    srcs = [":probe_msgs_fragment_lint_inputs"],
+    data = [":probe_msgs_fragment_lint_inputs"],
+)

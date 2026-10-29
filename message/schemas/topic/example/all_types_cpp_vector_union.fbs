@@ -1,0 +1,25 @@
+include "schemas/system/aorta_base.fbs";
+
+namespace demo;
+
+table UnionChild {
+  id:uint32 (id: 0);
+  text:string (id: 1);
+}
+
+table UnionMeta {
+  level:int32 (id: 0);
+}
+
+union UnionPayload {
+  UnionChild,
+  UnionMeta,
+}
+
+table AllTypesCppVectorUnion {
+  aorta_header:aorta.sys.AortaHeader (id: 0);
+  payload:UnionPayload (id: 2);
+  payloads:[UnionPayload] (id: 4);
+}
+
+root_type AllTypesCppVectorUnion;

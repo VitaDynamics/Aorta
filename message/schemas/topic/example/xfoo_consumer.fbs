@@ -1,0 +1,28 @@
+// Three-layer same-segment fixture. The `xfoo`
+// segment is BOTH a MIDDLE segment of the LOCAL namespace (aorta.xfoo.consumer)
+// AND a DISJOINT foreign root:
+//   - local:    aorta.xfoo.consumer      (flatc emits `pub mod aorta { pub mod
+//                                          xfoo { pub mod consumer {…} } }` --
+//                                          the local `pub mod xfoo` is at
+//                                          COLUMN 0 yet nested)
+//   - shared:   aorta.xfoo.common        (merged into the local `pub mod xfoo`)
+//   - disjoint: xfoo (CollideDisjA/B)     (needs a TRUE top-level `pub mod xfoo`)
+//
+// A shallow module-name check can confuse the nested local branch with the
+// disjoint top-level branch. Exact block matching materializes both.
+// Example/test only.
+include "schemas/system/aorta_base.fbs";
+include "schemas/shared/collide_fixtures/collide_shared.fbs";
+include "schemas/shared/collide_fixtures/collide_disjoint_a.fbs";
+include "schemas/shared/collide_fixtures/collide_disjoint_b.fbs";
+
+namespace aorta.xfoo.consumer;
+
+table XfooConsumer {
+  aorta_header : aorta.sys.AortaHeader                 (id: 0);
+  shared_phase : aorta.xfoo.common.CollideShared = UNKNOWN (id: 1);   // shared, merged into local xfoo
+  disj_a       : xfoo.CollideDisjA = UNKNOWN           (id: 2);       // disjoint root xfoo == local middle seg
+  disj_b       : xfoo.CollideDisjB = UNKNOWN           (id: 3);       // disjoint root xfoo, provider 2
+}
+
+root_type XfooConsumer;

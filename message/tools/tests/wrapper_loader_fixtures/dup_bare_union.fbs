@@ -1,0 +1,33 @@
+// Loader-path port of
+// gen_message_wrapper_union_semantics_test.py's (retired)
+// CrossNamespaceCollisionTest -- the same BARE union name in two namespaces
+// must hard-error via `_loaded_named_defs` (the shared helper behind
+// `collect_union_defs_from_loaded`/`collect_enum_bases_from_loaded`/
+// `collect_struct_names_from_loaded`), matching `collect_table_defs_from_
+// loaded`'s own policy (see dup_bare_name.fbs, the table analog of this
+// fixture). Mid-file namespace change, no includes needed -- same pattern.
+namespace one;
+
+table LeafOne {
+  a: int32 (id: 0);
+}
+
+union Clash {
+  LeafOne,
+}
+
+namespace two;
+
+table LeafTwo {
+  b: int32 (id: 0);
+}
+
+union Clash {
+  LeafTwo,
+}
+
+table Holder {
+  c: one.Clash (id: 1);
+}
+
+root_type Holder;

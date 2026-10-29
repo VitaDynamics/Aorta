@@ -1,0 +1,7 @@
+include "schemas/shared/action_common/action_common.fbs";
+include "schemas/system/aorta_base.fbs";
+namespace review.action;
+table MoveGoal { value:int; }
+table MoveResult { value:int; }
+table MoveFeedbackData { value:int; }
+root_type MoveGoal;

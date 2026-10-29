@@ -1,0 +1,30 @@
+[
+ {
+  "scenario": "serial_late_completion_degradation",
+  "seq": 0,
+  "op": "call",
+  "event": "lifecycle",
+  "phase": "call_parked_serverside_held"
+ },
+ {
+  "scenario": "serial_late_completion_degradation",
+  "seq": 1,
+  "op": "scope.close",
+  "event": "lifecycle",
+  "phase": "runtime_destroyed"
+ },
+ {
+  "scenario": "serial_late_completion_degradation",
+  "seq": 2,
+  "op": "call",
+  "event": "lifecycle",
+  "phase": "late_delivery_stamped_cancel_reply_landed"
+ },
+ {
+  "scenario": "serial_late_completion_degradation",
+  "seq": 3,
+  "op": "task.take_outcome",
+  "event": "lifecycle",
+  "phase": "frame_completed"
+ }
+]

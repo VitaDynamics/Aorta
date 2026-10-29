@@ -1,0 +1,164 @@
+load("@aorta_crates//:defs.bzl", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_test")
+load("//tools/aorta-introspect:rust_link_flags.bzl", "aorta_introspect_linux_rustc_flags")
+
+# `@flatbuffers//:flatbuffers` was previously listed here even though
+# `tools/aorta-cli/Cargo.toml` has no `flatbuffers` dep — `aorta_cli`
+# does not call `flatbuffers::` directly, only via `aorta_core` /
+# `aorta_introspect` re-exports. Dropped from the explicit list and
+# relying on those transitive deps.
+rust_binary(
+    name = "aorta",
+    srcs = glob(["src/**/*.rs"]),
+    crate_name = "aorta_cli",
+    edition = "2021",
+    rustc_env = {
+        "AORTA_RELEASE_VERSION": "{BUILD_EMBED_LABEL}",
+        "STABLE_GIT_COMMIT": "{STABLE_GIT_COMMIT}",
+    },
+    rustc_flags = aorta_introspect_linux_rustc_flags(),
+    stamp = -1,
+    deps = all_crate_deps(normal = True) + [
+        "//core:aorta_core",
+        "//tools/aorta-introspect:aorta_introspect",
+        "//tools/aorta-introspect:aorta_introspect_ffi",
+        "//tools/aorta-play:aorta_play",
+        "//tools/aorta-record:aorta_record",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+rust_binary(
+    name = "aorta-fault-injection",
+    srcs = glob(["src/**/*.rs"]),
+    crate_name = "aorta_cli_fault_injection",
+    edition = "2021",
+    rustc_flags = aorta_introspect_linux_rustc_flags(),
+    testonly = True,
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(normal = True) + [
+        "//core:aorta_core",
+        "//tools/aorta-introspect:aorta_introspect",
+        "//tools/aorta-introspect:aorta_introspect_ffi",
+        "//tools/aorta-play:aorta_play_fault_injection",
+        "//tools/aorta-record:aorta_record",
+    ],
+)
+
+rust_test(
+    name = "aorta_cli_test",
+    srcs = glob(["src/**/*.rs"]),
+    crate_root = "src/main.rs",
+    crate_name = "aorta_cli_test",
+    edition = "2021",
+    rustc_flags = aorta_introspect_linux_rustc_flags(),
+    deps = all_crate_deps(normal = True) + [
+        "//core:aorta_core",
+        "//tools/aorta-introspect:aorta_introspect",
+        "//tools/aorta-introspect:aorta_introspect_ffi",
+        "//tools/aorta-play:aorta_play",
+        "//tools/aorta-record:aorta_record",
+    ],
+)
+
+sh_test(
+    name = "aorta_version_test",
+    srcs = ["tests/version_test.sh"],
+    args = ["--bin=$(location :aorta)"],
+    data = [":aorta"],
+)
+
+sh_test(
+    name = "aorta_cli_smoke_test",
+    srcs = ["tests/cli_e2e.sh"],
+    args = [
+        "--aorta-bin=$(location :aorta)",
+        "--talker-bin=$(location //rust/examples:cli_talker)",
+        "--server-bin=$(location //rust/examples:cli_echo_server)",
+        "--action-server-bin=$(location //rust/examples:cli_execute_task_server)",
+        "--profile=quick",
+    ],
+    data = [
+        ":aorta",
+        "//rust/examples:cli_echo_server",
+        "//rust/examples:cli_execute_task_server",
+        "//rust/examples:cli_talker",
+    ],
+    tags = [
+        "manual",
+        "no-sandbox",
+    ],
+    timeout = "moderate",
+)
+
+sh_test(
+    name = "aorta_cli_regression_test",
+    srcs = ["tests/cli_e2e.sh"],
+    args = [
+        "--aorta-bin=$(location :aorta)",
+        "--talker-bin=$(location //rust/examples:cli_talker)",
+        "--server-bin=$(location //rust/examples:cli_echo_server)",
+        "--action-server-bin=$(location //rust/examples:cli_execute_task_server)",
+        "--profile=full",
+    ],
+    data = [
+        ":aorta",
+        "//rust/examples:cli_echo_server",
+        "//rust/examples:cli_execute_task_server",
+        "//rust/examples:cli_talker",
+    ],
+    tags = [
+        "manual",
+        "no-sandbox",
+    ],
+    timeout = "long",
+)
+
+sh_test(
+    name = "aorta_cli_ctx_smoke_test",
+    srcs = ["tests/cli_ctx_e2e.sh"],
+    args = [
+        "--aorta-bin=$(location :aorta)",
+        "--owner-bin=$(location //rust/examples:cli_ctx_owner)",
+        "--profile=quick",
+    ],
+    data = [
+        ":aorta",
+        "//rust/examples:cli_ctx_owner",
+    ],
+    tags = [
+        "manual",
+        "no-sandbox",
+    ],
+    timeout = "moderate",
+)
+
+sh_test(
+    name = "aorta_cli_ctx_regression_test",
+    srcs = ["tests/cli_ctx_e2e.sh"],
+    args = [
+        "--aorta-bin=$(location :aorta)",
+        "--owner-bin=$(location //rust/examples:cli_ctx_owner)",
+        "--profile=full",
+    ],
+    data = [
+        ":aorta",
+        "//rust/examples:cli_ctx_owner",
+    ],
+    tags = [
+        "manual",
+        "no-sandbox",
+    ],
+    timeout = "moderate",
+)
+
+# Expose `Cargo.toml` to Bazel so `crate.from_cargo(manifests=[...])`
+# (MODULE.bazel) can read this workspace member when resolving
+# `workspace = true` zenoh inheritance.
+exports_files(["Cargo.toml"])
+
+filegroup(
+    name = "license_workspace_sources",
+    srcs = glob(["**/*"]),
+    visibility = ["//tools/release:__pkg__"],
+)

@@ -1,0 +1,19 @@
+// Foreign enum, struct, and table in a deep
+// (multi-segment) namespace, referenced same-namespace by deepshadow_consumer in
+// every field shape flatc emits (direct / vector / fixed-array). At depth > 1 the
+// dep's single-level namespace re-export cannot resolve the bare names via the
+// glob, so each reference MUST be rewritten to its absolute crate path — which
+// requires the rewrite to cover comma-preceded (`Vector<'a, T>`, `Array<'a, T,
+// N>`), single-colon (`field: T`) and bracket (`&[T; N]`) type positions, not
+// just `<` / `&` / `->`. Example/test only; do NOT consume downstream.
+namespace aorta.shadowdeep.common;
+
+enum ShadowEnum : byte { NONE = 0, ON = 1 }
+
+struct ShadowStruct {
+  x : int;
+}
+
+table ShadowTable {
+  v : int (id: 0);
+}

@@ -1,0 +1,112 @@
+// Aorta tracing — canonical on-disk/on-wire CHUNK.
+//
+// This is the single source of truth for the compact trace record format
+// written by Aorta's tracing pipeline. Like the
+// `telemetry_*.fbs` families, it is intentionally NOT registered in
+// `message/schemas/registry.bzl`: the Rust bindings are produced by
+// `core/build.rs` (Cargo) and committed as `core/src/trace/chunk_generated.rs`
+// (the off-device `tools/aorta-trace2perfetto` consumes the same committed
+// binding). The build script regenerates into OUT_DIR and a drift test asserts
+// the committed copy is in sync. Generate the committed copy with the
+// version-matched flatc (the Bazel-pinned `//message:flatc`, kept in lockstep
+// with the `flatbuffers` crate) — NOT a newer system flatc.
+//
+// Design invariants:
+//   * `Record` is a FIXED struct (memcpy-class: no varint, no optional, no
+//     vtable). Compression is done by zstd over the whole chunk, measured on
+//     this fixed layout (about 5.4x), NOT by per-field encoding.
+//   * Each chunk is the interning RESET boundary -> independently decodable
+//     under lossy transport (a dropped chunk never orphans another's records).
+//   * `span_id`/`parent_span_id` are authoritative identity; the `*_iid` and
+//     `*_index` u16s are chunk-local compression ALIASES only.
+
+namespace aorta.trace;
+
+// One interned OS thread (chunk-local table entry). Cross-chunk / merge thread
+// identity is `(Chunk.pid, ThreadEntry.os_tid)` -> exactly one Perfetto thread
+// track. `Record.thread_iid` indexes this vector (per-chunk alias only).
+table ThreadEntry {
+  os_tid: uint32;
+  name: string;
+}
+
+// Fixed, memcpy-class span/event record. A FlatBuffers STRUCT: inline,
+// fixed-width, no vtable. Field order groups 8-byte fields first so the struct
+// packs without interior padding (72 bytes).
+//
+// `Record.event_type` is one of the five Perfetto TrackEvent primitives encoded
+// as a u8 (see core::trace::ChunkEventType): 0=SLICE_BEGIN, 1=SLICE_END,
+// 2=INSTANT, 3=COUNTER, 4=FLOW.
+struct Record {
+  // 128-bit trace id, inline per record; zstd window-dedups the repetition.
+  // (Storing it inline — rather than once per chunk — keeps multi-trace chunks
+  // valid and avoids a table-loss failure mode.)
+  trace_id: [uint8:16];
+  // Authoritative identity. For a FLOW record these are the two
+  // endpoints (this end / peer end).
+  span_id: uint64;
+  parent_span_id: uint64;
+  // (Chunk.mono_epoch_ns + delta_ns) = the event's monotonic timestamp, mapped
+  // to Perfetto ns by the converter.
+  delta_ns: uint64;
+  // CPU-time-within-span (Perfetto thread_dur / Chrome tdur); 0 = not captured
+  // (env-gated by AORTA_TRACE_THREAD_TIME — the thread-CPU clock is a syscall).
+  thread_delta_ns: uint64;
+  // COUNTER sample (0 for non-counter records).
+  value: uint64;
+  // Chunk-local interning aliases (NOT authoritative identity).
+  scope_iid: uint16;
+  event_iid: uint16;
+  thread_iid: uint16;
+  span_index: uint16;
+  parent_index: uint16;
+  // LogLevel value 0..=4 (Trace..Error); the tier filter maps onto this.
+  level: uint8;
+  // ChunkEventType (see above).
+  event_type: uint8;
+  // flags.bit0 = async (span_id-keyed track, begin/end may cross threads);
+  // flags.bit1 = FLOW direction (out vs in). Other bits reserved (0).
+  flags: uint8;
+}
+
+// A batch of records with self-contained provenance + interning tables.
+table Chunk {
+  // Forward-compat: decoders reject unknown major versions and skip
+  // unknown feature_flags bits gracefully.
+  format_version: uint16;
+  feature_flags: uint32;
+
+  // Provenance — lets a time window / process be retrieved without decoding
+  // (the filename also encodes node/process/pid/wall_ts/seq).
+  node_id: string;
+  run_id: string;
+  pid: uint32;
+  process_name: string;
+
+  // Clock domain + the chunk's monotonic epoch and the wall-clock (realtime)
+  // instant that epoch maps to — the per-chunk affine anchor for offline
+  // cross-host alignment (MONOTONIC orders within host; REALTIME joins hosts).
+  host_clock_domain_id: uint32;
+  mono_epoch_ns: uint64;
+  wall_start_realtime_ns: uint64;
+
+  // Per-process chunk sequence number (also in the filename).
+  seq: uint64;
+  // Records dropped (ring full) on the producing threads before this chunk was
+  // built — surfaced for visibility, never silently hidden.
+  dropped: uint64;
+
+  // Interning tables (chunk-local; the reset boundary). Indexed by the matching
+  // `Record.*_iid`.
+  scopes: [string];   // scope_iid  -> scope name
+  events: [string];   // event_iid  -> event name
+  levels: [string];   // level      -> label (optional; for human export)
+  threads: [ThreadEntry]; // thread_iid -> (os_tid, name)
+
+  // The records. A vector of fixed structs (inline, contiguous).
+  records: [Record];
+}
+
+root_type Chunk;
+file_identifier "ATRC";
+file_extension "chunk";

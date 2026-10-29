@@ -1,0 +1,17 @@
+// Probe: the STEADY-STATE shape a schema module / external user writes.
+//
+// Sources sit directly in the package (no `src/` prefix): with the copy step
+// gone the source IS the canonical slot, so the prefix that existed only to
+// keep source and copy apart is not needed. The include is repository-agnostic,
+// as every FlatBuffers include is.
+include "schemas/system/aorta_base.fbs";
+
+namespace probe.demo;
+
+table ProbeReading {
+  aorta_header: aorta.sys.AortaHeader;
+  label: string;
+  value: double;
+}
+
+root_type ProbeReading;

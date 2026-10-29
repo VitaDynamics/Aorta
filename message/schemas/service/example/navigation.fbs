@@ -1,0 +1,123 @@
+// Navigation Service Definitions
+// 
+// This schema defines service request/response pairs for navigation services.
+// Demonstrates RPC service patterns with schema discovery support.
+
+include "schemas/system/aorta_base.fbs";
+include "schemas/shared/service_common/status.fbs";
+
+namespace aorta.services.navigation;
+
+// ============================================================================
+// GetPlan Service - Compute navigation path
+// ============================================================================
+
+/// Request for path planning from start to goal
+table GetPlanRequest {
+  /// Aorta header for tracing and correlation
+  aorta_header: aorta.sys.AortaHeader;
+  
+  /// Start position (x, y, z in meters)
+  start_x: float;
+  start_y: float;
+  start_z: float = 0.0;
+  
+  /// Goal position (x, y, z in meters)
+  goal_x: float;
+  goal_y: float;
+  goal_z: float = 0.0;
+  
+  /// Planning algorithm hint: "a_star", "dijkstra", "rrt", "auto"
+  algorithm: string;
+  
+  /// Maximum planning time in milliseconds (0 = no limit)
+  timeout_ms: uint = 5000;
+  
+  /// Tolerance for goal reaching in meters
+  goal_tolerance: float = 0.1;
+}
+
+/// Response containing computed path
+table GetPlanResponse {
+  /// Aorta header (echo request header for correlation)
+  aorta_header: aorta.sys.AortaHeader;
+  
+  /// Status of planning
+  status: aorta.services.common.ServiceStatus;
+  
+  /// Planned waypoints (x, y, z triplets)
+  waypoints: [float];
+  
+  /// Number of waypoints (= waypoints.length / 3)
+  waypoint_count: uint;
+  
+  /// Total path length in meters
+  path_length: float;
+  
+  /// Planning computation time in milliseconds
+  computation_time_ms: uint;
+  
+  /// Error message if status != SUCCESS
+  error_message: string;
+}
+
+// ============================================================================
+// CancelPlan Service - Cancel ongoing navigation
+// ============================================================================
+
+table CancelPlanRequest {
+  aorta_header: aorta.sys.AortaHeader;
+  
+  /// Plan ID to cancel (empty = cancel current plan)
+  plan_id: string;
+  
+  /// Force stop even if plan is executing
+  force: bool = false;
+}
+
+table CancelPlanResponse {
+  aorta_header: aorta.sys.AortaHeader;
+  status: aorta.services.common.ServiceStatus;
+  
+  /// Whether the plan was successfully cancelled
+  cancelled: bool;
+  
+  /// Reason for cancellation failure (if any)
+  error_message: string;
+}
+
+// ============================================================================
+// GetCurrentPose Service - Query robot current position
+// ============================================================================
+
+table GetCurrentPoseRequest {
+  aorta_header: aorta.sys.AortaHeader;
+  
+  /// Frame ID for pose (e.g., "map", "odom", "base_link")
+  frame_id: string;
+}
+
+table GetCurrentPoseResponse {
+  aorta_header: aorta.sys.AortaHeader;
+  status: aorta.services.common.ServiceStatus;
+  
+  /// Current position (x, y, z)
+  position_x: float;
+  position_y: float;
+  position_z: float;
+  
+  /// Current orientation (quaternion: x, y, z, w)
+  orientation_x: float;
+  orientation_y: float;
+  orientation_z: float;
+  orientation_w: float = 1.0;
+  
+  /// Pose timestamp in nanoseconds
+  timestamp_ns: ulong;
+  
+  /// Frame ID of the pose
+  frame_id: string;
+}
+
+// Mark root type for FlatBuffers compiler
+root_type GetPlanRequest;

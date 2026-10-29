@@ -1,0 +1,404 @@
+module(
+    name = "aorta",
+    version = "0.1.0",
+)
+
+bazel_dep(name = "flatbuffers", version = "25.12.19")
+bazel_dep(name = "hedron_compile_commands", version = "0.0.0-0e990032f3c5")
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "rules_cc", version = "0.2.8")
+bazel_dep(name = "rules_foreign_cc", version = "0.10.1")
+bazel_dep(name = "rules_python", version = "1.0.0")
+bazel_dep(name = "rules_rust", version = "0.68.1")
+
+# Test-only, dev dependency: an EMPTY in-tree module that the schema
+# composition regression driver (message/tools/tests/schema_decoupling_cases_test.py)
+# overrides per case with `--override_module=aorta_schema_module_fixture=<case dir>`
+# to exercise the cross-module schema gates. Bazel only accepts a command-line
+# override for a module the root declares, and the root no longer declares any
+# schema module of its own, so this neutral name is what the driver overrides.
+# Consumers never see it: dev dependencies of a non-root module are ignored.
+# See the fixture's MODULE.bazel for the full rationale.
+bazel_dep(
+    name = "aorta_schema_module_fixture",
+    version = "0.0.0",
+    dev_dependency = True,
+)
+
+local_path_override(
+    module_name = "aorta_schema_module_fixture",
+    path = "message/tools/tests/schema_module_fixture",
+)
+
+# Test installer for hermetic interpreters that omit ensurepip.
+http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+http_file(
+    name = "wheel_test_pip",
+    dev_dependency = True,
+    urls = ["https://files.pythonhosted.org/packages/29/a2/d40fb2460e883eca5199c62cfc2463fd261f760556ae6290f88488c362c0/pip-25.1.1-py3-none-any.whl"],
+    sha256 = "2913a38a2abf4ea6b64ab507bd9e967f3b53dc1ede74b01b0931e1ce548751af",
+    downloaded_file_path = "pip-25.1.1-py3-none-any.whl",
+)
+
+archive_override(
+    module_name = "flatbuffers",
+    integrity = "sha256-+BwxYrEEb+i4S5oNvdOD4k/bz4hYO5y2Ao+Q0E2QaWo=",
+    strip_prefix = "flatbuffers-25.12.19",
+    urls = ["https://github.com/google/flatbuffers/archive/refs/tags/v25.12.19.tar.gz"],
+)
+
+git_override(
+    module_name = "hedron_compile_commands",
+    commit = "4f28899228fb3ad0126897876f147ca15026151e",
+    remote = "https://github.com/hedronvision/bazel-compile-commands-extractor",
+)
+
+single_version_override(
+    module_name = "rules_rust",
+    version = "0.68.1",
+    patch_strip = 1,
+    patches = ["//patches:rules_rust_linux_static_link.patch"],
+)
+
+# Root-only Linux cross analysis and compilation; consumers select their own toolchains.
+bazel_dep(name = "toolchains_llvm", version = "1.3.0", dev_dependency = True)
+sysroot_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+sysroot_archive(
+    name = "linux_aarch64_sysroot",
+    dev_dependency = True,
+    urls = ["https://commondatastorage.googleapis.com/chrome-linux-sysroot/278c36fe3a785d7f89fbe3f46956899a3bd49fe665f68dc667d6f626a951fcd6"],
+    sha256 = "278c36fe3a785d7f89fbe3f46956899a3bd49fe665f68dc667d6f626a951fcd6",
+    type = "tar.xz",
+    build_file_content = "filegroup(name = 'sysroot', srcs = glob(['usr/include/**', 'usr/lib/aarch64-linux-gnu/**', 'usr/lib/gcc/**', 'lib/aarch64-linux-gnu/**', 'lib/ld-linux-aarch64.so.1']), visibility = ['//visibility:public'])",
+)
+linux_cross = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm", dev_dependency = True)
+linux_cross.toolchain(
+    name = "linux_cross",
+    llvm_version = "17.0.6",
+    exec_os = "linux",
+    exec_arch = "amd64",
+    urls = {"": ["https://github.com/llvm/llvm-project/releases/download/llvmorg-17.0.6/clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04.tar.xz"]},
+    sha256 = {"": "884ee67d647d77e58740c1e645649e29ae9e8a6fe87c1376be0f3a30f3cc9ab3"},
+    strip_prefix = {"": "clang+llvm-17.0.6-x86_64-linux-gnu-ubuntu-22.04"},
+    stdlib = {"linux-aarch64": "dynamic-stdc++"},
+)
+linux_cross.sysroot(
+    name = "linux_cross",
+    label = "@linux_aarch64_sysroot//:sysroot",
+    targets = ["linux-aarch64"],
+)
+use_repo(linux_cross, "linux_cross")
+register_toolchains("@linux_cross//:cc-toolchain-aarch64-linux", dev_dependency = True)
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    ignore_root_user_error = True,
+    is_default = True,
+    python_version = "3.10",
+)
+
+# 3.11-3.13 exist ONLY so the `aorta_py_deps` pip hub below can be parsed for
+# each version an external consumer's ROOT module may default to. Bzlmod
+# ignores a non-root module's `is_default` — when aorta is consumed as a
+# dependency, the consumer's (or rules_python's own) default interpreter wins,
+# and a hub parsed for 3.10 alone hard-fails analysis for any target whose
+# codegen tool needs the pip `flatbuffers` runtime (gen_message_wrapper →
+# reflection_py_lib). 3.13 is the ceiling rules_python 1.0.0 ships an
+# interpreter for (the Python SDK's own 3.14 CI lane runs outside Bazel);
+# consumers on newer interpreters need a rules_python upgrade here first.
+# In-repo builds keep the 3.10 default above.
+python.toolchain(
+    ignore_root_user_error = True,
+    python_version = "3.11",
+)
+python.toolchain(
+    ignore_root_user_error = True,
+    python_version = "3.12",
+)
+python.toolchain(
+    ignore_root_user_error = True,
+    python_version = "3.13",
+)
+use_repo(python, "python_3_10", "python_3_10_x86_64-unknown-linux-gnu")
+
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rust.toolchain(
+    edition = "2021",
+    extra_rustc_flags_triples = {
+        "aarch64-unknown-linux-gnu": [
+            "-C",
+            "link-arg=-fuse-ld=bfd",
+        ],
+        "x86_64-unknown-linux-gnu": [
+            "-C",
+            "link-arg=-fuse-ld=bfd",
+        ],
+    },
+    # Regenerate from https://static.rust-lang.org/dist/<key>.sha256 sidecars.
+    sha256s = {
+        "2025-04-03/rustc-nightly-aarch64-apple-darwin.tar.xz": "6538a7232af263e84a4aac73d6858b6e9b44478bd48f16b1c53c027ab0278ad1",
+        "2025-04-03/rustc-nightly-aarch64-pc-windows-msvc.tar.xz": "64cc53f35e9bb43ca6cf48e7d78a83c7e68a403a8652fd6293121e44c05d388c",
+        "2025-04-03/rustc-nightly-aarch64-unknown-linux-gnu.tar.xz": "9dfc8463a28398cb1b440d465493865d097c0d5406d354423ce26c413214526f",
+        "2025-04-03/rustc-nightly-powerpc64le-unknown-linux-gnu.tar.xz": "83ee456e595bb872786e871c1e8e01477ff269e5401a90e3253acf7c0c927ef0",
+        "2025-04-03/rustc-nightly-s390x-unknown-linux-gnu.tar.xz": "bda1171a68be66b243746040b6176a505ad5efb518607510e682dad579f51955",
+        "2025-04-03/rustc-nightly-x86_64-apple-darwin.tar.xz": "162bd67d8f1d09633140ac6323ba3969fee0fa868b76c0b5775923938d6f1268",
+        "2025-04-03/rustc-nightly-x86_64-pc-windows-msvc.tar.xz": "ee85752360c78a7cfca39b6edaacc25f09c7e9913bfb54504c47e35976926db2",
+        "2025-04-03/rustc-nightly-x86_64-unknown-freebsd.tar.xz": "9cae9996319a33e4ac7775c99f8e21c1a96d675f1ccc19cf35174c94ac832a1e",
+        "2025-04-03/rustc-nightly-x86_64-unknown-linux-gnu.tar.xz": "2418663236236373c3d278e6e602ef5ad3158b9cebd5c1095f7916dbd9c9b891",
+        "2025-04-03/rustfmt-nightly-aarch64-apple-darwin.tar.xz": "52e7e729422369382a32a29ab3b208dfe79027d83416e136c100ab31bed74caf",
+        "2025-04-03/rustfmt-nightly-aarch64-pc-windows-msvc.tar.xz": "a232e85173cd101a0a80c585b7d5103029d49c0660d69cc6e1523755a434f720",
+        "2025-04-03/rustfmt-nightly-aarch64-unknown-linux-gnu.tar.xz": "55b3ee709b85c5db6da17030b6a14dcac268dea535c8b02995246874f25effa7",
+        "2025-04-03/rustfmt-nightly-powerpc64le-unknown-linux-gnu.tar.xz": "e3e626adce891fcdf84db06a104d269e3b31dfa2aab7e32fd7597bb2fba63584",
+        "2025-04-03/rustfmt-nightly-s390x-unknown-linux-gnu.tar.xz": "f299499510bb4bf9ddd65ea0e6cdf381ce753cf349e31194dab1d5535685cef8",
+        "2025-04-03/rustfmt-nightly-x86_64-apple-darwin.tar.xz": "fc2e83751acbf05bd4f650caab56c42b57a898793b42a22e52e942d35f951b24",
+        "2025-04-03/rustfmt-nightly-x86_64-pc-windows-msvc.tar.xz": "edf2707232003157221cca36a3a234fe399990d5dd187a1681903801f11d7330",
+        "2025-04-03/rustfmt-nightly-x86_64-unknown-freebsd.tar.xz": "892418e0f3b2e0496572d0155d935988390a5d07d4f1fe225f66c4061ee02b0e",
+        "2025-04-03/rustfmt-nightly-x86_64-unknown-linux-gnu.tar.xz": "f8876b429b1ad9dfd5ece1e47947b39b20a0ecc56b1c76a614c4af5797152d86",
+        "cargo-1.92.0-aarch64-apple-darwin.tar.xz": "bce6e7def37240c5a63115828017a9fc0ebcb31e64115382f5943b62b71aa34a",
+        "cargo-1.92.0-aarch64-pc-windows-msvc.tar.xz": "3fc47cc29781190c5075f807836c4b98d411aaf27c59598fbfb2aa781ccf6190",
+        "cargo-1.92.0-aarch64-unknown-linux-gnu.tar.xz": "cb2ce6be6411b986e25c71ad8a813f9dfbe3461738136fd684e3644f8dd75df4",
+        "cargo-1.92.0-powerpc64le-unknown-linux-gnu.tar.xz": "49dd01f5d10e3f368181223db0fbf7dc191161f7d80a295de4909bf87e53da58",
+        "cargo-1.92.0-s390x-unknown-linux-gnu.tar.xz": "a290edf359a5632dfda3b2325a309d9edeb58c97de97e3cc67274335b58adf05",
+        "cargo-1.92.0-x86_64-apple-darwin.tar.xz": "b033a7c33aba8af947c9d0ab2785f9696347cded228ffe731897f1c627466262",
+        "cargo-1.92.0-x86_64-pc-windows-msvc.tar.xz": "f4057534ec58708ed3554957582a6c8e8c6abfee011b5c8ad45c3ab27c0b3076",
+        "cargo-1.92.0-x86_64-unknown-freebsd.tar.xz": "7bf1853c6ac4b426d7b4b67ee4ecf60f4a3e83151147a13b4cf04f81ccff3c4b",
+        "cargo-1.92.0-x86_64-unknown-linux-gnu.tar.xz": "e5e12be2c7126a7036c8adf573078a28b92611f5767cc9bd0a6f7c83081df103",
+        "clippy-1.92.0-aarch64-apple-darwin.tar.xz": "08c65b6cf8faae3861706f8c97acf2aa6b784ed9455354c3b13495a7cfe5cb84",
+        "clippy-1.92.0-aarch64-pc-windows-msvc.tar.xz": "2aa2f1288072ea1f870d6d860d09f5911c1305d506f344b65cf5e27b5070e262",
+        "clippy-1.92.0-aarch64-unknown-linux-gnu.tar.xz": "333ab38c673b589468b8293b525e5704fb52515d9d516ee28d3d34dd5a63d3c3",
+        "clippy-1.92.0-powerpc64le-unknown-linux-gnu.tar.xz": "873047278043e6506f5c98b8f633a9b96dc49ff83869a86a151fe5b1b9455044",
+        "clippy-1.92.0-s390x-unknown-linux-gnu.tar.xz": "41aa44f1cf37cac87b83e450eb19148c539ff266bb40dc146207ad5b9e1e1acc",
+        "clippy-1.92.0-x86_64-apple-darwin.tar.xz": "39cce87aab3d8b71350edcb3f943fba7bc59581ce1e65e158ee01e64cf0f1cf5",
+        "clippy-1.92.0-x86_64-pc-windows-msvc.tar.xz": "51a9a67931a3e50eb0c26b4c6a7ec2ef6ddd633319343a2d4767710c1e33b21f",
+        "clippy-1.92.0-x86_64-unknown-freebsd.tar.xz": "73d799e51800ebe4af40395c63c46ec60fc51b7b5f56467b550d5a29f213075a",
+        "clippy-1.92.0-x86_64-unknown-linux-gnu.tar.xz": "2c1bf6e7da8ec50feba03fe188fc9a744ba59e2c6ece7970c13e201d08defa9a",
+        "llvm-tools-1.92.0-aarch64-apple-darwin.tar.xz": "9977d653781c4698383d90d22515721a46c1b7f87bca02c16062af9653ea0928",
+        "llvm-tools-1.92.0-aarch64-pc-windows-msvc.tar.xz": "28d1cb3559d13e1364111879b34a4daf56e8b1bdf6a798708cc9753b2b56713d",
+        "llvm-tools-1.92.0-aarch64-unknown-linux-gnu.tar.xz": "28ef9fd34fbb744da32b680228e60f1f7a89db97ca5e0f45f798e2d24cda1077",
+        "llvm-tools-1.92.0-powerpc64le-unknown-linux-gnu.tar.xz": "76b47abe4e7944d98ab0362cfe98f04f5b845a312418ae731ac9e41d055703af",
+        "llvm-tools-1.92.0-s390x-unknown-linux-gnu.tar.xz": "16ff6c3d3f55ab050466e84d51f6939cbadcf52c583ccb386dd79100835d4826",
+        "llvm-tools-1.92.0-x86_64-apple-darwin.tar.xz": "7e001169978c93e1ced65b16ef6866df275a09083bf57326957e1592eb18cc18",
+        "llvm-tools-1.92.0-x86_64-pc-windows-msvc.tar.xz": "5a23a441ae29f023cf989fefe972bf1eafd6d7ef68b3ad8495aeee397ee330ef",
+        "llvm-tools-1.92.0-x86_64-unknown-freebsd.tar.xz": "e1f3906940a2ada4a2418a1110a314b65f27209b106445f882d324a003e9adb2",
+        "llvm-tools-1.92.0-x86_64-unknown-linux-gnu.tar.xz": "0e7ecc3cd9e0d1ab690954e2a623f7e5e9c55aca7d9853c712d6d84cc490f1dd",
+        "rust-analyzer-1.92.0-aarch64-apple-darwin.tar.xz": "e2ec83302123119bbe04ed367fbb5d6d3575555faf7870f7b241f5bdeef3e6ed",
+        "rust-analyzer-1.92.0-aarch64-pc-windows-msvc.tar.xz": "fc645b480731828254c7691599c9d092032bfb5a728839cb3f2d52e7cce7fcd2",
+        "rust-analyzer-1.92.0-aarch64-unknown-linux-gnu.tar.xz": "f18c06dab73f5cffab6b7c58a51c3bcbbcc962b08d4a56974e958cac229eb0cd",
+        "rust-analyzer-1.92.0-powerpc64le-unknown-linux-gnu.tar.xz": "e4121755fbe8a5badc4a42a81b5e82dcc7ec67ab9f8d0596e815520a7097d571",
+        "rust-analyzer-1.92.0-s390x-unknown-linux-gnu.tar.xz": "d7ac225eff1437f606beeb9665bf01157fb50c80133f17f40cee78492625a762",
+        "rust-analyzer-1.92.0-x86_64-apple-darwin.tar.xz": "a0a9ef444c3223f0b55ef1ec54945b109c7e7ea7cb8d3f0696290aa2ac51507e",
+        "rust-analyzer-1.92.0-x86_64-pc-windows-msvc.tar.xz": "edcac488265c48737bf615481970e0a0b07fa98380f49d6322f6d53327a1b51a",
+        "rust-analyzer-1.92.0-x86_64-unknown-freebsd.tar.xz": "ebdbef53fb648982eb3835e11a9936aa751d9decaabedaaa2809a8c512e5c77d",
+        "rust-analyzer-1.92.0-x86_64-unknown-linux-gnu.tar.xz": "1b1dec1ca75c027968646a7524b2ebad070116df5fb625f8802deabe9c0b0b5a",
+        "rust-src-1.92.0.tar.xz": "333d45eeb76f210966dc5c1440b535dea5876ed0162f9286273c85e7a1e3cb29",
+        "rust-std-1.92.0-aarch64-apple-darwin.tar.xz": "ea619984fcb8e24b05dbd568d599b8e10d904435ab458dfba6469e03e0fd69aa",
+        "rust-std-1.92.0-aarch64-pc-windows-msvc.tar.xz": "b20c5c696af4ecfb683370ca0ee3c76ab8726fe6470ce9f1368d41a5b06ea065",
+        "rust-std-1.92.0-aarch64-unknown-linux-gnu.tar.xz": "ce2ab42c09d633b0a8b4b65a297c700ae0fad47aae890f75894782f95be7e36d",
+        "rust-std-1.92.0-powerpc64le-unknown-linux-gnu.tar.xz": "eba59766c2d9805c0a1fc82fd723acbb36569e1bec1088c037bba84d965f70ba",
+        "rust-std-1.92.0-s390x-unknown-linux-gnu.tar.xz": "ebf944dc95015498d322504a54e4f9cdb28590f7790aa3a9eb86d6cf4b6c93ff",
+        "rust-std-1.92.0-wasm32-unknown-unknown.tar.xz": "6c73f053ccd6adc886f802270ba960fd854e5e1111e4b5cfb875f1fdcfc0eb60",
+        "rust-std-1.92.0-wasm32-wasip1.tar.xz": "8107dc35f0b6b744d998e766351419b4e0d27cddd6456c461337753a25f29fcd",
+        "rust-std-1.92.0-wasm32-wasip2.tar.xz": "e69ce601b6b24eea08b0d9e1fb0d9bf2a4188b3109353b272be4d995f687c943",
+        "rust-std-1.92.0-x86_64-apple-darwin.tar.xz": "6ce143bf9e83c71e200f4180e8774ab22c8c8c2351c88484b13ff13be82c8d57",
+        "rust-std-1.92.0-x86_64-pc-windows-msvc.tar.xz": "b4e53a9c9b96a1a0618364791b7728a1c8978101ec6d1ee78fe930e1ef061994",
+        "rust-std-1.92.0-x86_64-unknown-freebsd.tar.xz": "151929a4255175d14b2cbcb69ef46d9217add23be268b9cd1446f8eab16616f2",
+        "rust-std-1.92.0-x86_64-unknown-linux-gnu.tar.xz": "5f106805ed86ebf8df287039e53a45cf974391ef4d088c2760776b05b8e48b5d",
+        "rustc-1.92.0-aarch64-apple-darwin.tar.xz": "15dee753c9217dff4cf45d734b29dc13ce6017d8a55fe34eed75022b39a63ff0",
+        "rustc-1.92.0-aarch64-pc-windows-msvc.tar.xz": "07ba5606143de3bc916455714f67732fca05805591396a8190d5e88b8863eea3",
+        "rustc-1.92.0-aarch64-unknown-linux-gnu.tar.xz": "7c8706fad4c038b5eacab0092e15db54d2b365d5f3323ca046fe987f814e7826",
+        "rustc-1.92.0-powerpc64le-unknown-linux-gnu.tar.xz": "f48a214ff6fa36a77de8a0a2ee009be8aa48ba1533792450aca5edac29497606",
+        "rustc-1.92.0-s390x-unknown-linux-gnu.tar.xz": "6a8cf614a74f7469c70d32b378f0163633e6bbe19624b248b758501c5bcdfe84",
+        "rustc-1.92.0-x86_64-apple-darwin.tar.xz": "0facbd5d2742c8e97c53d59c9b5b81db6088cfc285d9ecb99523a50d6765fc5c",
+        "rustc-1.92.0-x86_64-pc-windows-msvc.tar.xz": "6aec5aba5384ce1041538e71ebebf671d82e29f4fe697bc7844626d94b0dbfe6",
+        "rustc-1.92.0-x86_64-unknown-freebsd.tar.xz": "f9b3a4fdb825c171e15f68db7c4faefecd60ea7475b9b11e98004fb7d711fd7c",
+        "rustc-1.92.0-x86_64-unknown-linux-gnu.tar.xz": "78b2dd9c6b1fcd2621fa81c611cf5e2d6950690775038b585c64f364422886e0",
+    },
+    urls = [
+        "https://static.rust-lang.org/dist/{}.tar.xz",
+        # "https://rsproxy.cn/dist/{}.tar.xz",
+    ],
+    versions = ["1.92.0"],
+)
+use_repo(
+    rust,
+    "rust_linux_aarch64__aarch64-unknown-linux-gnu__stable_tools",
+    "rust_linux_x86_64__x86_64-unknown-linux-gnu__stable_tools",
+    "rust_macos_aarch64__aarch64-apple-darwin__stable_tools",
+    "rust_macos_x86_64__x86_64-apple-darwin__stable_tools",
+    "rust_toolchains",
+)
+
+register_toolchains("@rust_toolchains//:all")
+
+crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
+crate.spec(
+    default_features = False,
+    features = [
+        "zstd",
+        "lz4",
+    ],
+    package = "mcap",
+    version = "0.24.0",
+)
+crate.spec(
+    package = "serde_yaml",
+    version = "0.9",
+)
+crate.spec(
+    package = "toml",
+    version = "0.8",
+)
+crate.spec(
+    package = "json5",
+    version = "0.4",
+)
+crate.spec(
+    package = "git-version",
+    version = "0.3",
+)
+crate.spec(
+    package = "lazy_static",
+    version = "1",
+)
+
+# Keep the Bazel-only zenoh crates aligned with rmw_zenoh humble's vendored Zenoh revision.
+crate.spec(
+    git = "https://github.com/BOURBONCASK/zenoh.git",
+    package = "zenoh-config",
+    rev = "99ae7b413e0414ea02ba4bbd8aaf94df87a4a862",
+)
+crate.spec(
+    git = "https://github.com/BOURBONCASK/zenoh.git",
+    package = "zenoh-util",
+    rev = "99ae7b413e0414ea02ba4bbd8aaf94df87a4a862",
+)
+crate.spec(
+    package = "arboard",
+    version = "3",
+)
+crate.spec(
+    package = "crossterm",
+    version = "0.29",
+)
+crate.spec(
+    package = "nucleo",
+    version = "0.5",
+)
+crate.spec(
+    default_features = False,
+    features = ["crossterm"],
+    package = "ratatui",
+    version = "0.30",
+)
+crate.spec(
+    package = "ratatui-interact",
+    version = "0.4.2",
+)
+
+# Foxglove Rust SDK powers tools/aorta-foxglove-bridge. Default features
+# include `websocket`, which gates `WebSocketServer` — required for live
+# visualization.
+crate.spec(
+    package = "foxglove",
+    version = "0.26",
+)
+
+# tachyonfx: shader-like ratatui effects for the offline trace-TUI splash.
+crate.spec(
+    package = "tachyonfx",
+    version = "0.25",
+)
+
+# perf-event2 is aorta-sysmon's only external crate outside what
+# `aorta_core` already pulls in. It links libc's
+# perf_event_open syscall, which only exists on Linux — the collector
+# `tools/aorta-sysmon/src/collector/perf.rs` is `cfg(target_os = "linux")`
+# gated, so the crate is only actually pulled on Linux toolchains via
+# `aorta-sysmon`'s `Cargo.toml` target-conditional dep. Listing it here
+# keeps `@aorta_crates//:perf-event2` resolvable on Linux builds.
+crate.spec(
+    package = "perf-event2",
+    version = "0.7",
+)
+crate.from_cargo(
+    name = "aorta_crates",
+    cargo_config = "//.cargo:config.toml",
+    # Bazel owns this Cargo-format lockfile. After changing Cargo dependencies,
+    # regenerate it with:
+    # cp Cargo.lock Cargo.bazel.lock && bazel build @aorta_crates//:srcs && bazel build @aorta_crates//:srcs
+    # Cargo workspace root. `//:Cargo.toml` carries the
+    # single-source-of-truth Zenoh git pin in `[workspace.dependencies]`;
+    # each member manifest is listed so `workspace = true` inheritance
+    # resolves inside Bazel's hermetic sandbox.
+    cargo_lockfile = "//:Cargo.bazel.lock",
+    manifests = [
+        "//:Cargo.toml",
+        "//core:Cargo.toml",
+        "//rust:Cargo.toml",
+        "//sync:Cargo.toml",
+        "//tools/aorta-cbindgen:Cargo.toml",
+        "//tools/aorta-cli:Cargo.toml",
+        "//tools/aorta-foxglove-bridge:Cargo.toml",
+        "//tools/aorta-introspect:Cargo.toml",
+        "//tools/aorta-play:Cargo.toml",
+        "//tools/aorta-record:Cargo.toml",
+        "//tools/aorta-sysmon:Cargo.toml",
+        "//tools/aorta-trace-tui:Cargo.toml",
+        "//tools/aorta-trace2perfetto:Cargo.toml",
+        "//tools/aorta-tui:Cargo.toml",
+        "//tools/zenohd:Cargo.toml",
+    ],
+    supported_platform_triples = [
+        "x86_64-unknown-linux-gnu",
+        "aarch64-unknown-linux-gnu",
+        "aarch64-apple-darwin",
+        "x86_64-apple-darwin",
+    ],
+)
+use_repo(crate, "aorta_crates")
+
+# One pip.parse per supported Python version (same hub): the hub's per-package
+# alias is a select over `is_python_X` settings, and ONLY parsed versions get a
+# branch — see the python.toolchain comment above for why every version in the
+# consumer support matrix must be parsed, not just aorta's own 3.10 default.
+# The lock is a single universal (py3-none-any) wheel, flatbuffers==25.12.19
+# (pinned to the flatc/Bzlmod module version), so per-version parses cannot
+# diverge in contents.
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    download_only = True,
+    hub_name = "aorta_py_deps",
+    python_version = "3.10",
+    requirements_by_platform = {
+        "//python:requirements_linux_aarch64.txt": "linux_aarch64",
+        "//python:requirements_linux_x86_64.txt": "linux_x86_64",
+    },
+)
+pip.parse(
+    download_only = True,
+    hub_name = "aorta_py_deps",
+    python_version = "3.11",
+    requirements_by_platform = {
+        "//python:requirements_linux_aarch64.txt": "linux_aarch64",
+        "//python:requirements_linux_x86_64.txt": "linux_x86_64",
+    },
+)
+pip.parse(
+    download_only = True,
+    hub_name = "aorta_py_deps",
+    python_version = "3.12",
+    requirements_by_platform = {
+        "//python:requirements_linux_aarch64.txt": "linux_aarch64",
+        "//python:requirements_linux_x86_64.txt": "linux_x86_64",
+    },
+)
+pip.parse(
+    download_only = True,
+    hub_name = "aorta_py_deps",
+    python_version = "3.13",
+    requirements_by_platform = {
+        "//python:requirements_linux_aarch64.txt": "linux_aarch64",
+        "//python:requirements_linux_x86_64.txt": "linux_x86_64",
+    },
+)
+use_repo(pip, "aorta_py_deps")

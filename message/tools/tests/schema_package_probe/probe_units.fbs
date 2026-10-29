@@ -1,0 +1,8 @@
+// Include-only companion: no root type, raw codegen only.
+namespace probe.demo;
+
+enum ProbeUnit : byte {
+  Unknown = 0,
+  Metre = 1,
+  Second = 2,
+}

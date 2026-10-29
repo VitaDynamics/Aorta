@@ -1,0 +1,65 @@
+module,version,direct,origin,override_kind,patched,source
+aorta_schema_module_fixture,0.0.0,direct,bazel_dep,local_path_override,,local_path_override: message/tools/tests/schema_module_fixture
+flatbuffers,25.12.19,direct,bazel_dep,archive_override,,archive_override: https://github.com/google/flatbuffers/archive/refs/tags/v25.12.19.tar.gz
+hedron_compile_commands,0.0.0-0e990032f3c5,direct,bazel_dep,git_override,,git_override: https://github.com/hedronvision/bazel-compile-commands-extractor @ 4f28899228fb3ad0126897876f147ca15026151e
+platforms,1.0.0,direct,bazel_dep,,,Bazel Central Registry
+rules_cc,0.2.8,direct,bazel_dep,,,Bazel Central Registry
+rules_foreign_cc,0.10.1,direct,bazel_dep,,,Bazel Central Registry
+rules_python,1.0.0,direct,bazel_dep,,,Bazel Central Registry
+rules_rust,0.68.1,direct,bazel_dep,single_version_override,yes,single_version_override + patch //patches:rules_rust_linux_static_link.patch (patch_strip=1)
+toolchains_llvm,1.3.0,direct,bazel_dep,,,Bazel Central Registry
+abseil-cpp,20240722.0,transitive,lockfile source.json,,,Bazel Central Registry
+apple_support,1.24.1,transitive,lockfile source.json,,,Bazel Central Registry
+aspect_bazel_lib,2.14.0,transitive,lockfile source.json,,,Bazel Central Registry
+aspect_rules_esbuild,0.21.0,transitive,lockfile source.json,,,Bazel Central Registry
+aspect_rules_js,2.3.8,transitive,lockfile source.json,,,Bazel Central Registry
+aspect_rules_ts,3.6.0,transitive,lockfile source.json,,,Bazel Central Registry
+bazel_features,1.32.0,transitive,lockfile source.json,,,Bazel Central Registry
+bazel_skylib,1.8.2,transitive,lockfile source.json,,,Bazel Central Registry
+boringssl,0.20241024.0,transitive,lockfile source.json,,,Bazel Central Registry
+buildozer,7.1.2,transitive,lockfile source.json,,,Bazel Central Registry
+c-ares,1.15.0,transitive,lockfile source.json,,,Bazel Central Registry
+cel-spec,0.15.0,transitive,lockfile source.json,,,Bazel Central Registry
+civetweb,1.16,transitive,lockfile source.json,,,Bazel Central Registry
+curl,8.7.1,transitive,lockfile source.json,,,Bazel Central Registry
+cython,3.0.11-1,transitive,lockfile source.json,,,Bazel Central Registry
+envoy_api,0.0.0-20241214-918efc9,transitive,lockfile source.json,,,Bazel Central Registry
+gazelle,0.36.0,transitive,lockfile source.json,,,Bazel Central Registry
+google_benchmark,1.8.4,transitive,lockfile source.json,,,Bazel Central Registry
+googleapis,0.0.0-20240819-fe8ba054a,transitive,lockfile source.json,,,Bazel Central Registry
+googletest,1.15.2,transitive,lockfile source.json,,,Bazel Central Registry
+grpc,1.70.1,transitive,lockfile source.json,,,Bazel Central Registry
+grpc-java,1.66.0,transitive,lockfile source.json,,,Bazel Central Registry
+grpc-proto,0.0.0-20240627-ec30f58,transitive,lockfile source.json,,,Bazel Central Registry
+jsoncpp,1.9.5,transitive,lockfile source.json,,,Bazel Central Registry
+libpfm,4.11.0,transitive,lockfile source.json,,,Bazel Central Registry
+mbedtls,3.6.0,transitive,lockfile source.json,,,Bazel Central Registry
+nlohmann_json,3.11.3,transitive,lockfile source.json,,,Bazel Central Registry
+opencensus-cpp,0.0.0-20230502-50eb5de,transitive,lockfile source.json,,,Bazel Central Registry
+opencensus-proto,0.4.1,transitive,lockfile source.json,,,Bazel Central Registry
+opentelemetry-cpp,1.16.0,transitive,lockfile source.json,,,Bazel Central Registry
+opentelemetry-proto,1.4.0.bcr.1,transitive,lockfile source.json,,,Bazel Central Registry
+opentracing-cpp,1.6.0,transitive,lockfile source.json,,,Bazel Central Registry
+prometheus-cpp,1.3.0,transitive,lockfile source.json,,,Bazel Central Registry
+protobuf,29.0,transitive,lockfile source.json,,,Bazel Central Registry
+protoc-gen-validate,1.0.4.bcr.2,transitive,lockfile source.json,,,Bazel Central Registry
+pybind11_bazel,2.12.0,transitive,lockfile source.json,,,Bazel Central Registry
+rapidjson,1.1.0.bcr.20241007,transitive,lockfile source.json,,,Bazel Central Registry
+re2,2024-07-02,transitive,lockfile source.json,,,Bazel Central Registry
+rules_android,0.1.1,transitive,lockfile source.json,,,Bazel Central Registry
+rules_apple,3.16.0,transitive,lockfile source.json,,,Bazel Central Registry
+rules_fuzzing,0.5.2,transitive,lockfile source.json,,,Bazel Central Registry
+rules_go,0.50.1,transitive,lockfile source.json,,,Bazel Central Registry
+rules_java,8.5.1,transitive,lockfile source.json,,,Bazel Central Registry
+rules_jvm_external,6.3,transitive,lockfile source.json,,,Bazel Central Registry
+rules_kotlin,1.9.6,transitive,lockfile source.json,,,Bazel Central Registry
+rules_license,1.0.0,transitive,lockfile source.json,,,Bazel Central Registry
+rules_nodejs,6.3.3,transitive,lockfile source.json,,,Bazel Central Registry
+rules_pkg,1.0.1,transitive,lockfile source.json,,,Bazel Central Registry
+rules_proto,7.0.2,transitive,lockfile source.json,,,Bazel Central Registry
+rules_shell,0.6.1,transitive,lockfile source.json,,,Bazel Central Registry
+rules_swift,2.1.1,transitive,lockfile source.json,,,Bazel Central Registry
+stardoc,0.7.2,transitive,lockfile source.json,,,Bazel Central Registry
+swift_argument_parser,1.3.1.1,transitive,lockfile source.json,,,Bazel Central Registry
+xds,0.0.0-20240423-555b57e,transitive,lockfile source.json,,,Bazel Central Registry
+zlib,1.3.1.bcr.3,transitive,lockfile source.json,,,Bazel Central Registry

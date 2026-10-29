@@ -1,0 +1,73 @@
+include "schemas/system/aorta_base.fbs";
+
+namespace demo;
+
+enum Color:uint8 {
+  RED = 0,
+  GREEN = 1,
+  BLUE = 2,
+}
+
+enum Mode:int16 {
+  IDLE = 0,
+  RUN = 1,
+  STOP = 2,
+}
+
+struct Vec3 {
+  x:float32;
+  y:float32;
+  z:float32;
+}
+
+table Child {
+  id:uint32 (id: 0);
+  name:string (id: 1);
+  pose:Vec3 (id: 2);
+}
+
+table MetaInfo {
+  tag:string (id: 0);
+  level:int32 (id: 1);
+}
+
+union PayloadUnion {
+  Child,
+  MetaInfo,
+}
+
+table AllTypes {
+  aorta_header:aorta.sys.AortaHeader (id: 0);
+
+  flag:bool (id: 1);
+  val_int8:int8 (id: 2);
+  val_uint8:uint8 (id: 3);
+  val_int16:int16 (id: 4);
+  val_uint16:uint16 (id: 5);
+  val_int32:int32 (id: 6);
+  val_uint32:uint32 (id: 7);
+  val_int64:int64 (id: 8);
+  val_uint64:uint64 (id: 9);
+  val_float32:float32 (id: 10);
+  val_float64:float64 (id: 11);
+
+  text:string (id: 12);
+  color:Color (id: 13);
+  mode:Mode (id: 14);
+  pose:Vec3 (id: 15);
+  child:Child (id: 16);
+  payload:PayloadUnion (id: 18);
+  meta:MetaInfo (id: 19);
+
+  bytes:[uint8] (id: 20);
+  ints:[int32] (id: 21);
+  floats:[float32] (id: 22);
+  names:[string] (id: 23);
+  poses:[Vec3] (id: 24);
+  children:[Child] (id: 25);
+  colors:[Color] (id: 26);
+  modes:[Mode] (id: 27);
+  signed_bytes:[int8] (id: 28);
+}
+
+root_type AllTypes;

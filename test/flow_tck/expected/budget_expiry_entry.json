@@ -1,0 +1,18 @@
+[
+  {
+    "scenario": "budget_expiry_entry",
+    "seq": 0,
+    "op": "task.spawn",
+    "event": "lifecycle",
+    "phase": "spawned_on_expired"
+  },
+  {
+    "scenario": "budget_expiry_entry",
+    "seq": 1,
+    "op": "task.await",
+    "event": "stopped",
+    "kind": "cancelled",
+    "reason": "deadline",
+    "raw_reason": 2
+  }
+]

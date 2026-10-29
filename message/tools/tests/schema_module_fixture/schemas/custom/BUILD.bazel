@@ -1,0 +1,23 @@
+load("@middleware//message/tools:schema_package.bzl", "aorta_schema_package")
+package(default_visibility = ["//visibility:public"])
+aorta_schema_package(
+    name = "custom_types",
+    module_name = "custom_fixture",
+    api = 2,
+    srcs = ["custom.fbs"],
+    items = [{
+        "pkg": "//schemas/custom",
+        "stem": "custom",
+        "root_fbs": "custom.fbs",
+        "provenance": "external",
+        "dep_fbs": ["//schemas/release:release_leaf.fbs", "//schemas/release:commands.fbs", "@middleware//message/schemas/system:aorta_base.fbs"],
+        "python": True,
+        "bfbs": True,
+        "cpp": True,
+        "rust": True,
+        "cpp_wrapper": True,
+        "rust_wrapper": True,
+        "schema_meta_cpp": True,
+        "schema_meta_rust": True,
+    }],
+)

@@ -1,0 +1,28 @@
+load("//message/tools:schema_fragment.bzl", "aorta_schema_fragment")
+load("//message/tools:registry_compose.bzl", "aorta_registry")
+load("//message/tools:schema_release.bzl", "aorta_schema_release")
+
+genrule(
+    name = "root_rust",
+    srcs = ["root.fbs", "//message/tools/tests/release_owner_probe/foreign:wrong.fbs"],
+    outs = ["root_generated.rs"],
+    cmd = "cat $(location root.fbs) >/dev/null; sed 's|^|// |' $(location //message/tools/tests/release_owner_probe/foreign:wrong.fbs) > $@",
+)
+
+aorta_schema_fragment(
+    name = "fragment",
+    module_name = "review_product",
+    api = 2,
+    items = [{"pkg": "//message/tools/tests/release_owner_probe/schemas/root", "stem": "root", "root_fbs": "root.fbs", "provenance": "external", "rust": True}],
+)
+aorta_registry(name = "registry", fragments = [":fragment"])
+aorta_schema_release(
+    name = "release",
+    tags = ["manual"],
+    registry = ":registry",
+    fragments = [":fragment"],
+    module_name = "review_product",
+    module_revision = "review-product",
+    aorta_revision = "review-aorta",
+    licenses = {"//:LICENSE": "review_product"},
+)

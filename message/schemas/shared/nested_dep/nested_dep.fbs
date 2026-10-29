@@ -1,0 +1,13 @@
+// Nested-root type for a cross-crate
+// `nested_flatbuffer` reference. A `[ubyte] (nested_flatbuffer: "aorta.nestdep.
+// common.NestedRoot")` field has a plain reflection target of None (it is a
+// vector<ubyte>), but flatc emits a `*_nested_flatbuffer()` accessor that
+// references THIS type by its full namespace path. Example/test only.
+namespace aorta.nestdep.common;
+
+table NestedRoot {
+  value : int    (id: 0);
+  label : string (id: 1);
+}
+
+root_type NestedRoot;

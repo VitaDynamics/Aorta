@@ -1,0 +1,39 @@
+// Regression fixture for aorta#375: a namespace COMPONENT with a
+// letter->digit boundary (`p05`). flatc's Rust namer snake_cases every
+// namespace component (`CamelToSnake`), which inserts an `_` at that
+// boundary -- `p05.probe` becomes `pub mod p_05 { pub mod probe }`. A wrapper
+// that builds its Rust paths by a raw `.` -> `::` replacement emits
+// `p05::probe::...` and references a module flatc never generated, so the
+// generated crate does not compile.
+//
+// Shaped as an ACTION (expanded through gen_action_wrapper, like
+// probe_action.fbs) so ONE fixture reaches every Rust-namespace-path call
+// site in write_rust: the typed/owned wrappers, the per-table typed_build
+// paths, the typed_tables HeaderInjector paths AND the action-only
+// send_goal/cancel_goal/public_status/get_result paths plus the union
+// root-cloning `_table_root_path` helper.
+include "schemas/shared/action_common/action_common.fbs";
+
+namespace p05.probe;
+
+table Leaf {
+  a: int32 (id: 0);
+}
+
+union Choice {
+  Leaf,
+}
+
+table DigitNsGoal {
+  x: int32 (id: 0);
+}
+
+table DigitNsResult {
+  payload: Choice (id: 1);
+}
+
+table DigitNsFeedbackData {
+  y: int32 (id: 0);
+}
+
+root_type DigitNsGoal;

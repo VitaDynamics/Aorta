@@ -1,0 +1,30 @@
+// Deep same-namespace consumer that
+// references the foreign enum/struct/table `aorta.shadowdeep.common.*` in EVERY
+// field shape flatc emits — direct scalar-like enum/struct/table, vectors, a
+// fixed struct array, AND a struct-nested-struct field (`child : ShadowStruct`)
+// whose generated getter contains a nested struct type. At depth 3 the bare
+// references cannot resolve through a root import, so every type position must
+// use the injected alias. Example/test only.
+include "schemas/system/aorta_base.fbs";
+include "schemas/shared/deepshadow_dep/deepshadow_dep.fbs";
+
+namespace aorta.shadowdeep.common;
+
+struct ShadowWrap {
+  e     : ShadowEnum;
+  child : ShadowStruct;
+  arr   : [ShadowStruct : 2];
+}
+
+table DeepShadow {
+  aorta_header : aorta.sys.AortaHeader (id: 0);
+  de : ShadowEnum        (id: 1);
+  ds : ShadowStruct      (id: 2);
+  dt : ShadowTable       (id: 3);
+  ve : [ShadowEnum]      (id: 4);
+  vs : [ShadowStruct]    (id: 5);
+  vt : [ShadowTable]     (id: 6);
+  sw : ShadowWrap        (id: 7);
+}
+
+root_type DeepShadow;

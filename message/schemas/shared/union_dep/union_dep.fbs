@@ -1,0 +1,19 @@
+// Foreign union and variant-table fixture
+// in a DEEP same-namespace, referenced by union_shadow_consumer. flatc emits the
+// union discriminant `UShadow` in type positions (rewrite) AND as a value path
+// and inside a string literal. Type and value paths must be rewritten while the
+// verifier's variant-name string remains unchanged. Example/test only.
+namespace aorta.unionshadow.common;
+
+table AlphaLeaf {
+  a : int (id: 0);
+}
+
+table BetaLeaf {
+  b : int (id: 0);
+}
+
+union UShadow {
+  AlphaLeaf,
+  BetaLeaf,
+}

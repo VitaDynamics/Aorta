@@ -1,0 +1,17 @@
+// Shared cross-tree common enum fixture.
+//
+// A tiny shared-leaf schema in a THIRD namespace tree (aorta.xtree.common),
+// disjoint from a consumer's own namespace tree and from aorta.sys. It exercises
+// module assembly when two dependency crates share the aorta root.
+//
+// Shared leaf: no aorta_header, not a publishable root (like status.fbs /
+// action_common.fbs). Do NOT consume downstream; example/test only.
+namespace aorta.xtree.common;
+
+/// Cross-tree lifecycle phase for the third-tree fixture.
+enum XtreePhase : ubyte {
+  UNKNOWN  = 0,
+  APPROACH = 1,
+  TRACK    = 2,
+  LOST     = 3,
+}

@@ -1,0 +1,10 @@
+// Loader test fixture: a mid-file namespace change with root-local
+// types in TWO namespaces. The loader attributes each type its own namespace
+// (the text parser is blind to the change — it takes the first statement for
+// everything). The single root wrapper namespace is unrepresentable, so
+// namespace_full_from_loaded fails closed.
+namespace alpha;
+table AlphaMsg { a: int32; }
+namespace beta;
+table BetaMsg { b: int32; }
+root_type alpha.AlphaMsg;

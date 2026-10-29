@@ -1,0 +1,10 @@
+load("//message:schemas/registry.bzl", "schema_items_for_package")
+load("//message/tools:schema_codegen_registry.bzl", "aorta_define_schema_package")
+
+package(default_visibility = ["//visibility:public"])
+
+_SCHEMA_PACKAGE = "//message/schemas/shared/branch_common"
+
+aorta_define_schema_package(schema_items_for_package(_SCHEMA_PACKAGE))
+
+filegroup(name = "build_file", srcs = ["BUILD.bazel"])

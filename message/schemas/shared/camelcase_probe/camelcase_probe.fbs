@@ -1,0 +1,11 @@
+// Mixed-case and acronym namespace fixture. It verifies that generated Rust
+// namespace conversion is reproduced exactly by cross-crate references.
+// Example/test only; do NOT consume downstream.
+namespace ProbeCamel.HTTPThing;
+
+/// Enum in a snake-cased-at-codegen namespace.
+enum CamelEnum : ubyte {
+  UNKNOWN = 0,
+  ONE     = 1,
+  TWO     = 2,
+}

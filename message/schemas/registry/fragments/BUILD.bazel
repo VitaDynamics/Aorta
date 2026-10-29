@@ -1,0 +1,15 @@
+load("//message/tools:schema_fragment.bzl", "aorta_schema_fragment")
+load("//message:schemas/base_registry.bzl", "AORTA_BASE_FRAGMENT_FILES", "AORTA_BASE_SCHEMA_DEFINITIONS")
+
+aorta_schema_fragment(
+    name = "aorta_base_fragment",
+    api = 2,
+    fragment = AORTA_BASE_FRAGMENT_FILES,
+    fragment_symbols = {
+        "//message:schemas/registry_local.bzl": "LOCAL_SCHEMA_DEFINITIONS",
+    },
+    items = AORTA_BASE_SCHEMA_DEFINITIONS,
+    module_name = "aorta",
+    wrapper_packages = {"rust": "//message/bindings/rust", "cpp": "//message/bindings/cpp"},
+    visibility = ["//visibility:public"],
+)

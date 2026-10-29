@@ -1,0 +1,5 @@
+namespace perturb.inc;
+
+table IncBTable {
+  value: int32 (id: 0);
+}

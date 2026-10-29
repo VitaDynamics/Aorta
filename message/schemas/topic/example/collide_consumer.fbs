@@ -1,0 +1,25 @@
+// Shared-root and disjoint-root trees
+// that REUSE the same segment name (`xfoo`) in ONE closure.
+//
+// Local namespace aorta.services.collide reaches:
+//   - aorta.xfoo.common.CollideShared  (SHARED root aorta -> nested `pub mod xfoo`)
+//   - xfoo.CollideDisjA / xfoo.CollideDisjB (DISJOINT root xfoo, 2 providers)
+//
+// A loose module-name match can confuse the nested shared branch with the
+// top-level disjoint branch. Both branches must be materialized independently.
+// Example/test only.
+include "schemas/system/aorta_base.fbs";
+include "schemas/shared/collide_fixtures/collide_shared.fbs";
+include "schemas/shared/collide_fixtures/collide_disjoint_a.fbs";
+include "schemas/shared/collide_fixtures/collide_disjoint_b.fbs";
+
+namespace aorta.services.collide;
+
+table CollideConsumer {
+  aorta_header : aorta.sys.AortaHeader                 (id: 0);
+  shared_phase : aorta.xfoo.common.CollideShared = UNKNOWN (id: 1);   // shared tree (nested xfoo)
+  disj_a       : xfoo.CollideDisjA = UNKNOWN           (id: 2);       // disjoint root xfoo, provider 1
+  disj_b       : xfoo.CollideDisjB = UNKNOWN           (id: 3);       // disjoint root xfoo, provider 2
+}
+
+root_type CollideConsumer;

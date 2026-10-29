@@ -1,0 +1,8 @@
+// Regression: the foreign dep for the Tier-2 multi-local-
+// namespace fixture. A consumer type in `p.beta` references this same-namespace
+// foreign `p.beta.BetaDep`. Example/test only.
+namespace p.beta;
+
+table BetaDep {
+  v : int (id: 0);
+}

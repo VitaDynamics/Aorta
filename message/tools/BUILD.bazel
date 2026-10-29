@@ -1,0 +1,1179 @@
+load("@rules_rust//rust:defs.bzl", "rust_test")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+load("@rules_python//python/config_settings:transition.bzl", py_test_with_version = "py_test")
+load("@aorta_py_deps//:requirements.bzl", "requirement", "whl_requirement")
+load(":flatbuffers_rules.bzl", "flatbuffers_python")
+load(":python_fastpath.bzl", "python_fastpath")
+load(":python_distribution.bzl", "python_wheel_licenses")
+
+package(default_visibility = ["//visibility:public"])
+
+py_library(
+    name = "schema_lint_lib",
+    data = ["schema_contract.bzl"],
+    srcs = ["schema_lint.py", "registry_lint.py", "schema_include_utils.py", "schema_source_contract.py", "gen_action_wrapper.py"],
+)
+
+py_binary(
+    name = "schema_source_reflect",
+    srcs = ["schema_source_reflect.py", "schema_reflection.py", "gen_action_wrapper.py", "schema_include_utils.py"],
+    deps = [":reflection_py_lib"],
+)
+
+py_test(
+    name = "schema_api_freeze_test",
+    srcs = ["tests/schema_api_freeze_test.py"],
+    main = "tests/schema_api_freeze_test.py",
+    env = {"AORTA_FREEZE_AUDIT": "$(location //message/tools/tests/schema_package_probe:surface_audit)"},
+    data = ["//message/tools/tests/schema_package_probe:surface_audit"],
+    deps = [":schema_lint_lib"],
+)
+
+py_test(
+    name = "schema_lint_surface_test",
+    srcs = ["tests/schema_lint_surface_test.py", "schema_lint_main.py"],
+    main = "tests/schema_lint_surface_test.py",
+    env = {
+        "AORTA_SURFACE_AUDIT": "$(location //message/tools/tests/schema_package_probe:surface_audit)",
+        "AORTA_BASE_SURFACE_AUDIT": "$(location //message:base_surface_audit)",
+    },
+    data = ["//message/tools/tests/schema_package_probe:surface_audit", "//message:base_surface_audit"],
+    deps = [":schema_lint_lib"],
+)
+
+py_test(
+    name = "schema_source_contract_test",
+    srcs = ["tests/schema_source_contract_test.py"],
+    main = "tests/schema_source_contract_test.py",
+    deps = [":schema_lint_lib"],
+)
+
+py_test(
+    name = "schema_include_edges_test",
+    srcs = ["tests/schema_include_edges_test.py"],
+    main = "tests/schema_include_edges_test.py",
+    deps = [":schema_lint_lib"],
+)
+
+py_test(
+    name = "schema_census_test",
+    srcs = ["tests/schema_census_test.py"],
+    main = "tests/schema_census_test.py",
+    deps = [":schema_lint_lib"],
+)
+
+py_test(
+    name = "schema_fragment_agreement_test",
+    srcs = ["tests/schema_fragment_agreement_test.py"],
+    main = "tests/schema_fragment_agreement_test.py",
+    deps = [":schema_lint_lib"],
+)
+
+py_test(
+    name = "schema_decoupling_modes_test",
+    srcs = [
+        "tests/schema_decoupling_cases_test.py",
+        "tests/schema_decoupling_modes_test.py",
+    ],
+    main = "tests/schema_decoupling_modes_test.py",
+)
+
+exports_files([
+    "schema_lint_main.py",
+    # Read by //tools/release:test_mirror_export, which runs the mirror
+    # rewriters over this package's real BUILD file.
+    "BUILD.bazel",
+    "aorta_flatbuffers.bzl",
+    "bfbs_stage.bzl",
+    "bfbs_stage.sh",
+    "build_oss_comparison_bfbs.py",
+    "external_schema_root.bzl",
+    "flatbuffers_rules.bzl",
+    "python_fastpath.bzl",
+    "python_outputs.bzl",
+    # Read by //tools/release:test_mirror_gate, which runs this emitter's
+    # Python branch to pin the producer/parser schema-metadata contract.
+    "gen_schema_meta.py",
+    "message_bindings.bzl",
+    "oss_comparison_bfbs.bzl",
+    "schema_codegen.bzl",
+    "schema_names.bzl",
+    "schema_package.bzl",
+    # Entry points of the per-root lint targets `aorta_external_schema_package`
+    # generates in the CALLER's package (they are `srcs`/`main` of a py_test /
+    # py_binary declared over there, so they must be exported from here).
+    "external_root_lint_main.py",
+    "external_root_workspace_lint.py",
+    # Shared include parser, also used by the canonical schema-source tree
+    # action tool in //tools/release.
+    "schema_include_utils.py",
+])
+
+py_binary(
+    name = "build_oss_comparison_bfbs",
+    srcs = ["build_oss_comparison_bfbs.py"],
+)
+
+# Payload of every generated `<root>_lint_test` / `<root>_workspace_lint`.
+# `imports = ["."]` puts message/tools on sys.path so the entry points can
+# `import external_root_lint` from any caller package (including another
+# Bzlmod module).
+py_library(
+    name = "external_root_lint_lib",
+    srcs = [
+        "external_root_lint.py",
+        # The action-source `root_type` rule is gen_action_wrapper's own
+        # (`parse_root_type` + `derive_action_prefix`), imported rather than
+        # restated so the lint cannot drift from the generator it describes.
+        "gen_action_wrapper.py",
+        "registry_lint.py",
+        "schema_include_utils.py",
+    ],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_binary(
+    name = "external_root_manifest",
+    srcs = ["external_root_manifest.py"],
+    visibility = ["//visibility:public"],
+)
+
+# Fail-closed unit coverage of the external-root lint itself: the attack
+# matrix (missing evidence, fragment↔physical
+# mismatch, forged `internal` provenance, path escape / symlink, canonical
+# slot collision with an Aorta package, unknown manifest version, tampered
+# hashes, include↔dep_fbs one-sided edits).
+py_test(
+    name = "external_root_lint_test",
+    srcs = ["tests/external_root_lint_test.py"],
+    main = "tests/external_root_lint_test.py",
+    # `TargetDeclarationTest` executes the PRODUCTION per-item declaration
+    # block out of `external_schema_root.bzl` together with the pure
+    # derivations it aliases from `schema_names.bzl` (`_message_base`,
+    # `schema_meta_py_enabled` — both moved there so the L2/L3 rules can reach
+    # them without loading the registry), so all of them must be in the
+    # runfiles (`schemas_registry` also carries `registry_local.bzl`, which
+    # `registry_lint.repo_root()` looks for).
+    data = [
+        "external_schema_root.bzl",
+        "schema_names.bzl",
+        "//message:schemas_registry",
+    ],
+    deps = [":external_root_lint_lib"],
+)
+
+
+
+
+sh_test(
+    name = "bfbs_stage_collision_test",
+    srcs = ["bfbs_stage_collision_test.sh"],
+    args = ["$(location :bfbs_stage.sh)"],
+    data = ["bfbs_stage.sh"],
+)
+
+# gen_schema_meta computes all metadata from the compiled bfbs
+# via schema_reflection (same deps treatment as gen_message_wrapper below).
+py_binary(
+    name = "gen_schema_meta",
+    srcs = [
+        "gen_schema_meta.py",
+        "schema_include_utils.py",
+        "schema_reflection.py",
+    ],
+    deps = [":reflection_py_lib"],
+)
+
+# Build-time reflection Python bindings, generated by
+# the PINNED flatc's `--python` from the reflection.fbs SHIPPED WITH THE
+# PINNED flatbuffers Bzlmod module (`@flatbuffers//reflection:reflection_fbs_schema`)
+# — never a checked-in copy. `schema_reflection.py` imports the `reflection`
+# package this produces; the matching `flatbuffers` Python runtime is the
+# SAME pip dependency the Python SDK's own generated message bindings already
+# use (`python/requirements_*.txt`), not a new addition.
+flatbuffers_python(
+    name = "reflection_py",
+    srcs = ["@flatbuffers//reflection:reflection_fbs_schema"],
+)
+
+py_library(
+    name = "reflection_py_lib",
+    data = [":reflection_py"],
+    imports = ["reflection_py"],
+    deps = [requirement("flatbuffers")],
+)
+
+py_binary(
+    name = "gen_message_wrapper",
+    srcs = [
+        "gen_message_wrapper.py",
+        "schema_include_utils.py",
+        "schema_reflection.py",
+    ],
+    deps = [":reflection_py_lib"],
+)
+
+py_test(
+    name = "schema_include_utils_test",
+    srcs = [
+        "schema_include_utils.py",
+        "schema_include_utils_test.py",
+    ],
+    main = "schema_include_utils_test.py",
+)
+
+# gen_message_wrapper_parser_test.py was retired — it exercised
+# gen_message_wrapper's now-deleted regex/text scanners
+# (parse_table_fields/parse_local_type_names/parse_namespace_full/
+# parse_enum_base_types/parse_union_defs). Same-line-table and comment-blind
+# type coverage moved to gen_message_wrapper_loader_test's
+# Msg02SameLineTableTest/Msg03CommentedGhostTest (loader path, immune by
+# construction — flatc itself is comment-aware, so the whole comment-
+# blindness defect CLASS cannot recur once the loader is the only path).
+# StripFbsCommentsTest and the commented-include case tested
+# schema_include_utils functions (not gen_message_wrapper's own scanners) and
+# moved to schema_include_utils_test.py, since those functions stay alive.
+
+# Perturbation test — reordering a fixture schema's
+# include statements and top-level type declarations must not change the
+# canonical wrapper output (in either language). The module docstring has
+# details. Runs on the loader path — flatc-compiled bfbs fixtures below
+# (--root-bfbs is now required), same pattern as wrapper_loader_fixture_*.
+# Both variants' root schema is named `root.fbs` (in its own `original/` /
+# `perturbed/` subdirectory) — the loader path derives a root-local type's
+# generated-module name from `Path(root_fbs).stem`, so two DIFFERENT
+# filenames (e.g. `root_original.fbs` vs `root_perturbed.fbs`) would make the
+# variants differ in a real, non-ordering way (module name), defeating the
+# "byte-identical regardless of ordering" assertion below for a reason
+# unrelated to what this test checks.
+[
+    genrule(
+        name = "canonical_order_fixture_{}_bfbs".format(variant),
+        srcs = [
+            "tests/canonical_order_fixtures/{}/root.fbs".format(variant),
+            "tests/canonical_order_fixtures/{}/perturb_aorta_sys.fbs".format(variant),
+            "tests/canonical_order_fixtures/{}/perturb_inc_a.fbs".format(variant),
+            "tests/canonical_order_fixtures/{}/perturb_inc_b.fbs".format(variant),
+        ],
+        outs = ["tests/canonical_order_fixtures/{}/root.bfbs".format(variant)],
+        tools = [":flatc"],
+        cmd = "$(location :flatc) --binary --schema --bfbs-builtins -o $(@D) $(location tests/canonical_order_fixtures/{}/root.fbs)".format(variant),
+    )
+    for variant in ["original", "perturbed"]
+]
+
+py_test(
+    name = "gen_message_wrapper_canonical_order_test",
+    srcs = [
+        "gen_message_wrapper.py",
+        "gen_message_wrapper_canonical_order_test.py",
+        "schema_include_utils.py",
+        "schema_reflection.py",
+    ],
+    main = "gen_message_wrapper_canonical_order_test.py",
+    data = [
+        ":canonical_order_fixture_original_bfbs",
+        ":canonical_order_fixture_perturbed_bfbs",
+        "tests/canonical_order_fixtures/original/perturb_aorta_sys.fbs",
+        "tests/canonical_order_fixtures/original/perturb_inc_a.fbs",
+        "tests/canonical_order_fixtures/original/perturb_inc_b.fbs",
+        "tests/canonical_order_fixtures/original/root.fbs",
+        "tests/canonical_order_fixtures/perturbed/perturb_aorta_sys.fbs",
+        "tests/canonical_order_fixtures/perturbed/perturb_inc_a.fbs",
+        "tests/canonical_order_fixtures/perturbed/perturb_inc_b.fbs",
+        "tests/canonical_order_fixtures/perturbed/root.fbs",
+    ],
+    deps = [":reflection_py_lib"],
+)
+
+# Former union canonical-key test
+# semantics (real flatc numeric-discriminant replay, Alias:Target splitting,
+# cross-namespace collision hard-errors). Retired — the text
+# parser this test exercised (`gen_message_wrapper.parse_union_defs` et al.)
+# is deleted; every case was ported to `gen_message_wrapper_loader_test`
+# (`UnionExplicitValueOrderingTest`, `UnionAliasEmissionTest`,
+# `UnionAliasActionEmissionTest`, `CrossNamespaceUnionCollisionTest`) or
+# retired with justification (alias-parse-only cases already covered by
+# `UnionMemberAliasTest`; the diamond-include case is structurally
+# impossible under the loader path).
+
+# Flatc-compiled bfbs fixtures for the loader-backed
+# wrapper builders (message/tools/tests/wrapper_loader_fixtures/*.fbs). Plain
+# genrules (self-contained schemas, no includes -> no `-I`), same pattern as
+# the schema_reflection fixtures below.
+[
+    genrule(
+        name = "wrapper_loader_fixture_{}_bfbs".format(stem),
+        srcs = ["tests/wrapper_loader_fixtures/{}.fbs".format(stem)],
+        outs = ["tests/wrapper_loader_fixtures/{}.bfbs".format(stem)],
+        tools = [":flatc"],
+        cmd = "$(location :flatc) --binary --schema --bfbs-builtins -o $(@D) $(location tests/wrapper_loader_fixtures/{}.fbs)".format(stem),
+    )
+    for stem in [
+        "qualified_root",
+        "mid_namespace",
+        "union_alias",
+        "dup_bare_name",
+        "same_line_table",
+        "commented_ghost",
+        "recon_types",
+        "union_explicit_values",
+        "dup_bare_union",
+    ]
+]
+
+# `probe_action.fbs` (union alias/target action
+# emission port, see gen_message_wrapper_loader_test.py's
+# `UnionAliasActionEmissionTest`) needs the gen_action_wrapper expansion step
+# (real `include`) before it is flatc-compilable, unlike the other
+# self-contained wrapper_loader_fixtures above.
+genrule(
+    name = "wrapper_loader_fixture_probe_action_expand",
+    srcs = ["tests/wrapper_loader_fixtures/probe_action.fbs"],
+    outs = ["tests/wrapper_loader_fixtures/probe_action_action/probe_action.fbs"],
+    tools = [":gen_action_wrapper"],
+    cmd = "$(location :gen_action_wrapper) --root-fbs $(location tests/wrapper_loader_fixtures/probe_action.fbs) --out $@",
+)
+
+genrule(
+    name = "wrapper_loader_fixture_probe_action_bfbs",
+    srcs = [
+        ":wrapper_loader_fixture_probe_action_expand",
+        "//message/schemas/shared/action_common:action_common.fbs",
+    ],
+    outs = ["tests/wrapper_loader_fixtures/probe_action_action/probe_action.bfbs"],
+    tools = [":flatc"],
+    # The expanded schema's `include "schemas/shared/action_common/action_common.fbs";`
+    # is qualified (message-root-relative); derive that root by stripping
+    # everything from `/schemas/` onward off the real action_common.fbs's own
+    # location, same technique as schema_codegen.bzl's `_flatc_cmd`.
+    cmd = """
+        ACTION_COMMON="$(location //message/schemas/shared/action_common:action_common.fbs)"
+        $(location :flatc) --binary --schema --bfbs-builtins \
+            -I "$${ACTION_COMMON%%/schemas/*}" \
+            -o $(@D) $(location :wrapper_loader_fixture_probe_action_expand)
+    """,
+)
+
+# Digit-boundary namespace regression fixture (`namespace p05.probe;` ->
+# flatc emits `pub mod p_05`). Action-shaped so ONE render reaches every Rust
+# namespace-path call site in write_rust, hence the same expand + action_common
+# `-I` shape as wrapper_loader_fixture_probe_action above.
+genrule(
+    name = "wrapper_loader_fixture_digit_ns_expand",
+    srcs = ["tests/wrapper_loader_fixtures/digit_ns.fbs"],
+    outs = ["tests/wrapper_loader_fixtures/digit_ns_action/digit_ns.fbs"],
+    tools = [":gen_action_wrapper"],
+    cmd = "$(location :gen_action_wrapper) --root-fbs $(location tests/wrapper_loader_fixtures/digit_ns.fbs) --out $@",
+)
+
+genrule(
+    name = "wrapper_loader_fixture_digit_ns_bfbs",
+    srcs = [
+        ":wrapper_loader_fixture_digit_ns_expand",
+        "//message/schemas/shared/action_common:action_common.fbs",
+    ],
+    outs = ["tests/wrapper_loader_fixtures/digit_ns_action/digit_ns.bfbs"],
+    tools = [":flatc"],
+    cmd = """
+        ACTION_COMMON="$(location //message/schemas/shared/action_common:action_common.fbs)"
+        $(location :flatc) --binary --schema --bfbs-builtins \
+            -I "$${ACTION_COMMON%%/schemas/*}" \
+            -o $(@D) $(location :wrapper_loader_fixture_digit_ns_expand)
+    """,
+)
+
+# The wrapper emitters' semantic facts now come
+# from the bfbs loader (the `*_from_loaded` builders in gen_message_wrapper.py).
+# Rewrites the parser-level cases against the loader path with the four
+# acceptance-required new cases (qualified root_type, mid-file namespace, union
+# member alias, same bare name in two namespaces) plus the same-line-table and
+# comment-blind-type regressions preserved.
+py_test(
+    name = "gen_message_wrapper_loader_test",
+    srcs = [
+        "gen_message_wrapper.py",
+        "gen_message_wrapper_loader_test.py",
+        "schema_include_utils.py",
+        "schema_reflection.py",
+    ],
+    main = "gen_message_wrapper_loader_test.py",
+    data = [
+        ":wrapper_loader_fixture_commented_ghost_bfbs",
+        ":wrapper_loader_fixture_digit_ns_bfbs",
+        ":wrapper_loader_fixture_digit_ns_expand",
+        ":wrapper_loader_fixture_dup_bare_name_bfbs",
+        ":wrapper_loader_fixture_dup_bare_union_bfbs",
+        ":wrapper_loader_fixture_mid_namespace_bfbs",
+        ":wrapper_loader_fixture_probe_action_bfbs",
+        ":wrapper_loader_fixture_probe_action_expand",
+        ":wrapper_loader_fixture_qualified_root_bfbs",
+        ":wrapper_loader_fixture_recon_types_bfbs",
+        ":wrapper_loader_fixture_same_line_table_bfbs",
+        ":wrapper_loader_fixture_union_alias_bfbs",
+        ":wrapper_loader_fixture_union_explicit_values_bfbs",
+        "tests/wrapper_loader_fixtures/union_alias.fbs",
+    ],
+    deps = [":reflection_py_lib"],
+)
+
+# Type-support matrix wiring fixtures. vu_topic
+# is self-contained (plain genrule). vu_action needs the gen_action_wrapper
+# expansion + action_common -I, same shape as wrapper_loader_fixture_probe_action
+# above.
+genrule(
+    name = "matrix_fixture_vu_topic_bfbs",
+    srcs = ["tests/matrix_fixtures/vu_topic.fbs"],
+    outs = ["tests/matrix_fixtures/vu_topic.bfbs"],
+    tools = [":flatc"],
+    cmd = "$(location :flatc) --binary --schema --bfbs-builtins -o $(@D) $(location tests/matrix_fixtures/vu_topic.fbs)",
+)
+
+genrule(
+    name = "matrix_fixture_vu_action_expand",
+    srcs = ["tests/matrix_fixtures/vu_action.fbs"],
+    outs = ["tests/matrix_fixtures/vu_action_action/vu_action.fbs"],
+    tools = [":gen_action_wrapper"],
+    cmd = "$(location :gen_action_wrapper) --root-fbs $(location tests/matrix_fixtures/vu_action.fbs) --out $@",
+)
+
+genrule(
+    name = "matrix_fixture_vu_action_bfbs",
+    srcs = [
+        ":matrix_fixture_vu_action_expand",
+        "//message/schemas/shared/action_common:action_common.fbs",
+    ],
+    outs = ["tests/matrix_fixtures/vu_action_action/vu_action.bfbs"],
+    tools = [":flatc"],
+    cmd = """
+        ACTION_COMMON="$(location //message/schemas/shared/action_common:action_common.fbs)"
+        $(location :flatc) --binary --schema --bfbs-builtins \
+            -I "$${ACTION_COMMON%%/schemas/*}" \
+            -o $(@D) $(location :matrix_fixture_vu_action_expand)
+    """,
+)
+
+# Explicit type-support matrix + hard-fail
+# paths. Pure-function coverage of every UNSUPPORTED cell + the --action-name
+# hard-fail, plus wiring tests that drive write_rust/write_cpp on the
+# vector<union> fixtures above.
+py_test(
+    name = "gen_message_wrapper_matrix_test",
+    srcs = [
+        "gen_message_wrapper.py",
+        "gen_message_wrapper_matrix_test.py",
+        "schema_include_utils.py",
+        "schema_reflection.py",
+    ],
+    main = "gen_message_wrapper_matrix_test.py",
+    data = [
+        ":matrix_fixture_vu_action_bfbs",
+        ":matrix_fixture_vu_action_expand",
+        ":matrix_fixture_vu_topic_bfbs",
+        "tests/matrix_fixtures/vu_topic.fbs",
+    ],
+    deps = [":reflection_py_lib"],
+)
+
+# Compiled bfbs for the three
+# advanced_features loader fixtures (message/tools/tests/schema_reflection_fixtures/*.fbs).
+# Plain genrules, not the full aorta_define_schema_package registry macro —
+# these are test-only, single-file, never-included schemas with no wrapper/
+# schema-meta outputs of their own.
+[
+    genrule(
+        name = "reflection_fixture_{}_bfbs".format(stem),
+        srcs = ["tests/schema_reflection_fixtures/{}.fbs".format(stem)],
+        outs = ["tests/schema_reflection_fixtures/{}.bfbs".format(stem)],
+        tools = [":flatc"],
+        cmd = "$(location :flatc) --binary --schema --bfbs-builtins -o $(@D) $(location tests/schema_reflection_fixtures/{}.fbs)".format(stem),
+    )
+    for stem in ["optional_scalars", "advanced_union", "advanced_array", "python_fastpath",
+                 "python_fastpath_isnone_collision", "python_fastpath_length_collision"]
+]
+
+flatbuffers_python(
+    name = "reflection_fixture_python_fastpath_py",
+    srcs = ["tests/schema_reflection_fixtures/python_fastpath.fbs",
+            "tests/schema_reflection_fixtures/python_fastpath_isnone_collision.fbs",
+            "tests/schema_reflection_fixtures/python_fastpath_length_collision.fbs"],
+    testonly = True,
+)
+
+# Compiled bfbs for the gen_schema_meta
+# reflection fixtures (message/tools/tests/schema_meta_fixtures/*.fbs) —
+# same plain-genrule pattern as the reflection fixtures above. The
+# grandchild chain and the include-typed header fixtures need `-I` for
+# their `include` statements; structroot_root.fbs is deliberately NOT
+# compiled (the pinned flatc rejects struct roots — its bfbs is
+# synthesized at test time, see gen_schema_meta_reflection_test.py).
+[
+    genrule(
+        name = "schema_meta_fixture_{}_bfbs".format(stem),
+        srcs = ["tests/schema_meta_fixtures/{}.fbs".format(f) for f in [stem] + deps],
+        outs = ["tests/schema_meta_fixtures/{}.bfbs".format(stem)],
+        tools = [":flatc"],
+        cmd = "$(location :flatc) --binary --schema --bfbs-builtins -o $(@D) " +
+              "-I $$(dirname $(location tests/schema_meta_fixtures/{stem}.fbs)) ".format(stem = stem) +
+              "$(location tests/schema_meta_fixtures/{stem}.fbs)".format(stem = stem),
+    )
+    for stem, deps in [
+        ("grandchild_root", ["grandchild_mid", "grandchild_leaf"]),
+        ("midns", []),
+        ("header_wrong_type", []),
+        ("header_right_type", ["header_aorta_sys"]),
+        ("enums_only", []),
+    ]
+]
+
+# gen_schema_meta.py computes metadata from the
+# compiled bfbs (schema_reflection loader) — red-first tests pinning the
+# old regex parser's defects (grandchild-invisible struct sizes, mid-file
+# namespace changes, name-only HAS_AORTA_HEADER).
+py_test(
+    name = "gen_schema_meta_reflection_test",
+    srcs = [
+        "gen_schema_meta.py",
+        "gen_schema_meta_reflection_test.py",
+        "schema_include_utils.py",
+        "schema_reflection.py",
+    ],
+    main = "gen_schema_meta_reflection_test.py",
+    data = [
+        ":schema_meta_fixture_enums_only_bfbs",
+        ":schema_meta_fixture_grandchild_root_bfbs",
+        ":schema_meta_fixture_header_right_type_bfbs",
+        ":schema_meta_fixture_header_wrong_type_bfbs",
+        ":schema_meta_fixture_midns_bfbs",
+        "tests/schema_meta_fixtures/enums_only.fbs",
+        "tests/schema_meta_fixtures/grandchild_leaf.fbs",
+        "tests/schema_meta_fixtures/grandchild_mid.fbs",
+        "tests/schema_meta_fixtures/grandchild_root.fbs",
+        "tests/schema_meta_fixtures/header_aorta_sys.fbs",
+        "tests/schema_meta_fixtures/header_right_type.fbs",
+        "tests/schema_meta_fixtures/header_wrong_type.fbs",
+        "tests/schema_meta_fixtures/midns.fbs",
+        "tests/schema_meta_fixtures/structroot_root.fbs",
+        "//message:schemas_registry",  # _repo_root() sentinel (message/schemas/registry.bzl)
+    ],
+    deps = [":reflection_py_lib"],
+)
+
+py_test(
+    name = "schema_reflection_test",
+    srcs = [
+        "schema_reflection.py",
+        "schema_reflection_test.py",
+    ],
+    main = "schema_reflection_test.py",
+    imports = ["reflection_fixture_python_fastpath_py"],
+    data = [
+        ":reflection_fixture_advanced_array_bfbs",
+        ":reflection_fixture_advanced_union_bfbs",
+        ":reflection_fixture_optional_scalars_bfbs",
+        ":reflection_fixture_python_fastpath_bfbs",
+        ":reflection_fixture_python_fastpath_py",
+        ":reflection_fixture_python_fastpath_isnone_collision_bfbs",
+        ":reflection_fixture_python_fastpath_length_collision_bfbs",
+        "//message/schemas/topic/example:all_types_bfbs",
+        "//message/schemas/topic/example:guard_fixture_includer_bfbs",
+        "//message/schemas/topic/example:guard_fixture_owner_bfbs",
+        "//message:schemas_registry",  # _repo_root() sentinel (message/schemas/registry.bzl)
+    ],
+    deps = [":reflection_py_lib"],
+)
+
+py_binary(
+    name = "gen_action_wrapper",
+    srcs = [
+        "gen_action_wrapper.py",
+        "schema_include_utils.py",
+    ],
+)
+
+# Unit tests for the qualified-root_type fix
+# (written red-first) and the
+# shared-include-scanner routing. The existing gen_action_wrapper_test.sh
+# (below) covers the real execute_task.fbs + a hand-built all-types fixture
+# end to end; this test targets the root_type/include-scanning defect
+# directly.
+py_test(
+    name = "gen_action_wrapper_unit_test",
+    srcs = [
+        "gen_action_wrapper.py",
+        "gen_action_wrapper_test.py",
+        "schema_include_utils.py",
+    ],
+    main = "gen_action_wrapper_test.py",
+)
+
+# Permanent regression net: sweeps every cpp_wrapper=True registry
+# entry through gen_message_wrapper.py and scans all generated headers for
+# guard-asymmetry, independent of the compile probes in cpp/test/ and of the
+# aorta_define_* Bazel macro graph (see the module docstring in
+# tests/sweep_conflicts_test.py for why).
+py_test(
+    name = "sweep_conflicts_test",
+    srcs = [
+        "gen_action_wrapper.py",
+        "gen_message_wrapper.py",
+        "schema_include_utils.py",
+        "schema_reflection.py",
+        "tests/sweep_conflicts_test.py",
+    ],
+    main = "tests/sweep_conflicts_test.py",
+    data = [
+        "//message:bfbs_generated",
+        "//message:schemas",
+        "//message:schemas_registry",
+        # The built registry, so the sweep can prove it covers every
+        # cpp_wrapper entry the build actually used (see the test's setUpClass).
+        "//message:schemas_registry_manifest",
+    ],
+    deps = [":reflection_py_lib"],
+)
+
+py_test(
+    name = "registry_fragment_ast_lint_test",
+    srcs = [
+        "registry_lint.py",
+        "tests/registry_fragment_ast_lint_test.py",
+    ],
+    main = "tests/registry_fragment_ast_lint_test.py",
+    data = [
+        "//message:schemas_registry",
+    ],
+)
+
+py_test(
+    name = "registry_bijection_lint_test",
+    env = {
+        # Migrated families' registry entries live in a separate schema
+        # module. `$(locations ...)` expands to every fragment file, so a later
+        # batch needs no edit here; registry_lint fails CLOSED if the allowlist
+        # declares a migrated package and this is unset.
+    },
+    srcs = [
+        "registry_lint.py",
+        "tests/registry_bijection_lint_test.py",
+    ],
+    main = "tests/registry_bijection_lint_test.py",
+    data = [
+        "//message:schema_build_files",
+        "//message:schemas_registry",
+        "//message:schema_source_files",
+    ],
+)
+
+
+
+
+
+py_binary(
+    name = "patch_flatc_rust",
+    srcs = [
+        "patch_flatc_rust.py",
+        # The absolute foreign-reference rewrite reads the include
+        # closure's namespace/type map from the compiled bfbs via
+        # schema_reflection (same deps treatment as gen_schema_meta /
+        # gen_message_wrapper). Only loaded when `--root-bfbs` is passed; a leaf
+        # schema with no cross-tree references needs none of these.
+        "schema_include_utils.py",
+        "schema_reflection.py",
+    ],
+    deps = [":reflection_py_lib"],
+)
+
+py_test(
+    name = "patch_flatc_rust_test",
+    srcs = [
+        "patch_flatc_rust.py",
+        "patch_flatc_rust_test.py",
+    ],
+    main = "patch_flatc_rust_test.py",
+)
+
+# One-time content-identity harness for the canonical-order change (see the
+# module docstring, "Final design"). Not wired into
+# `bazel test //...` — it compares two directories of already-generated
+# wrapper outputs (before/after the canonical-order patch) passed as CLI
+# args, so it is a manual verification tool run via `bazel run`, not a
+# hermetic regression test. It compares every statement body STRICTLY and
+# UNCONDITIONALLY — no allowlist, no exception for any (file, function)
+# pair (review found a new false-pass hole in every attempt at automated
+# reorder tolerance, so the mechanism was removed rather than refined
+# again). The 3 known, legitimate
+# DataUploadGoal reorders this program identified now correctly show up
+# as ordinary content drift in this tool's own output; their actual
+# safety argument is the ALWAYS hermetic, `bazel test`-wired compile+
+# round-trip proofs `//cpp:data_upload_goal_reorder_roundtrip_test` and
+# `//rust:data_upload_goal_reorder_roundtrip_test`, plus human sign-off
+# — never this script. Additional permanent
+# regression coverage for reorder-safety is
+# `gen_message_wrapper_canonical_order_test` (perturbation) plus the
+# existing `sweep_conflicts_test` (guard-symmetry sweep over every schema).
+py_binary(
+    name = "content_identity_2a",
+    srcs = ["tests/content_identity_2a.py"],
+    main = "tests/content_identity_2a.py",
+)
+
+# Self-tests for the
+# content-identity harness's own comparison semantics -- identity-paired
+# refinement (never pooling different parents' children together),
+# declaration-list vs. statement-body classification, and (final design)
+# the strict-everywhere contract: every statement body compares in
+# exact order, unconditionally, with no allowlist and no exception for
+# any (file, function) pair, including the 3 known, compile+round-trip-
+# verified DataUploadGoal reorders. See content_identity_2a.py's module
+# docstring.
+py_test(
+    name = "content_identity_2a_test",
+    srcs = [
+        "tests/content_identity_2a.py",
+        "tests/content_identity_2a_test.py",
+    ],
+    main = "tests/content_identity_2a_test.py",
+)
+
+py_binary(
+    name = "check_message_schema_deps",
+    srcs = [
+        "check_message_schema_deps.py",
+        "schema_include_utils.py",
+    ],
+)
+
+sh_test(
+    name = "check_message_schema_deps_test",
+    srcs = ["check_message_schema_deps_test.sh"],
+    data = [
+        ":check_message_schema_deps",
+        "//message:build_file",
+        "//message:bindings_registry",
+        "//message:schemas_registry",
+        "//message:schemas_registry_manifest",
+        "//message:schema_build_files",
+        "//message:schemas",
+    ],
+)
+
+sh_test(
+    name = "gen_message_wrapper_include_table_test",
+    srcs = ["gen_message_wrapper_include_table_test.sh"],
+    args = ["$(location :flatc)"],
+    data = [
+        ":flatc",
+        ":gen_action_wrapper",
+        ":gen_message_wrapper",
+        "//message:schemas",
+        "//message/schemas/action/example:guard_action_probe_action_schema",
+    ],
+)
+
+sh_test(
+    name = "gen_action_wrapper_test",
+    srcs = ["gen_action_wrapper_test.sh"],
+    data = [
+        ":gen_action_wrapper",
+        "//message:schemas",
+    ],
+)
+
+sh_test(
+    name = "gen_message_wrapper_action_name_test",
+    srcs = ["gen_message_wrapper_action_name_test.sh"],
+    args = ["$(location :flatc)"],
+    data = [
+        ":flatc",
+        ":gen_action_wrapper",
+        ":gen_message_wrapper",
+        "//message:schemas",
+    ],
+)
+
+alias(
+    name = "flatc",
+    actual = "@flatbuffers//:flatc",
+)
+
+alias(
+    name = "flatbuffers_cc",
+    actual = "@flatbuffers//:flatbuffers",
+)
+
+# Aorta-owned anchor for the Rust flatbuffers runtime crate. @aorta_crates is
+# Aorta's PRIVATE crate-universe repo name — no external consumer has that
+# repo mapping, so Tier-2 macros must reference the crate through this alias
+# (resolved in THIS package, where @aorta_crates is visible).
+alias(
+    name = "flatbuffers_rust",
+    actual = "@aorta_crates//:flatbuffers",
+)
+
+# Same treatment for the FlatBuffers PYTHON runtime: @aorta_py_deps is
+# Aorta's private pip hub repo, invisible to an external module, so every
+# generated `py_library` reaches it through this alias instead of a
+# `requirement()` STRING (which would be re-resolved in the caller's repo
+# mapping when the codegen macros expand in an external schema root).
+alias(
+    name = "flatbuffers_py",
+    actual = requirement("flatbuffers"),
+)
+
+py_binary(
+    name = "registry_tool_identity",
+    srcs = ["registry_tool_identity.py"],
+)
+
+py_test(
+    name = "registry_tool_identity_test",
+    srcs = ["registry_tool_identity.py", "tests/registry_tool_identity_test.py"],
+    main = "tests/registry_tool_identity_test.py",
+)
+
+py_test(
+    name = "python_msgs_tree_test",
+    srcs = ["tests/python_msgs_tree_test.py"],
+    main = "tests/python_msgs_tree_test.py",
+    data = ["flatbuffers_rules.bzl", "schema_names.bzl"],
+)
+
+py_test(
+    name = "schema_release_test",
+    srcs = ["tests/schema_release_test.py"],
+    main = "tests/schema_release_test.py",
+    env = {"RELEASE_TREE": "$(rootpath @aorta_schema_module_fixture//schemas/release/nested:release)"},
+    data = ["@aorta_schema_module_fixture//schemas/release/nested:release"],
+    deps = [":schema_release_lib"],
+)
+
+py_library(
+    name = "schema_release_lib",
+    imports = ["."],
+    srcs = ["schema_release.py", "schema_include_utils.py"],
+)
+
+py_binary(
+    name = "schema_release_tool",
+    main = "schema_release_main.py",
+    srcs = ["schema_release_main.py"],
+    deps = [":schema_release_lib"],
+)
+
+sh_test(
+    name = "schema_release_owner_test",
+    srcs = ["tests/schema_release_owner_test.sh"],
+    args = ["$(location //:MODULE.bazel)"],
+    data = ["//:MODULE.bazel"],
+    tags = ["no-sandbox", "no-cache"],
+    size = "large",
+)
+
+py_binary(
+    name = "python_distribution",
+    srcs = ["python_distribution.py"],
+)
+
+py_test(
+    name = "python_ownership_test",
+    imports = ["."],
+    srcs = ["python_distribution.py", "tests/python_ownership_test.py"],
+    main = "tests/python_ownership_test.py",
+)
+
+# The published SDK wheel renders its THIRD_PARTY_NOTICES.md from cargo-about
+# evidence that only the release job collects, so the hermetic composition test
+# finishes the same payload wheel with a fixture notice instead; everything
+# else (LICENSE, NOTICE, layout, metadata) is the real thing.
+python_wheel_licenses(
+    name = "aorta_sdk_wheel_fixture_notices",
+    wheel = "//python/stage:aorta_sdk_wheel",
+    license_files = {
+        "//tools/release:LICENSE": "LICENSE",
+        "//python:NOTICE.aorta_sdk": "NOTICE",
+        "tests/wheel_fixtures/THIRD_PARTY_NOTICES.md": "THIRD_PARTY_NOTICES.md",
+    },
+    testonly = True,
+)
+
+# Inputs shared by the hermetic composition test and the manual release test:
+# only the SDK wheel and the notices it must carry differ.
+WHEEL_TEST_ENV = {
+    "PIP_WHEEL": "$(rootpath @wheel_test_pip//file)",
+    "FLATBUFFERS_WHEEL": "$(rootpath " + whl_requirement("flatbuffers") + ")",
+    "SDK_MANIFEST": "$(rootpath //python:aorta_sdk_ownership)",
+    "BASE_WHEEL": "$(rootpath //python:aorta_msgs_wheel)",
+    "PRODUCT_WHEEL": "$(rootpath @aorta_schema_module_fixture//:product_wheel)",
+    "CUSTOM_WHEEL": "$(rootpath @aorta_schema_module_fixture//:custom_wheel)",
+    "BASE_MANIFEST": "$(rootpath //python:aorta_msgs_ownership)",
+    "PRODUCT_MANIFEST": "$(rootpath @aorta_schema_module_fixture//:product_wheel_ownership)",
+    "CUSTOM_MANIFEST": "$(rootpath @aorta_schema_module_fixture//:custom_wheel_ownership)",
+    "REGISTRY": "$(rootpath @aorta_schema_module_fixture//:python_registry)",
+    "LICENSE_TEXT": "$(rootpath //tools/release:LICENSE)",
+    "SDK_NOTICE": "$(rootpath //python:NOTICE.aorta_sdk)",
+    "BASE_NOTICE": "$(rootpath //python:NOTICE.aorta_msgs)",
+    "BASE_THIRD_PARTY_NOTICES": "$(rootpath //python:aorta_msgs_third_party_notices)",
+    "FOXGLOVE_LICENSE": "$(rootpath //:THIRD_PARTY_LICENSES/foxglove-sdk.LICENSE)",
+}
+
+WHEEL_TEST_DATA = [
+    "@wheel_test_pip//file", whl_requirement("flatbuffers"),
+    "//python:aorta_sdk_ownership", "//python:aorta_msgs_wheel", "//python:aorta_msgs_ownership",
+    "@aorta_schema_module_fixture//:product_wheel", "@aorta_schema_module_fixture//:custom_wheel",
+    "@aorta_schema_module_fixture//:product_wheel_ownership", "@aorta_schema_module_fixture//:custom_wheel_ownership",
+    "@aorta_schema_module_fixture//:python_registry",
+    "//tools/release:LICENSE", "//python:NOTICE.aorta_sdk", "//python:NOTICE.aorta_msgs",
+    "//python:aorta_msgs_third_party_notices", "//:THIRD_PARTY_LICENSES/foxglove-sdk.LICENSE",
+]
+
+py_test(
+    name = "python_wheel_composition_test",
+    imports = ["."],
+    srcs = ["python_distribution.py", "tests/python_wheel_composition_test.py"],
+    main = "tests/python_wheel_composition_test.py",
+    env = WHEEL_TEST_ENV | {
+        "SDK_WHEEL": "$(rootpath :aorta_sdk_wheel_fixture_notices)",
+        "SDK_THIRD_PARTY_NOTICES": "$(rootpath tests/wheel_fixtures/THIRD_PARTY_NOTICES.md)",
+    },
+    data = WHEEL_TEST_DATA + [
+        ":aorta_sdk_wheel_fixture_notices",
+        "tests/wheel_fixtures/THIRD_PARTY_NOTICES.md",
+    ],
+)
+
+# The same checks over the published SDK wheel and its real notices. Manual:
+# it needs the release job's cargo-about evidence,
+# and the Python wheels workflow runs it after building the wheels.
+py_test(
+    name = "python_wheel_release_test",
+    imports = ["."],
+    srcs = ["python_distribution.py", "tests/python_wheel_composition_test.py"],
+    main = "tests/python_wheel_composition_test.py",
+    env = WHEEL_TEST_ENV | {
+        "SDK_WHEEL": "$(rootpath //python:aorta_sdk_wheel)",
+        "SDK_THIRD_PARTY_NOTICES": "$(rootpath //tools/release:aorta_sdk_wheel_third_party_notices)",
+        "RELEASE_NOTICES": "1",
+    },
+    data = WHEEL_TEST_DATA + [
+        "//python:aorta_sdk_wheel",
+        "//tools/release:aorta_sdk_wheel_third_party_notices",
+    ],
+    tags = ["manual"],
+)
+
+py_binary(
+    name = "gen_python_fastpath",
+    srcs = ["gen_python_fastpath.py", "schema_reflection.py"],
+    imports = ["."],
+    deps = [":reflection_py_lib"],
+)
+
+[
+    genrule(
+        name = "{}_bfbs".format(stem),
+        srcs = ["tests/schema_reflection_fixtures/{}.fbs".format(stem),
+                "tests/schema_reflection_fixtures/python_fastpath.fbs"],
+        outs = ["tests/schema_reflection_fixtures/{}.bfbs".format(stem)],
+        tools = [":flatc"],
+        cmd = "$(location :flatc) --binary --schema --bfbs-builtins -o $(@D) $(location tests/schema_reflection_fixtures/{}.fbs)".format(stem),
+        testonly = True,
+    )
+    for stem in ["fastpath_rows", "fastpath_unsupported"]
+]
+
+flatbuffers_python(
+    name = "fastpath_rows_py",
+    srcs = ["tests/schema_reflection_fixtures/fastpath_rows.fbs",
+            "tests/schema_reflection_fixtures/python_fastpath.fbs"],
+    testonly = True,
+)
+
+python_fastpath(
+    name = "fastpath_rows_companion",
+    bfbs = ":fastpath_rows_bfbs",
+    getters = ":fastpath_rows_py",
+    stem = "fastpath_rows",
+    testonly = True,
+)
+
+py_test(
+    name = "python_fastpath_test",
+    srcs = ["python_fastpath_test.py", "gen_python_fastpath.py", "schema_reflection.py"],
+    imports = ["fastpath_rows_py"],
+    env = {
+        "ROWS_BFBS": "$(rootpath :fastpath_rows_bfbs)",
+        "UNSUPPORTED_BFBS": "$(rootpath :fastpath_unsupported_bfbs)",
+        "DEFAULTS_BFBS": "$(rootpath :reflection_fixture_python_fastpath_bfbs)",
+        "GETTERS": "$(rootpath :fastpath_rows_py)",
+        "COMPANION": "$(rootpath :fastpath_rows_companion)",
+        "PRODUCER": "$(rootpath :fastpath_producer_buffer)",
+        "ISNONE_BFBS": "$(rootpath :reflection_fixture_python_fastpath_isnone_collision_bfbs)",
+        "LENGTH_BFBS": "$(rootpath :reflection_fixture_python_fastpath_length_collision_bfbs)",
+        "COLLISION_GETTERS": "$(rootpath :reflection_fixture_python_fastpath_py)",
+    },
+    data = [":fastpath_rows_bfbs", ":fastpath_unsupported_bfbs",
+            ":reflection_fixture_python_fastpath_bfbs", ":fastpath_rows_py", ":fastpath_rows_companion",
+            ":fastpath_producer_buffer", ":reflection_fixture_python_fastpath_py",
+            ":reflection_fixture_python_fastpath_isnone_collision_bfbs",
+            ":reflection_fixture_python_fastpath_length_collision_bfbs"],
+    deps = [":reflection_py_lib", "//message/runtime:python_fastpath"],
+)
+
+genrule(
+    name = "fastpath_rows_cpp",
+    srcs = ["tests/schema_reflection_fixtures/fastpath_rows.fbs",
+            "tests/schema_reflection_fixtures/python_fastpath.fbs"],
+    outs = ["fastpath_rows_generated.h", "python_fastpath_generated.h"],
+    tools = [":flatc"],
+    cmd = "$(location :flatc) --cpp --scoped-enums -o $(@D) $(SRCS)",
+    testonly = True,
+)
+
+cc_library(
+    name = "fastpath_rows_cpp_lib",
+    hdrs = [":fastpath_rows_cpp"],
+    deps = ["@flatbuffers//:runtime_cc"],
+    testonly = True,
+)
+
+cc_binary(
+    name = "fastpath_producer",
+    srcs = ["tests/python_fastpath_producer.cc"],
+    deps = [":fastpath_rows_cpp_lib"],
+    testonly = True,
+)
+
+genrule(
+    name = "fastpath_producer_buffer",
+    outs = ["tests/fastpath_producer.bin"],
+    tools = [":fastpath_producer"],
+    cmd = "$(location :fastpath_producer) $@",
+    testonly = True,
+)
+
+[
+    genrule(
+        name = "{}_bfbs".format(stem),
+        srcs = ["tests/schema_reflection_fixtures/writer_common.fbs",
+                "tests/schema_reflection_fixtures/writer_cmd.fbs"],
+        outs = ["tests/schema_reflection_fixtures/{}.bfbs".format(stem)],
+        tools = [":flatc"],
+        cmd = "$(location :flatc) --binary --schema --bfbs-builtins -o $(@D) $(location tests/schema_reflection_fixtures/{}.fbs)".format(stem),
+        testonly = True,
+    )
+    for stem in ["writer_common", "writer_cmd"]
+]
+
+flatbuffers_python(
+    name = "writer_py",
+    srcs = ["tests/schema_reflection_fixtures/writer_common.fbs",
+            "tests/schema_reflection_fixtures/writer_cmd.fbs"],
+    testonly = True,
+)
+
+# Object-API Pack() for structs whose names contain consecutive capitals
+# (BBox2D, UBytePair): flatc 25.9.23 defined and called the struct creator
+# under two different spellings (google/flatbuffers#8791).
+flatbuffers_python(
+    name = "object_api_py",
+    srcs = ["tests/python_object_api_fixtures/acronym_struct.fbs"],
+    testonly = True,
+)
+
+py_test(
+    name = "python_object_api_test",
+    srcs = ["python_object_api_test.py"],
+    imports = ["object_api_py"],
+    data = [":object_api_py"],
+    deps = [requirement("flatbuffers")],
+)
+
+python_fastpath(
+    name = "writer_companion",
+    bfbs = ":writer_common_bfbs",
+    getters = ":writer_py",
+    stem = "writer_common",
+    testonly = True,
+)
+
+py_test(
+    name = "python_struct_vector_test",
+    srcs = ["python_struct_vector_test.py", "gen_python_fastpath.py", "schema_reflection.py"],
+    imports = [".", "writer_py"],
+    env = {
+        "WRITER_COMPANION": "$(rootpath :writer_companion)",
+        "WRITER_GETTERS": "$(rootpath :writer_py)",
+        "COMMON_BFBS": "$(rootpath :writer_common_bfbs)",
+        "CMD_BFBS": "$(rootpath :writer_cmd_bfbs)",
+    },
+    data = [":writer_companion", ":writer_py", ":writer_common_bfbs", ":writer_cmd_bfbs"],
+    deps = [":reflection_py_lib", "//message/runtime:python_fastpath"],
+)
+
+py_binary(
+    name = "python_struct_vector_producer",
+    srcs = ["python_struct_vector_test.py", "gen_python_fastpath.py", "schema_reflection.py"],
+    main = "python_struct_vector_test.py",
+    imports = [".", "writer_py"],
+    data = [":writer_companion", ":writer_py"],
+    deps = [":reflection_py_lib", "//message/runtime:python_fastpath"],
+    testonly = True,
+)
+
+genrule(
+    name = "writer_buffer",
+    srcs = [":writer_companion"],
+    outs = ["tests/writer_buffer.bin"],
+    tools = [":python_struct_vector_producer"],
+    cmd = "WRITER_COMPANION=$(location :writer_companion) $(location :python_struct_vector_producer) --produce $@",
+    testonly = True,
+)
+
+genrule(
+    name = "writer_cpp",
+    srcs = ["tests/schema_reflection_fixtures/writer_common.fbs",
+            "tests/schema_reflection_fixtures/writer_cmd.fbs"],
+    outs = ["tests/writer_common_generated.h", "tests/writer_cmd_generated.h"],
+    tools = [":flatc"],
+    cmd = "$(location :flatc) --cpp --scoped-enums -o $(@D)/tests $(SRCS)",
+    testonly = True,
+)
+
+cc_test(
+    name = "python_struct_vector_cpp_test",
+    srcs = ["tests/python_struct_vector_reader.cc", ":writer_cpp"],
+    env = {"WRITER_BUFFER": "$(rootpath :writer_buffer)"},
+    data = [":writer_buffer"],
+    deps = ["@flatbuffers//:runtime_cc"],
+)
+
+genrule(
+    name = "writer_rust",
+    srcs = ["tests/schema_reflection_fixtures/writer_common.fbs",
+            "tests/schema_reflection_fixtures/writer_cmd.fbs"],
+    outs = ["tests/writer_cmd_generated.rs"],
+    tools = [":flatc"],
+    cmd = "$(location :flatc) --rust --gen-all -o $(@D) $(location tests/schema_reflection_fixtures/writer_cmd.fbs)",
+    testonly = True,
+)
+
+rust_test(
+    name = "python_struct_vector_rust_test",
+    srcs = ["tests/python_struct_vector_reader.rs", ":writer_rust"],
+    crate_root = "tests/python_struct_vector_reader.rs",
+    edition = "2021",
+    env = {"WRITER_BUFFER": "$(rootpath :writer_buffer)"},
+    data = [":writer_buffer"],
+    deps = [":flatbuffers_rust"],
+)
+
+py_test_with_version(
+    name = "python_fastpath_runfiles_test",
+    python_version = "3.11",
+    srcs = ["tests/python_fastpath_runfiles_test.py"],
+    main = "tests/python_fastpath_runfiles_test.py",
+    env = {"GENERATOR": "$(rootpath :gen_python_fastpath)"},
+    data = [":gen_python_fastpath"],
+)

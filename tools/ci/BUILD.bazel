@@ -1,0 +1,1 @@
+exports_files(["check_bazel_cargo_lockfile.sh"])

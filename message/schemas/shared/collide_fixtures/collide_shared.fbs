@@ -1,0 +1,12 @@
+// Shared-root fixture whose second segment (`xfoo`)
+// is REUSED as a DISJOINT root by collide_disjoint_{a,b}. Namespace
+// aorta.xfoo.common shares the consumer's local root (aorta), so the shared-root
+// pass injects a NESTED `pub mod xfoo` inside `pub mod aorta`. Example/test only.
+namespace aorta.xfoo.common;
+
+/// Shared enum whose namespace segment `xfoo` collides (by name) with a disjoint
+/// root -- exercises the top-level idempotency anchoring.
+enum CollideShared : ubyte {
+  UNKNOWN = 0,
+  A       = 1,
+}

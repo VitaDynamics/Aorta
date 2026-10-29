@@ -1,0 +1,22 @@
+name: Mirror schema integrity
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  schema-integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out mirror
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Set up Bazel
+        uses: ./.github/actions/setup-aorta-bazel
+      - name: Run schema-integrity
+        run: python3 .github/scripts/mirror_ci.py schema-integrity

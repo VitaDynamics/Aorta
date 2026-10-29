@@ -1,0 +1,13 @@
+// Schema-meta fixture — a fixture-local declaration of
+// `aorta.sys.AortaHeader` (same QUALIFIED name as the real
+// message/schemas/system/aorta_base.fbs table; the tightened
+// HAS_AORTA_HEADER semantic keys on the qualified name, so a
+// self-contained fixture copy avoids a cross-package srcs label on the
+// production schema tree).
+namespace aorta.sys;
+
+table AortaHeader {
+  publish_stamp_ns: ulong;
+  publisher_node: string;
+  sequence: ulong;
+}

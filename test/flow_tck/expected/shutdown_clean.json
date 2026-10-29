@@ -1,0 +1,24 @@
+[
+  {
+    "scenario": "shutdown_clean",
+    "seq": 0,
+    "op": "task.spawn",
+    "event": "lifecycle",
+    "phase": "spawned"
+  },
+  {
+    "scenario": "shutdown_clean",
+    "seq": 1,
+    "op": "task.await",
+    "event": "value",
+    "value": "7"
+  },
+  {
+    "scenario": "shutdown_clean",
+    "seq": 2,
+    "op": "scope.shutdown_grace",
+    "event": "counter",
+    "name": "detached",
+    "value": 0
+  }
+]

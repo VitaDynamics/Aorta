@@ -1,0 +1,20 @@
+load("//message/tools:external_schema_root.bzl", "aorta_external_schema_package")
+load("//message/tools/tests/external_root_internal:registry.bzl", "PROBE_SCHEMAS")
+
+package(default_visibility = ["//visibility:public"])
+
+aorta_external_schema_package(
+    name = "probe",
+    expected_provenance = "internal",
+    fragment = "//message/tools/tests/external_root_internal:registry.bzl",
+    fragment_symbol = "PROBE_SCHEMAS",
+    items = PROBE_SCHEMAS,
+    source_inventory = ["//message/tools/tests/external_root_internal:all_fbs"],
+    source_package = "//message/tools/tests/external_root_internal",
+    source_prefix = "src",
+)
+
+filegroup(
+    name = "build_file",
+    srcs = ["BUILD.bazel"],
+)

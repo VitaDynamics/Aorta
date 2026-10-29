@@ -1,0 +1,35 @@
+// Telemetry: merged vital snapshot (telemetry tiering).
+//
+// Composes node_identity + resource_inventory (reused via `include`) plus an
+// inline RuntimeHealth into ONE per-node 30 s vital record, published at
+// aorta/{group}/sys/telemetry/vital/snapshot/{node}. See
+// spec/Aorta_Observability_MP4_Telemetry_Tiering.md.
+//
+// Like the other telemetry families this schema is intentionally NOT registered
+// in `message/schemas/registry.bzl`; the Rust bindings + BFBS bytes are
+// committed as `core/src/telemetry/telemetry_vital_snapshot_generated.rs`
+// (constant `TELEMETRY_VITAL_SNAPSHOT_BFBS`) and a Cargo-only `core/build.rs`
+// drift test guards them against the .fbs.
+
+include "telemetry_node_identity.fbs";
+include "telemetry_resource_inventory.fbs";
+
+namespace aorta.telemetry;
+
+table RuntimeHealth {
+  spin_count: ulong;
+  last_progress_ns: ulong;
+  error_count: ulong;
+  alive: bool;
+}
+
+table VitalSnapshot {
+  telemetry_version: uint;
+  sequence: ulong;
+  timestamp_ns: ulong;
+  identity: NodeIdentity;
+  inventory: ResourceInventory;
+  health: RuntimeHealth;
+}
+
+root_type VitalSnapshot;

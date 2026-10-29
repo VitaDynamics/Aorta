@@ -1,0 +1,21 @@
+// Cross-package nested Foxglove types fixture.
+//
+// A root in ONE namespace tree (aorta.services.xtree) nesting types from a
+// SECOND, disjoint tree (foxglove). Generated relative paths reach the file's
+// top scope because `foxglove` is not nested under `aorta`.
+// Referencing TWO foxglove schemas (Vector3 + PointCloud) pulls TWO dep crates
+// that each declare a partial `pub mod foxglove`, so the glob import is
+// ambiguous. Example/test only; do NOT consume downstream.
+include "schemas/system/aorta_base.fbs";
+include "schemas/topic/foxglove_schema/Vector3.fbs";
+include "schemas/topic/foxglove_schema/PointCloud.fbs";
+
+namespace aorta.services.xtree;
+
+table XtreeFoxgloveProbe {
+  aorta_header : aorta.sys.AortaHeader (id: 0);
+  offset       : foxglove.Vector3      (id: 1);   // cross-tree nested table (E0412 site)
+  cloud        : foxglove.PointCloud   (id: 2);   // second foxglove provider crate
+}
+
+root_type XtreeFoxgloveProbe;

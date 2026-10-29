@@ -1,0 +1,14 @@
+// schema_reflection loader fixture: exercises the
+// `OptionalScalars` advanced_features bit. NOT a real Aorta message schema
+// (not registered in message/schemas/registry.bzl) — used only by
+// schema_reflection_test.py to prove `schema_reflection.load_bfbs` accepts
+// this bit. FlatBuffers spells "optional scalar" as `= null`, not an
+// `(optional)` field attribute, in this pinned flatc version.
+
+namespace fx;
+
+table Foo {
+  x:int32 = null (id: 0);
+}
+
+root_type Foo;

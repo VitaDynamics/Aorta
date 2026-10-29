@@ -1,0 +1,40 @@
+[
+  {
+    "scenario": "isolated_child_failure",
+    "seq": 0,
+    "op": "task.spawn",
+    "event": "lifecycle",
+    "phase": "spawned_a"
+  },
+  {
+    "scenario": "isolated_child_failure",
+    "seq": 1,
+    "op": "task.spawn",
+    "event": "lifecycle",
+    "phase": "spawned_b"
+  },
+  {
+    "scenario": "isolated_child_failure",
+    "seq": 2,
+    "op": "task.await",
+    "event": "stopped",
+    "kind": "fault",
+    "code": -5,
+    "message": "tck-isolated-fault"
+  },
+  {
+    "scenario": "isolated_child_failure",
+    "seq": 3,
+    "op": "task.await",
+    "event": "value",
+    "value": "42"
+  },
+  {
+    "scenario": "isolated_child_failure",
+    "seq": 4,
+    "op": "scope.stats",
+    "event": "counter",
+    "name": "scope_cancelled",
+    "value": 0
+  }
+]

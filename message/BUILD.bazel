@@ -1,0 +1,199 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//message:bindings/registry.bzl", "MESSAGE_BINDING_ALIASES")
+load("//message:schemas/registry_manifest.bzl", "aorta_schema_registry_manifest")
+load(
+    "//message:schemas/registry.bzl",
+    "SCHEMA_DEFINITIONS",
+    "SCHEMA_ALL_FBS_TARGETS",
+    "SCHEMA_BFBS_TARGETS",
+    "SCHEMA_BUILD_FILE_TARGETS",
+    "SCHEMA_CPP_GENERATED_TARGETS",
+    "SCHEMA_EXAMPLES_BFBS_TARGETS",
+    "SCHEMA_META_CPP_TARGETS",
+    "SCHEMA_META_PY_TARGETS",
+    "SCHEMA_META_RUST_TARGETS",
+    "SCHEMA_OUTPUT_ALIASES",
+    "SCHEMA_PYTHON_GENERATED_TARGETS",
+    "SCHEMA_RUST_GENERATED_TARGETS",
+)
+load("//message/tools:message_bindings.bzl", "aorta_define_aliases")
+load("//message/tools:registry_compose.bzl", "aorta_registry")
+load("//message/tools:schema_lint.bzl", "aorta_schema_module_lint_test")
+
+load("//message/tools:oss_comparison_bfbs.bzl", "aorta_oss_comparison_bfbs")
+
+package(default_visibility = ["//visibility:public"])
+
+
+# Read by //tools/release:test_mirror_export, which runs the mirror rewriters
+# over this package's real sources.
+exports_files(["README.md"])
+
+filegroup(
+    name = "schemas",
+    srcs = SCHEMA_ALL_FBS_TARGETS,
+)
+
+# PHYSICAL source census — lint input ONLY, never a release input.
+# It independently discovers tracked `.fbs` files with a glob, which is
+# exactly what makes it a useful cross-check against the registry-driven
+# `:schemas` set above. Do not feed it into the canonical schema-source tree
+# targets, or the two sources of truth collapse.
+filegroup(
+    name = "schema_source_files",
+    srcs = glob(["schemas/**/*.fbs"]) + [
+        "//message/{}:all_source_fbs".format(pkg)
+        for pkg in subpackages(
+            include = ["schemas/**"],
+            exclude = ["schemas/registry/**"],
+        )
+    ],
+)
+
+aorta_schema_module_lint_test(
+    name = "base_schema_lint_test",
+    fragments = ["//message/schemas/registry/fragments:aorta_base_fragment"],
+    census = [":schema_source_files"],
+)
+
+filegroup(
+    name = "base_surface_audit",
+    testonly = True,
+    srcs = [":base_schema_lint_test_inputs"],
+    data = [":base_schema_lint_test_inputs"],
+)
+
+filegroup(
+    name = "schema_build_files",
+    srcs = SCHEMA_BUILD_FILE_TARGETS,
+)
+
+filegroup(
+    name = "build_file",
+    srcs = ["BUILD.bazel"],
+)
+
+filegroup(
+    name = "bindings_registry",
+    srcs = ["bindings/registry.bzl"],
+)
+
+filegroup(
+    name = "schemas_registry",
+    srcs = [
+        "schemas/external_roots.bzl",
+        "schemas/registry.bzl",
+        "schemas/registry_local.bzl",
+    ],
+)
+
+exports_files(["schemas/external_roots.bzl"])
+
+aorta_schema_registry_manifest(
+    name = "schemas_registry_manifest",
+)
+
+
+
+
+
+
+
+
+aorta_oss_comparison_bfbs(
+    name = "oss_comparison_bfbs",
+    registry_entries = SCHEMA_DEFINITIONS,
+    schemas = ":schemas",
+    tags = ["manual"],
+)
+
+alias(
+    name = "flatc",
+    actual = "//message/tools:flatc",
+)
+
+alias(
+    name = "flatbuffers_cc",
+    actual = "//message/tools:flatbuffers_cc",
+)
+
+alias(
+    name = "gen_schema_meta",
+    actual = "//message/tools:gen_schema_meta",
+)
+
+filegroup(
+    name = "rust_generated",
+    srcs = SCHEMA_RUST_GENERATED_TARGETS,
+)
+
+filegroup(
+    name = "cpp_generated",
+    srcs = SCHEMA_CPP_GENERATED_TARGETS,
+)
+
+filegroup(
+    name = "python_generated",
+    srcs = SCHEMA_PYTHON_GENERATED_TARGETS,
+)
+
+filegroup(
+    name = "bfbs_generated",
+    srcs = SCHEMA_BFBS_TARGETS,
+)
+
+filegroup(
+    name = "schema_meta_rust_generated",
+    srcs = SCHEMA_META_RUST_TARGETS,
+)
+
+filegroup(
+    name = "schema_meta_cpp_generated",
+    srcs = SCHEMA_META_CPP_TARGETS,
+)
+
+# Release/audit aggregate for the Python schema-metadata modules
+# (`<stem>_schema_meta.py`), the fourth generated family alongside the BFBS,
+# Rust and C++ ones above. `SCHEMA_META_PY_TARGETS` lists only packages that
+# emit at least one module, so this filegroup is exactly the set the mirror
+# gate's M1 artifact parity expects to find in the artifacts root.
+filegroup(
+    name = "schema_meta_py_generated",
+    srcs = SCHEMA_META_PY_TARGETS,
+)
+
+filegroup(
+    name = "examples_bfbs",
+    srcs = SCHEMA_EXAMPLES_BFBS_TARGETS,
+)
+
+cc_library(
+    name = "aorta_schema_meta_cpp",
+    hdrs = SCHEMA_META_CPP_TARGETS,
+    includes = ["."],
+    deps = ["@flatbuffers//:flatbuffers"],
+)
+
+
+aorta_define_aliases(
+    SCHEMA_OUTPUT_ALIASES +
+    MESSAGE_BINDING_ALIASES,
+)
+
+# ---------------------------------------------------------------------------
+# L3: the degenerate composed registry — aorta alone. A real consumer
+# instantiates `aorta_registry` in ITS root over
+# `@aorta//message/schemas/registry/fragments:aorta_base_fragment` plus each
+# schema module's own fragment; this one-fragment instance is what proves the
+# base module can stand alone, and is the fixture the conflict tests compose
+# against.
+#
+# Building it is not automatic: an unreferenced target is never built and
+# `--nobuild` never runs its action, so a consumer's CI must name it
+# explicitly. The conflict checks themselves are analysis-time `fail()`s.
+# ---------------------------------------------------------------------------
+
+aorta_registry(
+    name = "base_registry",
+    fragments = ["//message/schemas/registry/fragments:aorta_base_fragment"],
+)

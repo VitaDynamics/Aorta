@@ -1,0 +1,39 @@
+// Owner side of the codegen guard-symmetry fixture.
+//
+// This schema and its includer form a same-namespace pair that exercises table
+// and union guard classes in generated wrappers.
+//
+// `guard_fixture_includer.fbs` includes this file and shares its namespace,
+// so both wrappers emit the same table and union symbols. The guards must be
+// symmetric to prevent redefinition in either include order.
+//
+// Do not add real fields or reuse this schema for anything other than the
+// guard-symmetry probes.
+
+include "schemas/system/aorta_base.fbs";
+
+namespace aorta.example.guard_fixture;
+
+table FixtureLeaf {
+  value: int32 (id: 0);
+}
+
+table FixtureMeta {
+  level: int32 (id: 0);
+}
+
+union FixtureUnion {
+  FixtureLeaf,
+  FixtureMeta,
+}
+
+table FixtureOwnerRoot {
+  aorta_header: aorta.sys.AortaHeader (id: 0);
+  // id 1 is reserved for the flatc-synthesized `payload_type` discriminator
+  // of the `payload` union field below (must be id 2 - 1); see
+  // all_types_cpp_vector_union.fbs for the same convention.
+  payload:      FixtureUnion          (id: 2);
+  leaf:         FixtureLeaf           (id: 3);
+}
+
+root_type FixtureOwnerRoot;

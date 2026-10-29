@@ -1,0 +1,6 @@
+load("//message:bindings/registry.bzl", "RUST_MESSAGE_BINDINGS")
+load("//message/tools:message_bindings.bzl", "aorta_define_rust_bindings")
+
+package(default_visibility = ["//visibility:public"])
+
+aorta_define_rust_bindings(RUST_MESSAGE_BINDINGS)

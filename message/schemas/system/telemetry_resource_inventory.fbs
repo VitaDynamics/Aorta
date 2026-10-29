@@ -1,0 +1,68 @@
+// Telemetry: resource_inventory family wire schema (telemetry V2).
+//
+// Like telemetry_node_identity.fbs, this schema is NOT
+// registered in registry.bzl: the Rust bindings + BFBS are produced by
+// core/build.rs (Cargo) and committed as
+// core/src/telemetry/telemetry_resource_inventory_generated.rs (constant
+// TELEMETRY_RESOURCE_INVENTORY_BFBS). The shape MUST mirror
+// `ResourceInventoryTelemetry` and friends in core/src/telemetry/schema.rs;
+// roundtrip tests in telemetry/fb.rs + the build.rs drift check guard against
+// drift. Regenerate the committed bindings with flatc and run `cargo fmt`.
+
+include "telemetry_common.fbs";
+
+namespace aorta.telemetry;
+
+// Mirrors TelemetryResourceCommon. Optional<String> -> optional string (null
+// when absent); Option<u64> declared_at_ns -> optional scalar (`= null`).
+table ResourceCommon {
+  resource_instance_id: string;
+  resource_name: string;
+  full_key: string;
+  schema_hash: string;
+  declared_at_ns: ulong = null;
+  labels: [KeyValue];
+}
+
+table PublisherEntry {
+  common: ResourceCommon;
+}
+
+table SubscriberEntry {
+  common: ResourceCommon;
+}
+
+table ServiceEntry {
+  common: ResourceCommon;
+  request_root_type: string;
+  response_root_type: string;
+}
+
+table ClientEntry {
+  common: ResourceCommon;
+  request_root_type: string;
+  response_root_type: string;
+}
+
+table InventoryOverflow {
+  publishers_dropped: ulong;
+  subscribers_dropped: ulong;
+  services_dropped: ulong;
+  clients_dropped: ulong;
+}
+
+table ResourceInventory {
+  telemetry_version: uint;
+  sequence: ulong;
+  timestamp_ns: ulong;
+  node_id: string;
+  group: string;
+  inventory_revision: ulong;
+  publishers: [PublisherEntry];
+  subscribers: [SubscriberEntry];
+  services: [ServiceEntry];
+  clients: [ClientEntry];
+  overflow: InventoryOverflow;
+}
+
+root_type ResourceInventory;

@@ -1,0 +1,23 @@
+# gtest 第三方库包定义
+# Google Testing and Mocking Framework
+
+# 直接使用gtest原生bazel配置
+# 注意：在v1.17.0中，GoogleMock已经集成到gtest中，不需要单独的gmock target
+alias(
+    name = "gtest",
+    actual = "//src/third_party/gtest/googletest:gtest",
+    visibility = ["//visibility:public"],
+)
+
+alias(
+    name = "gtest_main",
+    actual = "//src/third_party/gtest/googletest:gtest_main",
+    visibility = ["//visibility:public"],
+)
+
+# Alias for gmock - it's included in gtest library
+alias(
+    name = "gmock",
+    actual = "//src/third_party/gtest/googletest:gtest",
+    visibility = ["//visibility:public"],
+) 

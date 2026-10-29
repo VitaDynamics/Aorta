@@ -1,0 +1,97 @@
+// Examples - Sensor Data Schemas
+// 
+// This schema defines message types for the sensor publisher/subscriber examples.
+// Demonstrates various sensor data types with embedded AortaHeader.
+
+include "schemas/system/aorta_base.fbs";
+
+namespace examples.sensor;
+
+// 3D vector for acceleration, gyroscope, position, etc.
+struct Vector3 {
+  x: float;
+  y: float;
+  z: float;
+}
+
+// IMU (Inertial Measurement Unit) data
+// Typical usage: High-frequency sensor data (100Hz+) with Realtime QoS
+table ImuData {
+  aorta_header: aorta.sys.AortaHeader;
+  
+  // Linear acceleration in m/s^2
+  acceleration: Vector3;
+  
+  // Angular velocity in rad/s
+  gyroscope: Vector3;
+  
+  // Optional magnetometer data in µT
+  magnetometer: Vector3;
+  
+  // Sensor timestamp in nanoseconds
+  sensor_timestamp_ns: ulong;
+  
+  // Temperature in Celsius (optional)
+  temperature: float = 0.0;
+}
+
+// Camera frame metadata
+// Typical usage: Medium-frequency data (30Hz) with Normal QoS
+table CameraFrame {
+  aorta_header: aorta.sys.AortaHeader;
+  
+  // Frame dimensions
+  width: uint;
+  height: uint;
+  
+  // Frame format (e.g., "RGB", "RGBA", "GRAY", "YUV")
+  format: string;
+  
+  // Actual image data size in bytes
+  data_size: uint;
+  
+  // Frame capture timestamp in nanoseconds
+  capture_timestamp_ns: ulong;
+  
+  // Exposure time in microseconds
+  exposure_us: uint = 0;
+  
+  // ISO/gain value
+  iso: uint = 0;
+  
+  // Optional: Could include actual image data as [ubyte] for small images
+  // For large images, use shared memory or separate data channel
+  // image_data: [ubyte];
+}
+
+// Health/status information
+// Typical usage: Low-frequency (1Hz) with TransientLocal durability
+table HealthStatus {
+  aorta_header: aorta.sys.AortaHeader;
+  
+  // CPU usage percentage (0-100)
+  cpu_usage: float;
+  
+  // Memory usage percentage (0-100)
+  memory_usage: float;
+  
+  // Battery level percentage (0-100), -1 if not applicable
+  battery_level: float = -1.0;
+  
+  // System status: "OK", "WARNING", "ERROR", "CRITICAL"
+  status: string;
+  
+  // Robot position in world frame
+  position: Vector3;
+  
+  // Error count since startup
+  error_count: uint = 0;
+  
+  // Uptime in seconds
+  uptime_seconds: ulong = 0;
+  
+  // Optional error message
+  error_message: string;
+}
+
+root_type ImuData;

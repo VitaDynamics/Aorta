@@ -1,0 +1,4 @@
+include "schemas/release/release_leaf.fbs";
+namespace release.fixture;
+table ReleaseReading { leaf:ReleaseLeaf; leaves:[ReleaseLeaf]; commands:[Command]; }
+root_type ReleaseReading;

@@ -1,0 +1,30 @@
+// Field-order regression fixture. Example/test only.
+
+include "schemas/shared/action_common/action_common.fbs";
+include "schemas/system/aorta_base.fbs";
+
+namespace aorta.action.example;
+
+enum ProbeKind : ubyte {
+  UNKNOWN   = 0,
+  PRIMARY   = 1,
+  SECONDARY = 2,
+}
+
+table ReorderedGoalProbeGoal {
+  sequence : ulong                    (id: 0);
+  kind     : ProbeKind = UNKNOWN      (id: 4);
+  label    : string                   (id: 1);
+  samples  : [int32]                  (id: 2);
+  enabled  : bool = false             (id: 3);
+}
+
+table ReorderedGoalProbeResult {
+  accepted : bool = false (id: 0);
+}
+
+table ReorderedGoalProbeFeedbackData {
+  progress : ubyte (id: 0);
+}
+
+root_type ReorderedGoalProbeGoal;

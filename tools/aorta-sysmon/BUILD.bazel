@@ -1,0 +1,77 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
+
+# Library mirrors `tools/aorta-record` layout. The `sdk-publish` crate
+# feature is always-on under Bazel because the codegen wrapper crate is
+# part of the Bazel graph.
+rust_library(
+    name = "aorta_sysmon",
+    srcs = glob(
+        ["src/**/*.rs"],
+        exclude = ["src/main.rs"],
+    ),
+    crate_features = ["sdk-publish"],
+    crate_name = "aorta_sysmon",
+    edition = "2021",
+    deps = [
+        "//core:aorta_core",
+        "//message/bindings/rust:sysmon_alert_msg_rs",
+        "//message/bindings/rust:sysmon_snapshot_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:anyhow",
+        "@aorta_crates//:clap",
+        "@aorta_crates//:libc",
+        "@aorta_crates//:serde",
+        "@aorta_crates//:serde_json",
+        "@aorta_crates//:tokio",
+        "@aorta_crates//:toml",
+    ] + select({
+        # perf-event2 only resolves (and only makes sense) on Linux
+        # targets; macOS / Windows toolchains exclude it and the
+        # `cfg(target_os = "linux")` gate in `collector/perf.rs`
+        # makes the module a no-op there.
+        "@platforms//os:linux": ["@aorta_crates//:perf_event2"],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+)
+
+rust_binary(
+    name = "aorta-sysmon",
+    srcs = ["src/main.rs"],
+    crate_features = ["sdk-publish"],
+    crate_name = "aorta_sysmon_bin",
+    edition = "2021",
+    deps = [
+        ":aorta_sysmon",
+        "@aorta_crates//:anyhow",
+        "@aorta_crates//:clap",
+        "@aorta_crates//:tokio",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "aorta_sysmon_test",
+    crate = ":aorta_sysmon",
+    crate_features = ["sdk-publish"],
+    data = [":procfs_testdata"],
+)
+
+# Also read by //tools/release:test_mirror_manifest, which asserts the
+# checked-in procfs fixtures are regular files rather than symlinks.
+filegroup(
+    name = "procfs_testdata",
+    srcs = glob(["testdata/**/*"]),
+    visibility = ["//visibility:public"],
+)
+
+# Expose `Cargo.toml` to Bazel so `crate.from_cargo(manifests=[...])`
+# (MODULE.bazel) can read this workspace member when resolving
+# `workspace = true` zenoh inheritance.
+exports_files(["Cargo.toml"])
+
+filegroup(
+    name = "license_workspace_sources",
+    srcs = glob(["**/*"]),
+    visibility = ["//tools/release:__pkg__"],
+)

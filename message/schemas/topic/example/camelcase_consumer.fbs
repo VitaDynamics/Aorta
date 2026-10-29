@@ -1,0 +1,14 @@
+// References a foreign type in a mixed-case acronym namespace. The generated
+// Rust module path verifies exact namespace conversion for cross-crate types.
+// Example/test only; do NOT consume downstream.
+include "schemas/system/aorta_base.fbs";
+include "schemas/shared/camelcase_probe/camelcase_probe.fbs";
+
+namespace aorta.services.camel;
+
+table CamelConsumer {
+  aorta_header : aorta.sys.AortaHeader                      (id: 0);
+  probe        : ProbeCamel.HTTPThing.CamelEnum = UNKNOWN   (id: 1);   // mixed-case foreign ns
+}
+
+root_type CamelConsumer;

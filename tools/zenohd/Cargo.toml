@@ -1,0 +1,41 @@
+[package]
+name = "aorta_zenohd"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[[bin]]
+name = "zenohd"
+path = "src/main.rs"
+
+[features]
+default = ["zenoh/default"]
+shared-memory = ["zenoh/shared-memory"]
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+json5 = "0.4"
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
+# `aorta_zenohd` builds the Zenoh daemon binary, NOT the SDK surface.
+# It pulls in daemon-only features (`internal` / `internal_config` /
+# `plugins` / `runtime_plugins`) which the SDK consumers MUST NOT see,
+# and it sets `default-features = false` — a structural override that
+# the workspace base entry can't express without forcing every other
+# consumer to re-enable defaults. The rev still has to match the
+# workspace `[workspace.dependencies] zenoh` pin; `deny.toml` only
+# guards source URL, so a CI cross-check (cargo metadata + Cargo.lock
+# resolution to a single git source) is the actual drift guard.
+zenoh = { git = "https://github.com/BOURBONCASK/zenoh.git", rev = "99ae7b413e0414ea02ba4bbd8aaf94df87a4a862", default-features = false, features = ["internal", "internal_config", "plugins", "runtime_plugins", "shared-memory", "transport_serial", "unstable"] }
+# These two siblings have no per-crate overrides, so they inherit the
+# pinned rev straight from the workspace. Closes the
+# "zenohd bumps zenoh but forgets zenoh-config" drift hole.
+zenoh-config = { workspace = true }
+zenoh-util = { workspace = true }
+
+[build-dependencies]
+rustc_version = "0.4"

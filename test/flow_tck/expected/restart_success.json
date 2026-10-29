@@ -1,0 +1,24 @@
+[
+  {
+    "scenario": "restart_success",
+    "seq": 0,
+    "op": "task.spawn",
+    "event": "lifecycle",
+    "phase": "spawned_supervised"
+  },
+  {
+    "scenario": "restart_success",
+    "seq": 1,
+    "op": "task.await",
+    "event": "value",
+    "value": "recovered"
+  },
+  {
+    "scenario": "restart_success",
+    "seq": 2,
+    "op": "scope.stats",
+    "event": "counter",
+    "name": "factory_invocations",
+    "value": 2
+  }
+]

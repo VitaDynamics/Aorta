@@ -1,0 +1,25 @@
+[
+  {
+    "scenario": "budget_expiry_checkpoint",
+    "seq": 0,
+    "op": "task.spawn",
+    "event": "lifecycle",
+    "phase": "spawned"
+  },
+  {
+    "scenario": "budget_expiry_checkpoint",
+    "seq": 1,
+    "op": "budget.checkpoint",
+    "event": "lifecycle",
+    "phase": "checkpoint_observed_deadline"
+  },
+  {
+    "scenario": "budget_expiry_checkpoint",
+    "seq": 2,
+    "op": "task.await",
+    "event": "stopped",
+    "kind": "cancelled",
+    "reason": "deadline",
+    "raw_reason": 2
+  }
+]

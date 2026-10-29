@@ -1,0 +1,33 @@
+// Common Log Definitions
+//
+// Shared log types for producers that publish `foxglove.Log`
+// (`schemas/topic/foxglove_schema/Log.fbs`): the Aorta core log forwarder and
+// host-application log bridges.
+//
+// This lives in its own file rather than inside Log.fbs because the message
+// wrapper codegen requires a root schema to declare all of its types in a
+// single namespace.
+
+namespace aorta.log.common;
+
+/// Exact producer-side log level.
+///
+/// `foxglove.LogLevel` runs UNKNOWN/DEBUG/INFO/WARNING/ERROR/FATAL and has no
+/// level below DEBUG, so producers whose native scale has one (Aorta `TRACE`,
+/// or a host logger's `VERBOSE`) map it onto DEBUG in `foxglove.Log.level`
+/// and record the exact level here. Foxglove ignores this field; Aorta
+/// tooling (aorta-tui, aorta-introspect, log uploaders) reads it.
+///
+/// The numbering deliberately does NOT match `foxglove.LogLevel` — it is
+/// shifted by one from DEBUG onward to keep `UNKNOWN = 0`. Consumers must pick
+/// the right table per field rather than sharing one.
+enum AortaLogLevel: ubyte {
+  UNKNOWN = 0,
+  /// Aorta `TRACE`; equivalent to a host logger's `VERBOSE`
+  TRACE = 1,
+  DEBUG = 2,
+  INFO = 3,
+  WARN = 4,
+  ERROR = 5,
+  FATAL = 6,
+}

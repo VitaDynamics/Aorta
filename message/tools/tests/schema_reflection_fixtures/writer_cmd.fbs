@@ -1,0 +1,9 @@
+include "writer_common.fbs";
+namespace fx_write;
+table LowCmd {
+  stamp: ulong;
+  motor_cmd: [MotorCmd];
+  enums: [EnumCommand];
+  scalars: [AllScalar];
+}
+root_type LowCmd;

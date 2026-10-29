@@ -1,0 +1,9 @@
+// Loader test fixture: the same BARE name in two namespaces. The
+// bare-name-keyed emitter model requires unique bare names across the closure
+// (cross-namespace bare-name support is future work), so the loader-backed
+// collectors hard-error — matching the text collectors' own policy.
+namespace one;
+table Clash { a: int32; }
+namespace two;
+table Clash { b: int32; }
+root_type one.Clash;

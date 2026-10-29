@@ -1,0 +1,22 @@
+name: Mirror build and test
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out mirror
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Set up Bazel
+        uses: ./.github/actions/setup-aorta-bazel
+      - name: Run build-test
+        run: python3 .github/scripts/mirror_ci.py build-test

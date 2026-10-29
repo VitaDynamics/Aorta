@@ -1,0 +1,13 @@
+// Schema-meta fixture — enums-only schema (no root_type, no
+// tables/structs), mirroring the one real rootless meta consumer
+// (cpp/test/tier2_action_codegen/xfer_types.fbs). The C++ meta must keep
+// emitting the (empty) namespace block byte-identically, with the
+// namespace now derived from the root-local declared types' reflection
+// namespaces instead of the first textual `namespace` statement.
+namespace fixmeta.shared;
+
+enum Phase : ubyte {
+  UNSPECIFIED = 0,
+  RUNNING = 1,
+  DONE = 2,
+}

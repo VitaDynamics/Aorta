@@ -1,0 +1,43 @@
+[package]
+name = "aorta-trace-tui"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+# Offline trace waterfall viewer (D1). File-driven only: it discovers persisted
+# `.atrc` trace files via the SAME `AORTA_TRACE_DIR` resolution the writer uses
+# (`aorta_core::trace::sink::default_trace_dir`), decodes them through the SAME
+# reader + pairing path as the Perfetto converter
+# (`aorta_trace2perfetto::decode_trace_files`), and renders a per-(process,thread)
+# lane waterfall of spans + stages with durations. NO Zenoh, NO live session, NO
+# trace enable/control — purely a viewer over what is already on disk.
+
+[[bin]]
+name = "aorta-trace-tui"
+path = "src/main.rs"
+
+[lib]
+name = "aorta_trace_tui"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = "1"
+aorta_core = { path = "../../core" }
+aorta-trace2perfetto = { path = "../aorta-trace2perfetto" }
+clap = { version = "4.5", features = ["derive"] }
+crossterm = "0.29"
+# Local UTC offset (one `localtime_r` call) so the absolute-time axis renders in
+# local wall-clock; all other formatting is pure arithmetic. Already in the
+# lockfile via core, so no new crate is pulled.
+libc = "0.2"
+ratatui = { version = "0.30", default-features = false, features = ["crossterm"] }
+# Normal (not dev) dep so the Bazel `rust_test` target picks it up via
+# `all_crate_deps(normal = True)`: the load round-trip test frames CHUNKs into
+# zstd ATCF containers. It is already transitive via aorta-trace2perfetto, so
+# this adds nothing to the lockfile.
+zstd = "0.13"
+tachyonfx = "0.25.0"

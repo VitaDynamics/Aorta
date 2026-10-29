@@ -1,0 +1,25 @@
+[
+ {
+  "scenario": "serial_teardown_drop",
+  "seq": 0,
+  "op": "task.body",
+  "event": "lifecycle",
+  "phase": "parked_in_domain"
+ },
+ {
+  "scenario": "serial_teardown_drop",
+  "seq": 1,
+  "op": "scope.cancel",
+  "event": "lifecycle",
+  "phase": "external_stop_issued"
+ },
+ {
+  "scenario": "serial_teardown_drop",
+  "seq": 2,
+  "op": "task.take_outcome",
+  "event": "stopped",
+  "kind": "cancelled",
+  "reason": "shutdown",
+  "raw_reason": 3
+ }
+]

@@ -1,0 +1,21 @@
+// Canonical field-order regression fixture. Example/test only.
+include "schemas/shared/action_common/action_common.fbs";
+include "schemas/system/aorta_base.fbs";
+namespace aorta.action.example;
+
+enum FieldKind : ubyte { UNKNOWN = 0, SAMPLE = 1 }
+table FieldWindow { first : ulong (id: 0); last : ulong (id: 1); }
+table OrderedFieldsProbeGoal {
+  sequence : ulong (id: 0);
+  type : FieldKind (id: 8);
+  label : string (id: 1);
+  names : [string] (id: 2);
+  window : FieldWindow (id: 3);
+  enabled : bool (id: 4);
+  selected : bool (id: 5);
+  category : string (id: 6);
+  pattern : string (id: 7);
+}
+table OrderedFieldsProbeResult { accepted : bool (id: 0); }
+table OrderedFieldsProbeFeedbackData { progress : ubyte (id: 0); }
+root_type OrderedFieldsProbeGoal;

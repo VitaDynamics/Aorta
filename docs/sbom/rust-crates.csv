@@ -1,0 +1,631 @@
+name,version,license,declared,source_kind,source,direct,in_deny_graph
+adler2,2.0.1,0BSD OR MIT OR Apache-2.0,0BSD OR MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+advisory-lock,0.3.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+aes,0.8.4,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+ahash,0.8.12,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+aho-corasick,1.1.4,Unlicense OR MIT,Unlicense OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+allocator-api2,0.2.21,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+android_system_properties,0.1.5,MIT/Apache-2.0,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+anpa,0.10.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+anstream,1.0.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+anstyle,1.0.14,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+anstyle-parse,1.0.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+anstyle-query,1.1.5,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+anstyle-wincon,3.0.11,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+anyhow,1.0.102,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+arboard,3.6.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+arc-swap,1.9.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+array-init,2.1.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+asn1-rs,0.7.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+asn1-rs-derive,0.6.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+asn1-rs-impl,0.2.0,Apache-2.0 OR MIT,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+async-trait,0.1.89,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+atomic,0.6.1,Apache-2.0/MIT,Apache-2.0/MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+autocfg,1.5.0,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+aws-lc-rs,1.18.0,ISC AND (Apache-2.0 OR ISC),ISC AND (Apache-2.0 OR ISC),registry,https://github.com/rust-lang/crates.io-index,transitive,no
+aws-lc-sys,0.44.0,ISC AND (Apache-2.0 OR ISC) AND Apache-2.0 AND MIT AND BSD-3-Clause AND (Apache-2.0 OR ISC OR MIT) AND (Apache-2.0 OR ISC OR MIT-0),ISC AND (Apache-2.0 OR ISC) AND Apache-2.0 AND MIT AND BSD-3-Clause AND (Apache-2.0 OR ISC OR MIT) AND (Apache-2.0 OR ISC OR MIT-0),registry,https://github.com/rust-lang/crates.io-index,transitive,no
+base64,0.22.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+base64ct,1.8.3,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+bimap,0.6.3,Apache-2.0 OR MIT,Apache-2.0/MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+binrw,0.12.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+binrw,0.15.2,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+binrw_derive,0.12.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+binrw_derive,0.15.2,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+bit-set,0.5.3,MIT/Apache-2.0,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+bit-vec,0.6.3,MIT/Apache-2.0,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+bit-vec,0.9.1,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+bitflags,1.3.2,Apache-2.0 OR MIT,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+bitflags,2.11.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+block-buffer,0.10.4,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+bon,3.9.3,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+bon-macros,3.9.3,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+bs58,0.5.1,MIT/Apache-2.0,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+buddy_system_allocator,0.10.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+bumpalo,3.20.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+bytemuck,1.25.0,Zlib OR Apache-2.0 OR MIT,Zlib OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+byteorder,1.5.0,Unlicense OR MIT,Unlicense OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+byteorder-lite,0.1.0,Unlicense OR MIT,Unlicense OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+bytes,1.11.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+c-enum,0.2.3,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+castaway,0.2.4,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+cbindgen,0.29.2,MPL-2.0,MPL-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+cc,1.2.62,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+cfg-if,1.0.4,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+cfg_aliases,0.1.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+cfg_aliases,0.2.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+chacha20,0.10.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+chrono,0.4.44,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+cipher,0.4.4,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+clap,4.6.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+clap_builder,4.6.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+clap_derive,4.6.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+clap_lex,1.1.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+clipboard-win,5.4.1,BSL-1.0,BSL-1.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+cmake,0.1.58,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+cobs,0.2.3,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+colorchoice,1.0.5,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+combine,4.6.7,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+compact_str,0.9.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+concurrent-queue,2.5.0,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+const-oid,0.9.6,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+const_format,0.2.36,Zlib,Zlib,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+const_format_proc_macros,0.2.34,Zlib,Zlib,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+convert_case,0.10.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+core-foundation,0.10.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+core-foundation-sys,0.8.7,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+cpufeatures,0.2.17,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+cpufeatures,0.3.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+crc32fast,1.5.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+crossbeam,0.8.4,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+crossbeam-channel,0.5.15,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+crossbeam-deque,0.8.6,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+crossbeam-epoch,0.9.18,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+crossbeam-queue,0.3.12,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+crossbeam-utils,0.8.21,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+crossterm,0.29.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+crossterm_winapi,0.9.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+crunchy,0.2.4,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+crypto-common,0.1.7,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+csscolorparser,0.6.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+darling,0.21.3,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+darling,0.23.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+darling_core,0.21.3,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+darling_core,0.23.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+darling_macro,0.21.3,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+darling_macro,0.23.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+data-encoding,2.11.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+delegate,0.13.5,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+deltae,0.3.2,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+der,0.7.10,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+der-parser,10.0.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+deranged,0.5.8,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+derive_more,2.1.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+derive_more-impl,2.1.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+digest,0.10.7,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+dirs,6.0.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+dirs-sys,0.5.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+dispatch2,0.3.1,Zlib OR Apache-2.0 OR MIT,Zlib OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+displaydoc,0.2.5,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+document-features,0.2.12,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+dtoa,1.0.11,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+dunce,1.0.5,CC0-1.0 OR MIT-0 OR Apache-2.0,CC0-1.0 OR MIT-0 OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+dyn-clone,1.0.20,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+either,1.15.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+enumset,1.1.12,Apache-2.0 OR MIT,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+enumset_derive,0.15.0,Apache-2.0 OR MIT,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+equivalent,1.0.2,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+errno,0.3.14,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+error-code,3.3.2,BSL-1.0,BSL-1.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+euclid,0.22.14,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+event-listener,5.4.1,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+fancy-regex,0.11.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+fastbloom,0.17.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+fastrand,2.4.1,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+fax,0.2.7,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+fdeflate,0.3.7,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+filedescriptor,0.8.3,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+find-msvc-tools,0.1.9,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+finl_unicode,1.4.0,(MIT OR Apache-2.0) AND Unicode-DFS-2016,(MIT OR Apache-2.0) AND Unicode-DFS-2016,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+fixedbitset,0.4.2,MIT/Apache-2.0,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+fixedbitset,0.5.7,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+flatbuffers,25.12.19,Apache-2.0,Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+flatbuffers-reflection,0.1.0,Apache-2.0,Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+flate2,1.1.9,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+flume,0.11.1,Apache-2.0 OR MIT,Apache-2.0/MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+flume,0.12.0,Apache-2.0 OR MIT,Apache-2.0/MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+fnv,1.0.7,Apache-2.0 OR MIT,Apache-2.0 / MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+foldhash,0.1.5,Zlib,Zlib,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+foldhash,0.2.0,Zlib,Zlib,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+form_urlencoded,1.2.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+foxglove,0.26.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+foxglove_derive,0.26.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+fs_extra,1.3.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+futures,0.3.32,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+futures-channel,0.3.32,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+futures-core,0.3.32,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+futures-executor,0.3.32,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+futures-io,0.3.32,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+futures-macro,0.3.32,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+futures-sink,0.3.32,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+futures-task,0.3.32,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+futures-util,0.3.32,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+generator,0.8.9,Apache-2.0 OR MIT,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+generic-array,0.14.7,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+gethostname,1.1.0,Apache-2.0,Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+getrandom,0.2.17,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+getrandom,0.3.4,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+getrandom,0.4.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+git-version,0.3.9,BSD-2-Clause,BSD-2-Clause,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+git-version-macro,0.3.9,BSD-2-Clause,BSD-2-Clause,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+half,2.7.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+hashbrown,0.12.3,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+hashbrown,0.14.5,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+hashbrown,0.15.5,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+hashbrown,0.16.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+hashbrown,0.17.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+heck,0.5.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+hermit-abi,0.5.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+hex,0.4.3,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+hmac,0.12.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+home,0.5.12,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+http,1.4.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+httparse,1.10.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+humantime,2.3.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+iana-time-zone,0.1.65,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+iana-time-zone-haiku,0.1.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+icu_collections,2.2.0,Unicode-3.0,Unicode-3.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+icu_locale_core,2.2.0,Unicode-3.0,Unicode-3.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+icu_normalizer,2.2.0,Unicode-3.0,Unicode-3.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+icu_normalizer_data,2.2.0,Unicode-3.0,Unicode-3.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+icu_properties,2.2.0,Unicode-3.0,Unicode-3.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+icu_properties_data,2.2.0,Unicode-3.0,Unicode-3.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+icu_provider,2.2.0,Unicode-3.0,Unicode-3.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+id-arena,2.3.0,MIT/Apache-2.0,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+ident_case,1.0.1,Apache-2.0 OR MIT,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+idna,1.1.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+idna_adapter,1.2.2,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+image,0.25.10,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+indexmap,1.9.3,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+indexmap,2.14.0,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+indoc,2.0.7,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+inout,0.1.4,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+instability,0.3.12,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+io-kit-sys,0.4.1,Apache-2.0 OR MIT,MIT / Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+ipnetwork,0.20.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+is_terminal_polyfill,1.70.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+itertools,0.14.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+itoa,1.0.18,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+jni,0.22.4,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+jni-macros,0.22.4,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+jni-sys,0.4.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+jni-sys-macros,0.4.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+jobserver,0.1.34,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+js-sys,0.3.98,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+json5,0.4.1,ISC,ISC,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+kasuari,0.4.12,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+keccak,0.1.6,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+keyed-set,1.1.0,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+konst,0.2.20,Zlib,Zlib,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+konst_macro_rules,0.2.19,Zlib,Zlib,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+lab,0.11.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+lazy_static,1.5.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+leb128fmt,0.1.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+libc,0.2.186,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+libloading,0.8.9,ISC,ISC,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+libm,0.2.16,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+libredox,0.1.16,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+line-clipping,0.3.7,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+linux-raw-sys,0.12.1,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+litemap,0.8.2,Unicode-3.0,Unicode-3.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+litrs,1.0.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+lock_api,0.4.14,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+lockfree,0.5.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+log,0.4.29,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+loom,0.7.2,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+lru,0.16.4,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+lru-slab,0.1.2,MIT OR Apache-2.0 OR Zlib,MIT OR Apache-2.0 OR Zlib,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+lz4,1.28.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+lz4-sys,1.11.1+lz4-1.10.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+lz4_flex,0.10.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+mac_address,1.1.8,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+mach2,0.4.3,BSD-2-Clause OR MIT OR Apache-2.0,BSD-2-Clause OR MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+matchers,0.2.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+mcap,0.24.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+mcap,0.25.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+memchr,2.8.0,Unlicense OR MIT,Unlicense OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+memmap2,0.9.10,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+memmem,0.1.1,MIT/Apache-2.0,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+memoffset,0.9.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+micromath,2.1.0,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+minimal-lexical,0.2.1,Apache-2.0 OR MIT,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+miniz_oxide,0.8.9,MIT OR Zlib OR Apache-2.0,MIT OR Zlib OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+mio,1.2.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+mio-serial,5.0.6,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+moxcms,0.8.1,BSD-3-Clause OR Apache-2.0,BSD-3-Clause OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+nanorand,0.7.0,Zlib,Zlib,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+nix,0.26.4,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+nix,0.29.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+no-std-net,0.6.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+nom,7.1.3,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+nonempty-collections,0.3.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+nu-ansi-term,0.50.3,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+nucleo,0.5.0,MPL-2.0,MPL-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+nucleo-matcher,0.3.1,MPL-2.0,MPL-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+num-bigint,0.4.6,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+num-bigint-dig,0.8.6,Apache-2.0 OR MIT,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+num-conv,0.2.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+num-derive,0.4.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+num-integer,0.1.46,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+num-iter,0.1.45,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+num-traits,0.2.19,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+num_cpus,1.17.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+num_threads,0.1.7,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+objc2,0.6.4,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+objc2-app-kit,0.3.2,Zlib OR Apache-2.0 OR MIT,Zlib OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+objc2-core-foundation,0.3.2,Zlib OR Apache-2.0 OR MIT,Zlib OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+objc2-core-graphics,0.3.2,Zlib OR Apache-2.0 OR MIT,Zlib OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+objc2-encode,4.1.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+objc2-foundation,0.3.2,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+objc2-io-surface,0.3.2,Zlib OR Apache-2.0 OR MIT,Zlib OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+oid-registry,0.8.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+once_cell,1.21.4,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+once_cell_polyfill,1.70.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+openssl-probe,0.2.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+option-ext,0.2.0,MPL-2.0,MPL-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+ordered-float,4.6.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+owned-alloc,0.2.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+owo-colors,3.5.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+owo-colors,4.3.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+parking,2.2.1,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+parking_lot,0.12.5,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+parking_lot_core,0.9.12,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+paste,1.0.15,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+pem,3.0.6,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+pem-rfc7468,0.7.0,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+percent-encoding,2.3.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+perf-event-data,0.1.8,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+perf-event-open-sys2,5.0.6,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+perf-event2,0.7.4,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+pest,2.8.6,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+pest_derive,2.8.6,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+pest_generator,2.8.6,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+pest_meta,2.8.6,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+petgraph,0.8.3,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+phf,0.11.3,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+phf,0.13.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+phf_codegen,0.11.3,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+phf_generator,0.11.3,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+phf_generator,0.13.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+phf_macros,0.11.3,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+phf_macros,0.13.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+phf_shared,0.11.3,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+phf_shared,0.13.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+pin-project-lite,0.2.17,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+pin-utils,0.1.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+pkcs1,0.7.5,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+pkcs8,0.10.2,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+pkg-config,0.3.33,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+pnet_base,0.35.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+pnet_datalink,0.35.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+pnet_sys,0.35.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+png,0.18.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+portable-atomic,1.13.1,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+potential_utf,0.1.5,Unicode-3.0,Unicode-3.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+powerfmt,0.2.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+ppv-lite86,0.2.21,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+prettyplease,0.2.37,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+proc-macro-crate,3.5.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+proc-macro2,1.0.106,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+prometheus-client,0.24.1,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+prometheus-client-derive-encode,0.5.0,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+prost,0.14.4,Apache-2.0,Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+prost-derive,0.14.4,Apache-2.0,Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+prost-types,0.14.4,Apache-2.0,Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+pxfm,0.1.29,BSD-3-Clause OR Apache-2.0,BSD-3-Clause OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+quick-error,2.0.1,Apache-2.0 OR MIT,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+quinn,0.11.9,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+quinn-proto,0.11.16,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+quinn-udp,0.5.14,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+quote,1.0.45,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+r-efi,5.3.0,MIT OR Apache-2.0 OR LGPL-2.1-or-later,MIT OR Apache-2.0 OR LGPL-2.1-or-later,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+r-efi,6.0.0,MIT OR Apache-2.0 OR LGPL-2.1-or-later,MIT OR Apache-2.0 OR LGPL-2.1-or-later,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rand,0.10.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rand,0.8.6,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rand,0.9.4,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rand_chacha,0.3.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rand_chacha,0.9.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rand_core,0.10.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rand_core,0.6.4,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rand_core,0.9.5,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rand_pcg,0.10.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+ratatui,0.30.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+ratatui-core,0.1.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+ratatui-crossterm,0.1.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+ratatui-interact,0.4.2,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+ratatui-macros,0.7.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+ratatui-termwiz,0.1.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+ratatui-widgets,0.3.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rayon,1.12.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rayon-core,1.13.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rcgen,0.14.8,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+redox_syscall,0.5.18,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+redox_users,0.5.2,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+ref-cast,1.0.25,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+ref-cast-impl,1.0.25,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+regex,1.12.3,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+regex-automata,0.4.14,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+regex-syntax,0.8.10,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+ring,0.17.14,Apache-2.0 AND ISC,Apache-2.0 AND ISC,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+ringbuffer-spsc,0.1.15,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rlimit,0.10.2,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+ron,0.12.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rsa,0.9.10,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rustc-hash,2.1.2,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rustc_version,0.4.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+rusticata-macros,4.1.0,Apache-2.0 OR MIT,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rustix,1.1.4,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rustls,0.23.45,Apache-2.0 OR ISC OR MIT,Apache-2.0 OR ISC OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rustls-native-certs,0.8.3,Apache-2.0 OR ISC OR MIT,Apache-2.0 OR ISC OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rustls-pemfile,2.2.0,Apache-2.0 OR ISC OR MIT,Apache-2.0 OR ISC OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rustls-pki-types,1.14.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rustls-platform-verifier,0.7.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rustls-platform-verifier-android,0.1.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rustls-webpki,0.103.15,ISC,ISC,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+rustversion,1.0.22,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+ryu,1.0.23,Apache-2.0 OR BSL-1.0,Apache-2.0 OR BSL-1.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+same-file,1.0.6,MIT OR Unlicense,Unlicense/MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+schannel,0.1.29,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+schemars,0.9.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+schemars,1.2.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+schemars_derive,1.2.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+scoped-tls,1.0.1,Apache-2.0 OR MIT,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+scopeguard,1.2.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+secrecy,0.8.0,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+security-framework,3.7.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+security-framework-sys,2.17.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+semver,1.0.28,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+serde,1.0.228,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+serde_core,1.0.228,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+serde_derive,1.0.228,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+serde_derive_internals,0.29.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+serde_json,1.0.149,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+serde_repr,0.1.20,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+serde_spanned,0.6.9,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+serde_spanned,1.1.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+serde_with,3.21.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+serde_with_macros,3.21.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+serde_yaml,0.9.34+deprecated,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+serialport,4.9.0,MPL-2.0,MPL-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+sha1,0.10.6,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+sha2,0.10.9,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+sha2-const-stable,0.1.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+sha3,0.10.9,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+sharded-slab,0.1.7,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+shellexpand,3.1.2,Apache-2.0 OR MIT,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+shlex,1.3.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+signal-hook,0.3.18,Apache-2.0 OR MIT,Apache-2.0/MIT,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+signal-hook-mio,0.2.5,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+signal-hook-registry,1.4.8,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+signature,2.2.0,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+simd-adler32,0.3.9,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+simd_cesu8,1.2.0,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+simdutf8,0.1.5,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+siphasher,1.0.3,Apache-2.0 OR MIT,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+slab,0.4.12,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+smallbox,0.8.8,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+smallbytes,0.1.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+smallvec,1.15.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+socket2,0.5.10,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+socket2,0.6.3,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+spin,0.10.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+spin,0.9.8,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+spki,0.7.3,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+stabby,72.1.16,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+stabby-abi,72.1.16,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+stabby-macros,72.1.16,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+stable_deref_trait,1.2.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+static_assertions,1.1.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+static_init,1.0.4,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+static_init_macro,1.0.4,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+strsim,0.11.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+strum,0.27.2,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+strum_macros,0.27.2,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+subtle,2.6.1,BSD-3-Clause,BSD-3-Clause,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+symlink,0.1.0,Apache-2.0 OR MIT,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+syn,1.0.109,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+syn,2.0.117,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+syn,3.0.3,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+synstructure,0.13.2,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+tachyonfx,0.25.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+talc,4.4.3,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+tempfile,3.27.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+terminfo,0.9.0,WTFPL,WTFPL,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+termios,0.3.3,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+termwiz,0.23.3,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+thiserror,1.0.69,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+thiserror,2.0.18,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+thiserror-impl,1.0.69,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+thiserror-impl,2.0.18,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+thread-priority,1.2.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+thread_local,1.1.9,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+tiff,0.11.3,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+time,0.3.47,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+time-core,0.1.8,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+time-macros,0.2.27,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+tinystr,0.8.3,Unicode-3.0,Unicode-3.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+tinyvec,1.11.0,Zlib OR Apache-2.0 OR MIT,Zlib OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+tinyvec_macros,0.1.1,MIT OR Apache-2.0 OR Zlib,MIT OR Apache-2.0 OR Zlib,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+tls-listener,0.11.2,Apache-2.0,Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+token-cell,2.1.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+tokio,1.52.3,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+tokio-macros,2.7.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+tokio-rustls,0.26.4,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+tokio-serial,5.4.5,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+tokio-tungstenite,0.24.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+tokio-tungstenite,0.29.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+tokio-util,0.7.18,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+toml,0.8.23,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+toml,0.9.12+spec-1.1.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+toml_datetime,0.6.11,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+toml_datetime,0.7.5+spec-1.1.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+toml_datetime,1.1.1+spec-1.1.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+toml_edit,0.22.27,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+toml_edit,0.25.11+spec-1.1.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+toml_parser,1.1.2+spec-1.1.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+toml_write,0.1.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+toml_writer,1.1.1+spec-1.1.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+tracing,0.1.44,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+tracing-appender,0.2.5,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+tracing-attributes,0.1.31,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+tracing-core,0.1.36,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+tracing-log,0.2.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+tracing-serde,0.2.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+tracing-subscriber,0.3.23,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+tungstenite,0.24.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+tungstenite,0.29.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+twox-hash,1.6.3,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+typeid,1.0.3,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+typenum,1.20.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+ucd-trie,0.1.7,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+uhlc,0.8.2,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+unescaper,0.1.8,GPL-3.0 OR MIT,GPL-3.0/MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+unicode-ident,1.0.24,(MIT OR Apache-2.0) AND Unicode-3.0,(MIT OR Apache-2.0) AND Unicode-3.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+unicode-normalization,0.1.25,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+unicode-segmentation,1.13.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+unicode-truncate,2.0.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+unicode-width,0.2.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+unicode-xid,0.2.6,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+unsafe-libyaml,0.2.11,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+untrusted,0.9.0,ISC,ISC,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+unzip-n,0.1.4,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+url,2.5.8,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+urlencoding,2.1.3,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+utf-8,0.7.6,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+utf8_iter,1.0.4,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+utf8parse,0.2.2,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+uuid,1.23.1,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+validated_struct,2.2.0,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+validated_struct_macros,2.2.0,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+valuable,0.1.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+vec_map,0.8.2,Apache-2.0 OR MIT,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+version_check,0.9.5,Apache-2.0 OR MIT,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+vtparse,0.6.2,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+walkdir,2.5.0,MIT OR Unlicense,Unlicense/MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+wasi,0.11.1+wasi-snapshot-preview1,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+wasip2,1.0.3+wasi-0.2.9,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+wasip3,0.4.0+wasi-0.3.0-rc-2026-01-06,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+wasm-bindgen,0.2.121,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+wasm-bindgen-macro,0.2.121,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+wasm-bindgen-macro-support,0.2.121,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+wasm-bindgen-shared,0.2.121,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+wasm-encoder,0.244.0,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+wasm-metadata,0.244.0,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+wasmparser,0.244.0,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+web-time,1.1.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+webpki-root-certs,1.0.7,CDLA-Permissive-2.0,CDLA-Permissive-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+webpki-roots,1.0.7,CDLA-Permissive-2.0,CDLA-Permissive-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+weezl,0.1.12,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+wezterm-bidi,0.2.3,MIT AND Unicode-DFS-2016,MIT AND Unicode-DFS-2016,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+wezterm-blob-leases,0.1.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+wezterm-color-types,0.3.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+wezterm-dynamic,0.2.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+wezterm-dynamic-derive,0.1.1,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+wezterm-input-types,0.1.0,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+win-sys,0.3.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+winapi,0.3.9,Apache-2.0 OR MIT,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+winapi-i686-pc-windows-gnu,0.4.0,Apache-2.0 OR MIT,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+winapi-util,0.1.11,Unlicense OR MIT,Unlicense OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+winapi-x86_64-pc-windows-gnu,0.4.0,Apache-2.0 OR MIT,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows,0.34.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows-core,0.62.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+windows-implement,0.60.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+windows-interface,0.59.3,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+windows-link,0.2.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows-result,0.4.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows-strings,0.5.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+windows-sys,0.52.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows-sys,0.60.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows-sys,0.61.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows-targets,0.52.6,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows-targets,0.53.5,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_aarch64_gnullvm,0.52.6,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_aarch64_gnullvm,0.53.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_aarch64_msvc,0.34.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_aarch64_msvc,0.52.6,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_aarch64_msvc,0.53.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_i686_gnu,0.34.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_i686_gnu,0.52.6,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_i686_gnu,0.53.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_i686_gnullvm,0.52.6,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_i686_gnullvm,0.53.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_i686_msvc,0.34.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_i686_msvc,0.52.6,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_i686_msvc,0.53.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_x86_64_gnu,0.34.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_x86_64_gnu,0.52.6,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_x86_64_gnu,0.53.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_x86_64_gnullvm,0.52.6,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_x86_64_gnullvm,0.53.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_x86_64_msvc,0.34.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_x86_64_msvc,0.52.6,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+windows_x86_64_msvc,0.53.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+winnow,0.7.15,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+winnow,1.0.3,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+wit-bindgen,0.51.0,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+wit-bindgen,0.57.1,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+wit-bindgen-core,0.51.0,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+wit-bindgen-rust,0.51.0,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+wit-bindgen-rust-macro,0.51.0,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+wit-component,0.244.0,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+wit-parser,0.244.0,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,no
+writeable,0.6.3,Unicode-3.0,Unicode-3.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+x11rb,0.13.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+x11rb-protocol,0.13.2,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+x509-parser,0.18.1,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+yasna,0.6.0,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+yoke,0.8.2,Unicode-3.0,Unicode-3.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+yoke-derive,0.8.2,Unicode-3.0,Unicode-3.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+z-serial,0.3.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+zenoh,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,direct,yes
+zenoh-buffers,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-codec,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-collections,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-config,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,direct,yes
+zenoh-core,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-crypto,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-keyexpr,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-link,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-link-commons,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-link-quic,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-link-quic_datagram,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-link-serial,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-link-tcp,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-link-tls,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-link-udp,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-link-unixsock_stream,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-link-ws,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-macros,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-plugin-trait,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-protocol,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-result,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-runtime,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-shm,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-stats,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-sync,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-task,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-transport,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,transitive,yes
+zenoh-util,1.10.1,EPL-2.0 OR Apache-2.0,EPL-2.0 OR Apache-2.0,git,https://github.com/BOURBONCASK/zenoh.git @ 99ae7b413e0414ea02ba4bbd8aaf94df87a4a862,direct,yes
+zerocopy,0.8.48,BSD-2-Clause OR Apache-2.0 OR MIT,BSD-2-Clause OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+zerocopy-derive,0.8.48,BSD-2-Clause OR Apache-2.0 OR MIT,BSD-2-Clause OR Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+zerofrom,0.1.8,Unicode-3.0,Unicode-3.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+zerofrom-derive,0.1.7,Unicode-3.0,Unicode-3.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+zeroize,1.8.2,Apache-2.0 OR MIT,Apache-2.0 OR MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+zerotrie,0.2.4,Unicode-3.0,Unicode-3.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+zerovec,0.11.6,Unicode-3.0,Unicode-3.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+zerovec-derive,0.11.3,Unicode-3.0,Unicode-3.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+zmij,1.0.21,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+zstd,0.13.3,MIT,MIT,registry,https://github.com/rust-lang/crates.io-index,direct,yes
+zstd-safe,7.2.4,MIT OR Apache-2.0,MIT OR Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+zstd-sys,2.0.16+zstd.1.5.7,Apache-2.0 OR MIT,MIT/Apache-2.0,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+zune-core,0.5.1,MIT OR Apache-2.0 OR Zlib,MIT OR Apache-2.0 OR Zlib,registry,https://github.com/rust-lang/crates.io-index,transitive,yes
+zune-jpeg,0.5.15,MIT OR Apache-2.0 OR Zlib,MIT OR Apache-2.0 OR Zlib,registry,https://github.com/rust-lang/crates.io-index,transitive,yes

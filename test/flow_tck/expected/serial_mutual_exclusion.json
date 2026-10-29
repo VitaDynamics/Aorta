@@ -1,0 +1,25 @@
+[
+ {
+  "scenario": "serial_mutual_exclusion",
+  "seq": 0,
+  "op": "task.spawn",
+  "event": "lifecycle",
+  "phase": "two_bound_tasks_spawned"
+ },
+ {
+  "scenario": "serial_mutual_exclusion",
+  "seq": 1,
+  "op": "queue.stats",
+  "event": "counter",
+  "name": "final_count",
+  "value": 400
+ },
+ {
+  "scenario": "serial_mutual_exclusion",
+  "seq": 2,
+  "op": "queue.stats",
+  "event": "counter",
+  "name": "overlaps",
+  "value": 0
+ }
+]

@@ -1,0 +1,175 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+
+exports_files(["BUILD.bazel"])
+
+cc_library(
+    name = "example_common",
+    hdrs = [
+        "local_zenoh_config.h",
+        "schema_attach_policy.h",
+    ],
+    deps = ["//cpp:aorta_cpp"],
+)
+
+cc_binary(
+    name = "talker",
+    srcs = ["talker.cc"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cpp:aorta_cpp",
+        "//message:demo_chat_msg_cc",
+    ],
+)
+
+cc_binary(
+    name = "talker_simple",
+    srcs = ["talker_simple.cc"],
+    deps = [
+        "//cpp:aorta_cpp",
+        "//message:demo_chat_msg_cc",
+    ],
+)
+
+cc_binary(
+    name = "listener",
+    srcs = ["listener.cc"],
+    deps = [
+        "//cpp:aorta_cpp",
+        "//message:demo_chat_msg_cc",
+    ],
+)
+
+# Runnable demo of subscriber-callback panic
+# isolation (paired with `talker_simple` or `talker`). The
+# subscriber's callback throws after the first few messages; the
+# process stays alive because the dispatcher in
+# `cpp/src/subscriber.cc` catches at the `extern "C"` boundary
+# (the dispatcher is declared `noexcept`).
+cc_binary(
+    name = "throwing_callback_listener",
+    srcs = ["throwing_callback_listener.cc"],
+    deps = [
+        "//cpp:aorta_cpp",
+        "//message:demo_chat_msg_cc",
+    ],
+)
+
+cc_binary(
+    name = "all_types_talker",
+    srcs = ["all_types_talker.cc"],
+    deps = [
+        "//cpp:aorta_cpp",
+        "//message:all_types_msg_cc",
+    ],
+)
+
+cc_binary(
+    name = "foxglove_compressed_video_publisher",
+    srcs = ["foxglove_compressed_video_publisher.cc"],
+    deps = [
+        "//cpp:aorta_cpp",
+        "//message:foxglove_compressed_video_msg_cc",
+    ],
+)
+
+cc_binary(
+    name = "echo_server",
+    srcs = ["echo_server.cc"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cpp:aorta_cpp",
+        ":example_common",
+        "//message:echo_msg_cc",
+    ],
+)
+
+cc_binary(
+    name = "echo_client",
+    srcs = ["echo_client.cc"],
+    deps = [
+        "//cpp:aorta_cpp",
+        ":example_common",
+        "//message:echo_msg_cc",
+    ],
+)
+
+cc_binary(
+    name = "navigation_service_server",
+    srcs = ["navigation_service_server.cc"],
+    deps = [
+        "//cpp:aorta_cpp",
+        ":example_common",
+        "//message:navigation_msg_cc",
+    ],
+)
+
+cc_binary(
+    name = "cli_execute_task_server",
+    srcs = ["cli_execute_task_server.cc"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cpp:aorta_cpp",
+        ":example_common",
+        "//message:flow_resume_probe_msg_cc",
+    ],
+)
+
+cc_binary(
+    name = "cli_execute_task_client",
+    srcs = ["cli_execute_task_client.cc"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cpp:aorta_cpp",
+        ":example_common",
+        "//message:flow_resume_probe_msg_cc",
+    ],
+)
+
+cc_test(
+    name = "local_zenoh_config_test",
+    srcs = ["local_zenoh_config_test.cc"],
+    deps = [
+        ":example_common",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+# Aorta Flow demo — the opt-in C++20 coroutine surface.
+# Runs standalone (single process, loopback service): bazel run :flow_demo
+cc_binary(
+    name = "flow_demo",
+    srcs = ["flow_demo.cc"],
+    copts = ["-std=c++20"],
+    deps = [
+        "//cpp:aorta_cpp",
+        "//cpp:aorta_cpp20_flow",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# SerialDomain demo: the three-sentence model live —
+# unlocked-counter MT hammer, join-inherits vs spawn+when_all timing,
+# offload out-and-back; re-run with AORTA_CPP_LANES=0 for the rollback
+# no-op-domain leg. bazel run :flow_serial_demo
+cc_binary(
+    name = "flow_serial_demo",
+    srcs = ["flow_serial_demo.cc"],
+    copts = ["-std=c++20"],
+    deps = [
+        "//cpp:aorta_cpp",
+        "//cpp:aorta_cpp20_flow",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_binary(
+    name = "flow_lanes_demo",
+    srcs = ["flow_lanes_demo.cc"],
+    copts = ["-std=c++20"],
+    deps = [
+        "//cpp:aorta_cpp",
+        "//cpp:aorta_cpp20_flow",
+    ],
+    visibility = ["//visibility:public"],
+)

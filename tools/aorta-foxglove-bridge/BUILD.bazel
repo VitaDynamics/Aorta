@@ -1,0 +1,71 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
+load("//tools/aorta-introspect:rust_link_flags.bzl", "aorta_introspect_linux_rustc_flags")
+
+# `//core:aorta_ffi_header` runs `cargo metadata` over the workspace and
+# needs every member manifest visible in its sandbox.
+exports_files(["Cargo.toml"])
+
+rust_library(
+    name = "aorta_foxglove_bridge",
+    srcs = glob(["src/**/*.rs"]),
+    crate_name = "aorta_foxglove_bridge",
+    edition = "2021",
+    deps = [
+        "//core:aorta_core",
+        "//tools/aorta-introspect:aorta_introspect",
+        "@aorta_crates//:anyhow",
+        "@aorta_crates//:clap",
+        "@aorta_crates//:foxglove",
+        "@aorta_crates//:serde",
+        "@aorta_crates//:serde_json",
+        "@aorta_crates//:serde_yaml",
+        "@aorta_crates//:tokio",
+        "@aorta_crates//:toml",
+        "@aorta_crates//:zenoh",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+rust_binary(
+    name = "aorta-foxglove-bridge",
+    srcs = ["src/main.rs"],
+    crate_name = "aorta_foxglove_bridge_bin",
+    edition = "2021",
+    rustc_flags = aorta_introspect_linux_rustc_flags(),
+    deps = [
+        ":aorta_foxglove_bridge",
+        "//tools/aorta-introspect:aorta_introspect_ffi",
+        "@aorta_crates//:anyhow",
+        "@aorta_crates//:clap",
+        "@aorta_crates//:tokio",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "aorta_foxglove_bridge_test",
+    crate = ":aorta_foxglove_bridge",
+    deps = ["//tools/aorta-introspect:aorta_introspect_ffi"],
+    rustc_flags = aorta_introspect_linux_rustc_flags(),
+)
+
+sh_test(
+    name = "aorta_foxglove_bridge_smoke_test",
+    srcs = ["tests/bridge_smoke.sh"],
+    args = [
+        "--bridge-bin=$(location :aorta-foxglove-bridge)",
+        "--profile=quick",
+    ],
+    data = [":aorta-foxglove-bridge"],
+    tags = [
+        "manual",
+        "no-sandbox",
+    ],
+    timeout = "short",
+)
+
+filegroup(
+    name = "license_workspace_sources",
+    srcs = glob(["**/*"]),
+    visibility = ["//tools/release:__pkg__"],
+)

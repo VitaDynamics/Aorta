@@ -1,0 +1,12 @@
+Aorta C++ SDK
+Copyright 2026 VitaDynamics
+
+Licensed under the Apache License, Version 2.0. See LICENSE.
+This applies to VitaDynamics' code and schemas in this SDK archive.
+
+Third-party components retain their own copyrights and license terms.
+See THIRD_PARTY_NOTICES.md for generated Rust dependency notices,
+the vendored FlatBuffers license, and system runtime notes.
+FLATBUFFERS-LICENSE is the exact license shipped by the header dependency.
+
+Owner license decision: 2026-09-09.

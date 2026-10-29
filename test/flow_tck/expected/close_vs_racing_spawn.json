@@ -1,0 +1,25 @@
+[
+  {
+    "scenario": "close_vs_racing_spawn",
+    "seq": 0,
+    "op": "scope.close",
+    "event": "lifecycle",
+    "phase": "closed"
+  },
+  {
+    "scenario": "close_vs_racing_spawn",
+    "seq": 1,
+    "op": "task.spawn",
+    "event": "lifecycle",
+    "phase": "spawn_refused"
+  },
+  {
+    "scenario": "close_vs_racing_spawn",
+    "seq": 2,
+    "op": "task.await",
+    "event": "stopped",
+    "kind": "cancelled",
+    "reason": "shutdown",
+    "raw_reason": 3
+  }
+]

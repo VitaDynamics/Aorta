@@ -1,0 +1,28 @@
+// Type-support matrix wiring fixture: a topic table with a
+// vector-of-union field. Self-contained (no includes / no aorta_header) so it
+// compiles straight to bfbs. Fed to write_rust to prove the Rust typed_build
+// matrix sweep rejects vector<union> (the pinned flatc Rust backend cannot emit
+// it). vector<union> DOES compile in flatc itself (C++ supports it), so the
+// bfbs builds fine; only the Rust WRAPPER emitter rejects it.
+
+namespace mtx;
+
+table Leaf {
+  id : uint (id: 0);
+}
+
+table Node {
+  n : int (id: 0);
+}
+
+union Choice {
+  Leaf,
+  Node,
+}
+
+table Bag {
+  one  : Choice   (id: 1);   // scalar union (supported)
+  many : [Choice]  (id: 3);   // vector<union> (UNSUPPORTED in Rust)
+}
+
+root_type Bag;

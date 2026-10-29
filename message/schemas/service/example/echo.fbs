@@ -1,0 +1,15 @@
+include "schemas/system/aorta_base.fbs";
+
+namespace demo;
+
+table EchoRequest {
+  aorta_header: aorta.sys.AortaHeader;
+  message: string;
+}
+
+table EchoResponse {
+  aorta_header: aorta.sys.AortaHeader;
+  echoed_message: string;
+}
+
+root_type EchoRequest;

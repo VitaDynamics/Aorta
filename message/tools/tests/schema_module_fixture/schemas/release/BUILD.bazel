@@ -1,0 +1,13 @@
+load("@middleware//message/tools:schema_package.bzl", "aorta_schema_package")
+load(":fragment.bzl", "LEAF")
+package(default_visibility = ["//visibility:public"])
+aorta_schema_package(
+    name = "leaf",
+    module_name = "release_fixture",
+    api = 2,
+    srcs = ["release_leaf.fbs", "commands.fbs"],
+    items = LEAF,
+    fragment = ":fragment.bzl",
+    fragment_symbols = {":fragment.bzl": "LEAF"},
+)
+exports_files(["fragment.bzl"])

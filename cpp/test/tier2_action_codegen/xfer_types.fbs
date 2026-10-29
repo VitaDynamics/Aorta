@@ -1,0 +1,10 @@
+// Shared enum referenced by both xfer actions via a local (same-package)
+// include -- mirrors map_asset's MapTransferPhase shared by upload + download.
+namespace aorta.action.xfer;
+
+enum XferPhase : ubyte {
+  UNSPECIFIED = 0,
+  PACKING = 1,
+  TRANSFERRING = 2,
+  DONE = 3,
+}

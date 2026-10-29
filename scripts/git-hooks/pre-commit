@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# Mirror the cargo fmt --check step from .github/workflows/aorta-lint.yml
+# so the CI hard gate fails locally before the commit lands.
+#
+# Activate once per clone:
+#   git config core.hooksPath scripts/git-hooks
+#
+# Skip for an emergency commit:
+#   AORTA_SKIP_FMT=1 git commit ...
+# Prefer fixing the diff with `cargo fmt` over skipping.
+
+set -euo pipefail
+
+if [[ "${AORTA_SKIP_FMT:-0}" == "1" ]]; then
+  echo "[pre-commit] AORTA_SKIP_FMT=1 set, skipping cargo fmt --check"
+  exit 0
+fi
+
+if ! command -v cargo >/dev/null 2>&1; then
+  echo "[pre-commit] cargo not found in PATH; install rustup + the toolchain pinned in CI (1.92.0) to enable this hook." >&2
+  exit 1
+fi
+
+if ! cargo fmt --version >/dev/null 2>&1; then
+  echo "[pre-commit] rustfmt component missing; run 'rustup component add rustfmt' to enable this hook." >&2
+  exit 1
+fi
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+# Crate set is the single source of truth in scripts/fmt-crates.txt; the same
+# file is consumed by .github/workflows/aorta-lint.yml so the hook can never
+# drift from CI.
+crates_file="$repo_root/scripts/fmt-crates.txt"
+if [[ ! -f "$crates_file" ]]; then
+  echo "[pre-commit] $crates_file missing; cannot determine crates to check." >&2
+  exit 1
+fi
+
+crates=()
+while IFS= read -r line || [[ -n "$line" ]]; do
+  line=${line%$'\r'}                      # tolerate CRLF
+  line=${line%%#*}                        # strip inline comments
+  line=${line#"${line%%[![:space:]]*}"}   # ltrim
+  line=${line%"${line##*[![:space:]]}"}   # rtrim
+  [[ -z "$line" ]] && continue
+  crates+=("$line")
+done < "$crates_file"
+
+if [[ ${#crates[@]} -eq 0 ]]; then
+  echo "[pre-commit] $crates_file did not yield any crate paths." >&2
+  exit 1
+fi
+
+failed=0
+for crate in "${crates[@]}"; do
+  if ! (cd "$crate" && cargo fmt --check) >/dev/null 2>&1; then
+    echo "[pre-commit] cargo fmt --check failed in $crate"
+    (cd "$crate" && cargo fmt --check) || true
+    failed=1
+  fi
+done
+
+if [[ $failed -ne 0 ]]; then
+  echo
+  echo "[pre-commit] Run 'cargo fmt' in the failing crate(s) and re-stage, or set AORTA_SKIP_FMT=1 to bypass." >&2
+  exit 1
+fi

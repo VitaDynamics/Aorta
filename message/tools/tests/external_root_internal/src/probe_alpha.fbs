@@ -1,0 +1,13 @@
+// Internal-class external-root fixture: source lives OUTSIDE message/schemas,
+// exactly like a schema-module package would; the canonical slot is created by
+// the shadow package's `aorta_external_schema_package` call.
+include "schemas/system/aorta_base.fbs";
+
+namespace aorta.fixture.probe;
+
+table ProbeAlpha {
+  aorta_header: aorta.sys.AortaHeader;
+  label: string;
+}
+
+root_type ProbeAlpha;

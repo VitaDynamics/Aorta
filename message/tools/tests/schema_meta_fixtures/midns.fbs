@@ -1,0 +1,18 @@
+// Schema-meta fixture — MID-FILE namespace change (namespace
+// defect): the old emitter took the FIRST `namespace` statement only, so
+// every later type was forward-declared and specialized under the WRONG
+// C++ namespace (compile-wrong output). Each type below must be emitted
+// under ITS OWN namespace.
+namespace fixmeta.alpha;
+
+table Inner {
+  v: int;
+}
+
+namespace fixmeta.beta;
+
+table Msg {
+  inner: fixmeta.alpha.Inner;
+}
+
+root_type Msg;

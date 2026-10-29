@@ -1,0 +1,22 @@
+load(":registry.bzl", "PROBE_SCHEMAS")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "registry.bzl",
+])
+
+# The single canonical inventory filegroup a source package exposes. In the
+# real schema module its completeness is proven by that repository's own
+# `git ls-files` sweep — never by anything derived from Aorta's registry.
+filegroup(
+    name = "all_fbs",
+    srcs = glob(
+        ["src/*.fbs"],
+        allow_empty = False,
+    ),
+)
+
+
+
+

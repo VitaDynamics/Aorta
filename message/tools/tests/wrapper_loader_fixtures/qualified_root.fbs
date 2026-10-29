@@ -1,0 +1,7 @@
+// Loader test fixture: a QUALIFIED root_type.
+// The regex text parser returns the qualified spelling ("demo.thing.Root")
+// and then misses the table (all_table_defs is bare-name keyed); the loader
+// returns the bare name.
+namespace demo.thing;
+table Root { a: int32; }
+root_type demo.thing.Root;

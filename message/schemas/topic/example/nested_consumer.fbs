@@ -1,0 +1,19 @@
+// Cross-crate `nested_flatbuffer` reference. The
+// `payload` field is `[ubyte]` (plain reflection target None), but flatc emits
+// `payload_nested_flatbuffer()` returning the nested root type in ANOTHER crate
+// (aorta.nestdep.common.NestedRoot). The consumer namespace shares the
+// `aorta.nestdep` prefix with the nested type, so flatc's reference is the
+// shared-prefix form, which a root-level dependency import cannot resolve.
+// The nested attribute must therefore participate in type rewriting.
+// Example/test only; do NOT consume downstream.
+include "schemas/system/aorta_base.fbs";
+include "schemas/shared/nested_dep/nested_dep.fbs";
+
+namespace aorta.nestdep.consumer;
+
+table NestedConsumer {
+  aorta_header : aorta.sys.AortaHeader (id: 0);
+  payload      : [ubyte] (id: 1, nested_flatbuffer: "aorta.nestdep.common.NestedRoot");
+}
+
+root_type NestedConsumer;

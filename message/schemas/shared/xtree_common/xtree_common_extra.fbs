@@ -1,0 +1,17 @@
+// Shared cross-tree second enum fixture.
+//
+// A SECOND provider file declaring types in the SAME namespace tree branch as
+// xtree_common.fbs (aorta.xtree.common). Two providers under the same
+// sub-namespace `aorta.xtree.common` exercises ambiguous flat root-glob module
+// synthesis. Consumed with xtree_common by
+// xtree_branch to force the recursive-trie module assembly. Example/test only;
+// do NOT consume downstream.
+namespace aorta.xtree.common;
+
+/// A distinct enum sharing xtree_common's namespace (different type name).
+enum XtreeExtra : ubyte {
+  NONE   = 0,
+  LOW    = 1,
+  MEDIUM = 2,
+  HIGH   = 3,
+}

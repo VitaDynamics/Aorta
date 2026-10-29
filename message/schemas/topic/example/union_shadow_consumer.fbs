@@ -1,0 +1,18 @@
+// Deep same-namespace consumer with a
+// foreign UNION field. flatc emits the foreign union discriminant `UShadow` in
+// type positions (`-> UShadow`, `push_slot::<UShadow>`, `pub pick_type: UShadow`)
+// and value paths, all of which need the absolute dependency path. The same
+// name also appears in verifier string literals, which must remain unchanged.
+// String-literal masking distinguishes those cases.
+// Example/test only; do NOT consume downstream.
+include "schemas/system/aorta_base.fbs";
+include "schemas/shared/union_dep/union_dep.fbs";
+
+namespace aorta.unionshadow.common;
+
+table UnionShadow {
+  aorta_header : aorta.sys.AortaHeader (id: 0);
+  pick         : UShadow               (id: 2);
+}
+
+root_type UnionShadow;

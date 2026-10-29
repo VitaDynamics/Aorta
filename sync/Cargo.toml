@@ -1,0 +1,32 @@
+[package]
+name = "aorta_sync"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+# Explicit lib target so `cargo metadata` (run by //core:aorta_ffi_header's
+# cbindgen genrule, which only sees declared-srcs in its sandbox) can resolve
+# this path-dependency's target from the manifest alone, without probing for
+# src/lib.rs. Matches the default layout — no behavioural change.
+[lib]
+name = "aorta_sync"
+path = "src/lib.rs"
+
+# Intentionally dependency-free in normal builds. This crate is the tokio-/
+# zenoh-free home for loom-verified concurrency primitives: loom is driven by a
+# global `--cfg loom` (RUSTFLAGS) that recompiles EVERY crate in its loom
+# configuration, and tokio's loom configuration drops the runtime/time/sync API
+# `aorta_core` needs. Keeping these primitives in a leaf crate lets
+# `RUSTFLAGS="--cfg loom" cargo test -p aorta_sync` recompile only this crate
+# (plus loom) under loom. See src/loom_sync.rs.
+[dependencies]
+
+# loom is linked ONLY under `--cfg loom`; inert (not even downloaded) in normal
+# cargo/bazel builds. See the `.github/workflows/aorta-loom.yml` CI lane.
+# `futures` enables `loom::future::block_on` for the cancel-tree waker models.
+[target.'cfg(loom)'.dependencies]
+loom = { version = "0.7", features = ["futures"] }

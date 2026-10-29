@@ -1,0 +1,448 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+exports_files(["BUILD.bazel"])
+
+# Basic examples
+rust_binary(
+    name = "talker",
+    srcs = [
+        "cli_args.rs",
+        "talker.rs",
+    ],
+    edition = "2021",
+    deps = [
+        "//message:demo_chat_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:flatbuffers",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "cli_talker",
+    srcs = [
+        "cli_args.rs",
+        "cli_talker.rs",
+        "schema_attach.rs",
+    ],
+    edition = "2021",
+    visibility = [
+        "//tools/aorta-cli:__pkg__",
+        "//tools/aorta-play:__pkg__",
+        "//tools/aorta-record:__pkg__",
+    ],
+    deps = [
+        "//message:demo_chat_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:flatbuffers",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "ctx_aggregator_mirror",
+    srcs = ["ctx_aggregator_mirror.rs"],
+    edition = "2021",
+    deps = [
+        "//rust:aorta_sdk",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "cli_ctx_owner",
+    srcs = [
+        "cli_args.rs",
+        "cli_ctx_owner.rs",
+    ],
+    edition = "2021",
+    visibility = [
+        "//tools/aorta-cli:__pkg__",
+        "//tools/aorta-record:__pkg__",
+    ],
+    deps = [
+        "//rust:aorta_sdk",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "listener",
+    srcs = [
+        "cli_args.rs",
+        "listener.rs",
+    ],
+    edition = "2021",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//message:demo_chat_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "all_types_talker",
+    srcs = ["all_types_talker.rs"],
+    edition = "2021",
+    deps = [
+        "//message:all_types_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "foxglove_compressed_video_publisher",
+    srcs = ["foxglove_compressed_video_publisher.rs"],
+    edition = "2021",
+    deps = [
+        "//rust:aorta_sdk",
+        "//message:foxglove_compressed_video_msg_rs",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "timer_demo",
+    srcs = ["timer_demo.rs"],
+    edition = "2021",
+    deps = [
+        "//rust:aorta_sdk",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+# Flow demos (spec Aorta_Flow_Concurrency_Architecture.md). Registered as
+# Cargo examples in rust/Cargo.toml; these targets keep them compiling under
+# the bazel-only CI like every sibling example here.
+rust_binary(
+    name = "flow_demo",
+    srcs = ["flow_demo.rs"],
+    edition = "2021",
+    deps = [
+        "//rust:aorta_sdk",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+# The Rust-plane Flow TCK emitter (test/flow_tck/SCHEMA.md). Cargo builds
+# it as `--example flow_tck_emitter --features examples` (the feature is an
+# empty opt-in gate — no dep or cfg differences); this target lets
+# //test/flow_tck:flow_tck run both planes hermetically.
+rust_binary(
+    name = "flow_tck_emitter",
+    srcs = ["flow_tck_emitter.rs"],
+    edition = "2021",
+    visibility = ["//test/flow_tck:__pkg__"],
+    deps = [
+        # aorta_core directly: the admission-counters / queued-server
+        # scenarios drive core executor + service surfaces that the SDK
+        # deliberately doesn't re-export (Cargo grants examples the SDK
+        # crate's own deps; Bazel needs them spelled).
+        "//core:aorta_core",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "flow_recv_demo",
+    srcs = ["flow_recv_demo.rs"],
+    edition = "2021",
+    deps = [
+        "//rust:aorta_sdk",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "sched_contention_demo",
+    srcs = ["sched_contention_demo.rs"],
+    edition = "2021",
+    deps = [
+        "//rust:aorta_sdk",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "sched_inversion_demo",
+    srcs = ["sched_inversion_demo.rs"],
+    edition = "2021",
+    deps = [
+        "//rust:aorta_sdk",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "simple_timer_publish",
+    srcs = ["simple_timer_publish.rs"],
+    edition = "2021",
+    deps = [
+        "//rust:aorta_sdk",
+        "@aorta_crates//:flatbuffers",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+# Performance test examples
+rust_binary(
+    name = "perf_talker",
+    srcs = [
+        "cli_args.rs",
+        "perf_args.rs",
+        "perf_talker.rs",
+    ],
+    edition = "2021",
+    deps = [
+        "//message:perf_payload_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:flatbuffers",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "perf_listener",
+    srcs = [
+        "cli_args.rs",
+        "perf_listener.rs",
+    ],
+    edition = "2021",
+    deps = [
+        "//message:perf_payload_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "zenoh_perf_talker",
+    srcs = [
+        "cli_args.rs",
+        "perf_args.rs",
+        "zenoh_perf_common.rs",
+        "zenoh_perf_talker.rs",
+    ],
+    edition = "2021",
+    deps = [
+        "//message:perf_payload_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:flatbuffers",
+        "@aorta_crates//:tokio",
+        "@aorta_crates//:zenoh",
+    ],
+)
+
+rust_binary(
+    name = "zenoh_perf_listener",
+    srcs = [
+        "cli_args.rs",
+        "zenoh_perf_common.rs",
+        "zenoh_perf_listener.rs",
+    ],
+    edition = "2021",
+    deps = [
+        "//message:perf_payload_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:tokio",
+        "@aorta_crates//:zenoh",
+    ],
+)
+
+# Comprehensive examples showcasing Aorta features
+
+rust_binary(
+    name = "sensor_publisher",
+    srcs = ["sensor_publisher.rs"],
+    edition = "2021",
+    deps = [
+        "//message:examples_sensor_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:flatbuffers",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "sensor_subscriber",
+    srcs = ["sensor_subscriber.rs"],
+    edition = "2021",
+    deps = [
+        "//message:examples_sensor_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:flatbuffers",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "control_loop",
+    srcs = [
+        "control_loop.rs",
+        "fb_schema.rs",
+    ],
+    edition = "2021",
+    deps = [
+        "//message:examples_control_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:flatbuffers",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "late_joiner",
+    srcs = [
+        "fb_schema.rs",
+        "late_joiner.rs",
+    ],
+    edition = "2021",
+    deps = [
+        "//message:examples_perf_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:flatbuffers",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "performance_demo",
+    srcs = [
+        "fb_schema.rs",
+        "performance_demo.rs",
+    ],
+    edition = "2021",
+    deps = [
+        "//message:examples_perf_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:flatbuffers",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "unified_publish_demo",
+    srcs = ["unified_publish_demo.rs"],
+    edition = "2021",
+    deps = [
+        "//rust:aorta_sdk",
+        "//core:aorta_core",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "echo_server",
+    srcs = [
+        "cli_args.rs",
+        "echo_server.rs",
+        "schema_attach.rs",
+    ],
+    edition = "2021",
+    deps = [
+        "//message:echo_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "cli_echo_server",
+    srcs = [
+        "cli_args.rs",
+        "cli_echo_server.rs",
+        "schema_attach.rs",
+    ],
+    edition = "2021",
+    visibility = ["//tools/aorta-cli:__pkg__"],
+    deps = [
+        "//message:echo_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:flatbuffers",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "cli_execute_task_server",
+    srcs = [
+        "cli_args.rs",
+        "cli_execute_task_server.rs",
+    ],
+    edition = "2021",
+    visibility = [
+        "//tools/aorta-cli:__pkg__",
+    ],
+    deps = [
+        "//message:flow_resume_probe_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "cli_execute_task_client",
+    srcs = [
+        "cli_args.rs",
+        "cli_execute_task_client.rs",
+    ],
+    edition = "2021",
+    deps = [
+        "//message:flow_resume_probe_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "echo_client",
+    srcs = [
+        "cli_args.rs",
+        "echo_client.rs",
+        "schema_attach.rs",
+    ],
+    edition = "2021",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//message:echo_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "navigation_service_server",
+    srcs = ["navigation_service_server.rs"],
+    edition = "2021",
+    deps = [
+        "//message:navigation_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:flatbuffers",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "navigation_service_client",
+    srcs = ["navigation_service_client.rs"],
+    edition = "2021",
+    deps = [
+        "//message:navigation_msg_rs",
+        "//rust:aorta_sdk",
+        "@aorta_crates//:flatbuffers",
+        "@aorta_crates//:tokio",
+    ],
+)
+
+rust_binary(
+    name = "sched_xproc_demo",
+    srcs = ["sched_xproc_demo.rs"],
+    edition = "2021",
+    deps = [
+        "//rust:aorta_sdk",
+        "@aorta_crates//:tokio",
+    ],
+)

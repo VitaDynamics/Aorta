@@ -1,0 +1,17 @@
+[
+  {
+    "scenario": "shutdown_grace_expired",
+    "seq": 0,
+    "op": "task.spawn",
+    "event": "lifecycle",
+    "phase": "spawned_straggler"
+  },
+  {
+    "scenario": "shutdown_grace_expired",
+    "seq": 1,
+    "op": "scope.shutdown_grace",
+    "event": "counter",
+    "name": "detached",
+    "value": 1
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "scenario": "sibling_fail_fast",
+    "seq": 0,
+    "op": "task.spawn",
+    "event": "lifecycle",
+    "phase": "spawned_a"
+  },
+  {
+    "scenario": "sibling_fail_fast",
+    "seq": 1,
+    "op": "task.spawn",
+    "event": "lifecycle",
+    "phase": "spawned_b"
+  },
+  {
+    "scenario": "sibling_fail_fast",
+    "seq": 2,
+    "op": "task.await",
+    "event": "stopped",
+    "kind": "fault",
+    "code": -5,
+    "message": "tck-sibling-fault"
+  },
+  {
+    "scenario": "sibling_fail_fast",
+    "seq": 3,
+    "op": "task.await",
+    "event": "stopped",
+    "kind": "cancelled",
+    "reason": "child_failed",
+    "raw_reason": 4
+  },
+  {
+    "scenario": "sibling_fail_fast",
+    "seq": 4,
+    "op": "scope.stats",
+    "event": "counter",
+    "name": "scope_cancel_reason_raw",
+    "value": 4
+  }
+]

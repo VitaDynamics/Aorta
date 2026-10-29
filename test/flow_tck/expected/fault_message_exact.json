@@ -1,0 +1,18 @@
+[
+  {
+    "scenario": "fault_message_exact",
+    "seq": 0,
+    "op": "task.spawn",
+    "event": "lifecycle",
+    "phase": "spawned"
+  },
+  {
+    "scenario": "fault_message_exact",
+    "seq": 1,
+    "op": "task.await",
+    "event": "stopped",
+    "kind": "fault",
+    "code": -5,
+    "message": "tck: exact fault text"
+  }
+]

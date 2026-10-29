@@ -1,0 +1,30 @@
+[package]
+name = "aorta-foxglove-bridge"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lib]
+name = "aorta_foxglove_bridge"
+path = "src/lib.rs"
+
+[[bin]]
+name = "aorta-foxglove-bridge"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4.5", features = ["derive"] }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "signal", "time", "sync"] }
+zenoh = { workspace = true, features = ["shared-memory", "unstable"] }
+aorta_core = { path = "../../core" }
+aorta-introspect = { path = "../aorta-introspect" }
+foxglove = "0.26"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+toml = "0.8"

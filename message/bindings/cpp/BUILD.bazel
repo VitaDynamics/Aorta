@@ -1,0 +1,6 @@
+load("//message:bindings/registry.bzl", "CPP_MESSAGE_BINDINGS")
+load("//message/tools:message_bindings.bzl", "aorta_define_cpp_bindings")
+
+package(default_visibility = ["//visibility:public"])
+
+aorta_define_cpp_bindings(CPP_MESSAGE_BINDINGS)

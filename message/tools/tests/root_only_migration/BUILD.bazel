@@ -1,0 +1,74 @@
+"""Root-only `schema_deps` migration test.
+
+`message_bindings.bzl`'s `aorta_rust_message_binding` / `aorta_cpp_message_wrapper`
+used to silently degrade to a root-only `srcs` list whenever `schema_deps`
+was omitted (dead `native.read`-based "auto-detect"); omitting it now
+`fail()`s instead. That is a source-level breaking change for legitimate
+root-only callers, who must now pass an explicit `schema_deps = []`. This
+package is the regression test proving `[]` still builds cleanly for a
+schema that genuinely has no includes.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//message/tools:message_bindings.bzl", "aorta_cpp_message_wrapper", "aorta_rust_message_binding")
+load("//message/tools:schema_codegen.bzl", "aorta_define_schema_targets")
+
+package(default_visibility = ["//visibility:private"])
+
+_SCHEMA_PKG = "//message/tools/tests/root_only_migration"
+
+aorta_define_schema_targets(
+    stem = "root_only",
+    root_fbs = "root_only.fbs",
+    rust = True,
+    cpp = True,
+    bfbs = True,
+    schema_meta_rust = True,
+    schema_meta_cpp = True,
+)
+
+cc_library(
+    name = "root_only_schema_cc",
+    hdrs = [
+        ":root_only_cpp",
+        ":root_only_schema_meta_cpp",
+    ],
+    includes = ["."],
+    deps = ["@flatbuffers//:flatbuffers"],
+)
+
+# schema_deps = [] (NOT omitted) — the migration this test exists to prove.
+# rust_module_targets is passed explicitly (as every registry-driven caller
+# already does — see registry.bzl's _build_rust_message_bindings) so codegen
+# uses the --rust-local-module-prefix emission path rather than the relative-
+# `#[path=...]` fallback, which assumes the `schemas/<category>/<domain>`
+# package depth this test fixture package does not have.
+aorta_rust_message_binding(
+    name = "root_only_rust_binding",
+    schema_pkg = _SCHEMA_PKG,
+    schema_stem = "root_only",
+    rust_module_targets = [
+        "//message/schemas/system:aorta_base_rust",
+        ":root_only_rust",
+    ],
+    schema_deps = [],
+)
+
+aorta_cpp_message_wrapper(
+    name = "root_only_cpp_binding",
+    schema_pkg = _SCHEMA_PKG,
+    schema_stem = "root_only",
+    schema_cc_target = ":root_only_schema_cc",
+    schema_deps = [],
+)
+
+# Builds both bindings as a single sh_test-free smoke target: `bazel build`
+# succeeding IS the assertion (schema_deps=[] must not fail() and must
+# produce a usable rust_library / cc_library).
+filegroup(
+    name = "root_only_migration_smoke",
+    srcs = [
+        ":root_only_cpp_binding",
+        ":root_only_rust_binding",
+    ],
+)

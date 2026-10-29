@@ -1,0 +1,45 @@
+// All-types extended codegen fixture (example/test only).
+//
+// Sibling of all_types.fbs covering boolean vectors, a union member alias, and
+// a qualified root type without changing the original fixture.
+// Demo/test golden -- not a real robot contract.
+
+include "schemas/system/aorta_base.fbs";
+
+namespace demo.ext;
+
+enum Level : ubyte {
+  NONE = 0,
+  ONE  = 1,
+  TWO  = 2,
+}
+
+table AltLeaf {
+  id : uint (id: 0);
+}
+
+table AltNode {
+  score : int (id: 0);
+}
+
+/// Union with a MEMBER ALIAS (`Chosen: AltLeaf`).
+union AltPayload {
+  Chosen : AltLeaf,
+  AltNode,
+}
+
+table AllTypesExt {
+  aorta_header : aorta.sys.AortaHeader (id: 0);
+
+  flags   : [bool]      (id: 1);   // [bool] -- C++ typed-build compile bomb (item 2)
+  toggle  : bool        (id: 2);   // scalar bool
+  // union field: the flatc discriminator `payload_type` takes id-1 (3), so the
+  // value id jumps to 4 (id 3 is reserved for the synthesized discriminator).
+  payload : AltPayload  (id: 4);   // union with member alias
+  levels  : [Level]     (id: 5);   // [enum]
+  names   : [string]    (id: 6);   // [string]
+}
+
+// QUALIFIED root_type spelling (`ns.Type`) -- exercises the loader's
+// root-type resolution that the retired text scanner mis-parsed.
+root_type demo.ext.AllTypesExt;

@@ -1,0 +1,46 @@
+# Example aorta-sysmon configuration — see tools/aorta-sysmon/README.md.
+
+node_name = "aorta_sysmon"  # must satisfy KeyExprBuilder normalization
+host_name = ""              # empty = use `gethostname()`
+host_id   = ""              # empty = equals host_name after normalization
+
+topic_suffix       = "sysmon/{host_name}/snapshot"
+alert_topic_suffix = "sysmon/{host_name}/alerts"
+
+interval_ms          = 5000
+capability_refresh_ms = 60000
+
+[metrics]
+cpu             = "on"
+memory          = "on"
+disk            = "on"
+network         = "on"
+psi             = "auto"
+perf            = "auto"
+zenoh_topology  = "off"  # off until a Zenoh topology collector exists
+process         = "on"
+
+[filter]
+disk_include = ["sd*", "nvme*", "mmcblk*"]
+disk_exclude = ["loop*", "ram*", "dm-*", "sr*", "zram*"]
+net_include  = ["eth*", "wlan*", "enp*", "wlp*", "usb*", "can*"]
+net_exclude  = ["lo", "docker*", "veth*", "br-*", "virbr*"]
+
+[process]
+include_self        = true
+include_aorta_nodes = true
+include_pids        = []
+include_executables = []
+max_listed          = 32
+
+[[psi_threshold]]              # daemon alert rule
+resource     = "io"
+line         = "full"
+stall_ratio  = 0.10
+window_ms    = 1000
+
+[[process_threshold]]          # daemon alert rule
+metric    = "cpu_percent_host"
+threshold = 90.0
+top_k     = 3
+severity  = "warn"

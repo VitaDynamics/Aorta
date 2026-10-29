@@ -1,0 +1,56 @@
+name: Mirror Python wheels
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Wheel version
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  python-wheels:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: linux-x86_64
+            runner: ubuntu-latest
+            include_messages: "true"
+          - id: linux-arm64
+            runner: ubuntu-24.04-arm
+            include_messages: "false"
+          - id: macos-arm64
+            runner: macos-14
+            include_messages: "false"
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    steps:
+      - name: Check out mirror
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Set up Bazel
+        uses: ./.github/actions/setup-aorta-bazel
+      - name: Build wheels from the mirror
+        env:
+          INCLUDE_MESSAGES: ${{ matrix.include_messages }}
+          WHEEL_EVENT_NAME: ${{ github.event_name }}
+          WHEEL_REF_NAME: ${{ github.ref_name }}
+          WHEEL_VERSION_INPUT: ${{ inputs.version || '' }}
+        run: >-
+          python3 .github/scripts/mirror_ci.py python-wheels
+          --include-messages "$INCLUDE_MESSAGES"
+          --event-name "$WHEEL_EVENT_NAME"
+          --ref-name "$WHEEL_REF_NAME"
+          --version-input "$WHEEL_VERSION_INPUT"
+      - name: Upload wheels
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: aorta-wheels-${{ matrix.id }}
+          path: dist/*.whl
+          if-no-files-found: error

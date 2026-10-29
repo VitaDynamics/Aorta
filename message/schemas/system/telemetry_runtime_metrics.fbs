@@ -1,0 +1,122 @@
+// Telemetry: runtime_metrics family wire schema (telemetry V2).
+//
+// Like the other telemetry_*.fbs, NOT registered in registry.bzl: bindings +
+// BFBS are produced by core/build.rs and committed as
+// core/src/telemetry/telemetry_runtime_metrics_generated.rs (constant
+// TELEMETRY_RUNTIME_METRICS_BFBS). Shape MUST mirror RuntimeMetricsTelemetry
+// and friends in core/src/telemetry/schema.rs; roundtrip tests in
+// telemetry/fb.rs + the build.rs drift check guard against drift. Regenerate
+// the committed bindings with flatc and run `cargo fmt`.
+
+namespace aorta.telemetry;
+
+table PublisherMetrics {
+  resource_name: string;
+  resource_instance_id: string;
+  schema_hash: string;
+  publish_shm_hit_total: ulong;
+  publish_shm_fallback_total: ulong;
+  publish_shm_required_fail_total: ulong;
+  loan_inflight_current: ulong;
+  loan_quota_exceeded_total: ulong;
+}
+
+table SubscriberMetrics {
+  resource_name: string;
+  resource_instance_id: string;
+  schema_hash: string;
+  duplicate_drop_count: ulong;
+  out_of_order_count: ulong;
+  out_of_order_drop_count: ulong;
+  executor_drop_count: ulong;
+  local_drop_count: ulong;
+  overflow_relay_enqueue_count: ulong;
+  overflow_relay_drop_count: ulong;
+  // v7: samples dropped by the deadline-over-messaging gate —
+  // the counter existed in-process since v5 but never reached the wire.
+  dropped_for_deadline: ulong;
+}
+
+table ServiceMetrics {
+  resource_name: string;
+  resource_instance_id: string;
+  schema_hash: string;
+  request_received_count: ulong;
+  request_dispatched_count: ulong;
+  reply_ok_count: ulong;
+  reply_error_count: ulong;
+  reply_send_failure_count: ulong;
+  request_dropped_count: ulong;
+  query_receive_failure_count: ulong;
+  task_exit_count: ulong;
+  in_flight_requests: ulong;
+  last_request_ns: ulong;
+  last_reply_ns: ulong;
+}
+
+table ClientMetrics {
+  resource_name: string;
+  resource_instance_id: string;
+  schema_hash: string;
+  call_count: ulong;
+  success_count: ulong;
+  timeout_count: ulong;
+  concurrent_conflict_count: ulong;
+  error_count: ulong;
+  retry_count: ulong;
+  last_call_started_ns: ulong;
+  last_call_finished_ns: ulong;
+  last_call_latency_ns: ulong;
+}
+
+table ExecutorMetrics {
+  queued_events: ulong;
+  queued_bytes: ulong;
+  peak_queued_events: ulong;
+  peak_queued_bytes: ulong;
+  dropped_queue_full: ulong;
+  dropped_queue_closed: ulong;
+  dropped_budget_events: ulong;
+  dropped_budget_bytes: ulong;
+  // Monotonic executor spin-loop counter (Relaxed, one per spin).
+  // Cumulative — the cloud consumer derives spins/sec (Δ/Δt) + stall detection.
+  spin_count: ulong;
+  // Flow: the reserved CoroutineResume lane + Flow drops.
+  // Appended fields — forward/backward compatible (implicit id continuation).
+  lane_occupancy: ulong;       // current reserved-lane depth
+  lane_high_water: ulong;      // max observed lane depth
+  lane_pushed_total: ulong;    // cumulative lane posts
+  dropped_expired: ulong;      // events dropped at dequeue past their deadline
+  // Current offload-pool backlog. PROCESS-GLOBAL (shared offload pool),
+  // not per-executor: every executor row of one process reports the same
+  // value — do not diff it across executors.
+  offload_queue_depth: ulong;
+  // Flow (telemetry v6): the ATTACHED lane pool's
+  // per-class-lane counters, index = class (0 realtime .. 3 low). Empty
+  // vectors = executor not in facade mode (v5 consumers ignore them;
+  // the v5 queue/lane fields above go QUIESCENT for attached C++
+  // processes — documented consumer contract). Appended fields —
+  // forward/backward compatible (implicit id continuation).
+  pool_lane_depth: [ulong];           // current queued per class lane
+  pool_lane_high_water: [ulong];      // max observed per class lane
+  pool_lane_enqueued_total: [ulong];  // cumulative accepted posts
+  pool_lane_shed_total: [ulong];      // budget sheds (Drop policy)
+  pool_lane_dropped_expired_total: [ulong]; // deadline drops at dequeue
+}
+
+table RuntimeMetrics {
+  telemetry_version: uint;
+  sequence: ulong;
+  timestamp_ns: ulong;
+  node_id: string;
+  group: string;
+  collection_period_ms: uint;
+  publishers: [PublisherMetrics];
+  subscribers: [SubscriberMetrics];
+  services: [ServiceMetrics];
+  clients: [ClientMetrics];
+  // Option<TelemetryExecutorRuntimeMetrics> -> table field (absent == None).
+  executor: ExecutorMetrics;
+}
+
+root_type RuntimeMetrics;

@@ -1,0 +1,1741 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_shared_library", "cc_test")
+
+_AORTA_CPP_SRCS = [
+    "src/capture.cc",
+    "src/client.cc",
+    "src/contextstore.cc",
+    "src/executor.cc",
+    "src/internal/common.cc",
+    "src/internal/common.h",
+    "src/internal/ffi.h",
+    "src/internal/recycle_pool.h",
+    "src/logging.cc",
+    "src/node.cc",
+    "src/publisher.cc",
+    "src/qos.cc",
+    "src/service.cc",
+    "src/subscriber.cc",
+    "src/time.cc",
+    "src/timer.cc",
+    "src/uuid.cc",
+]
+
+exports_files(["BUILD.bazel"])
+
+cc_library(
+    name = "flatbuffers_cc",
+    hdrs = ["include/aorta/flatbuffers.h"],
+    includes = ["include"],
+    deps = ["@flatbuffers//:flatbuffers"],
+    visibility = ["//visibility:public"],
+)
+
+# NOTE: the former `gmock_impl` cc_library was REMOVED here.
+# gtest v1.17 integrates GoogleMock, and `//src/third_party/gtest:gtest`
+# already globs `googlemock/src/*.cc` (gmock-matchers.cc → `kUnused`,
+# gmock-spec-builders.cc → Sequence ThreadLocal, etc.). gmock_impl
+# recompiled the SAME five sources into a SECOND shared library, so every
+# mock-linked test loaded two copies of gmock's globals + thread-local
+# singletons. That duplication was the single root cause of three
+# sanitizer symptoms on the 8 mock-linked targets:
+#   * ASAN odr-violation on `kUnused` at load (detect_odr_violation=2)
+#   * ASAN heap-use-after-free in gmock Sequence ThreadLocal teardown
+#     (when the odr check was relaxed — the bug just moved to teardown)
+#   * UBSAN static-destructor SIGSEGV (double-destroy of the same globals)
+# Depend on `//src/third_party/gtest:gtest` (or its `:gmock` alias) for
+# gmock; do NOT reintroduce a second library that compiles googlemock/src.
+
+cc_library(
+    name = "aorta_cpp_headers",
+    # flow_watch.hpp is the one .hpp in the C++17 baseline: header-only
+    # Ring sugar over the C ABI, no coroutines (the glob only catches .h).
+    hdrs = glob([
+        "include/aorta/*.h",
+        "include/aorta/detail/*.h",
+    ]) + ["include/aorta/flow_watch.hpp"],
+    includes = ["include"],
+    deps = [
+        "//core:aorta_ffi_headers",
+        "//message:fbs_schema_aorta_base_cpp_lib",
+        "//message:fbs_schema_action_common_cpp_lib",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Every header under `include/` ships, recursively: `aorta/aorta.h` pulls in
+# `aorta/detail/reentrancy_check.h`, so a top-level-only glob produces a bundle
+# whose public header does not compile.
+filegroup(
+    name = "aorta_cpp_public_headers",
+    srcs = glob([
+        "include/**/*.h",
+        "include/**/*.hpp",
+    ]),
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "aorta_cpp",
+    # QoS preset bodies live in the shared source list (not headers),
+    # so only the compiled SDK targets propagate the Core FFI dependency.
+    srcs = _AORTA_CPP_SRCS,
+    deps = [
+        ":aorta_cpp_headers",
+        "//core:aorta_core_linkopts",
+        "//core:aorta_ffi_headers",
+        "//message:fbs_schema_aorta_base_cpp_lib",
+    ] + select({
+        # Cross-language TSAN lane (--config=tsan-xlang) links the cargo-built
+        # instrumented FFI staticlib instead of the uninstrumented (stable-1.92)
+        # rules_rust lib, so a single process has BOTH sides TSAN-instrumented.
+        # Every other config — normal / asan / ubsan / tsan-clang(mock) — keeps
+        # the real lib, so this select is invisible outside the xlang lane.
+        "//core:tsan_xlang": ["//core:aorta_core_ffi_tsan_prebuilt"],
+        "//conditions:default": ["//core:aorta_core_ffi"],
+    }),
+    visibility = ["//visibility:public"],
+)
+
+# Release-only static SDK library.
+#
+# `--config=release` compiles with `-flto=auto`, which makes `libaorta_cpp.a`
+# unusable outside the exact GCC major version that built it: GNU ld's LTO
+# plugin claims the `.gnu.lto_*` sections in preference to any machine code, so
+# a GCC 11 consumer (Ubuntu 22.04 / Humble) dies with
+# `lto1: bytecode stream ... generated with LTO version 13.1 instead of the
+# expected 11.3`. `-ffat-lto-objects` does not help — the plugin still picks the
+# IR. A redistributable archive must therefore carry plain objects, so this
+# target opts out of LTO (target copts win over `--copt`). The in-repo
+# `:aorta_cpp` keeps LTO for the publish hot path; only the shipped archive
+# differs, and the membership gate rejects any LTO section in it.
+cc_library(
+    name = "aorta_cpp_release_static",
+    srcs = _AORTA_CPP_SRCS,
+    copts = ["-fno-lto"],
+    linkopts = select({
+        "@platforms//os:macos": [],
+        "@platforms//os:windows": [],
+        "//conditions:default": ["-fno-lto"],
+    }),
+    deps = [
+        ":aorta_cpp_headers",
+        "//core:aorta_core_linkopts",
+        "//core:aorta_ffi_headers",
+        "//message:fbs_schema_aorta_base_cpp_lib",
+    ],
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+# Release-only shared SDK library. It links against the Core cdylib so a
+# consumer process has exactly one Core runtime when using Aorta::cpp_shared.
+cc_library(
+    name = "aorta_cpp_shared_objects",
+    srcs = _AORTA_CPP_SRCS,
+    alwayslink = True,
+    deps = [
+        ":aorta_cpp_headers",
+        "//core:aorta_core_cdylib",
+        "//core:aorta_core_linkopts",
+        "//core:aorta_ffi_headers",
+        "//message:fbs_schema_aorta_base_cpp_lib",
+    ],
+    tags = ["manual"],
+)
+
+cc_shared_library(
+    name = "aorta_cpp_shared",
+    deps = [":aorta_cpp_shared_objects"],
+    shared_lib_name = select({
+        "@platforms//os:macos": "libaorta_cpp_sdk.dylib",
+        "@platforms//os:windows": "aorta_cpp_sdk.dll",
+        "//conditions:default": "libaorta_cpp_sdk.so",
+    }),
+    user_link_flags = select({
+        "@platforms//os:macos": ["-Wl,-install_name,@rpath/libaorta_cpp.dylib"],
+        "@platforms//os:windows": [],
+        "//conditions:default": ["-Wl,-soname,libaorta_cpp.so"],
+    }),
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+# SerialDomain stop-window family: the C++ SDK sources
+# linked against the ONLY `test-seams`-enabled Core
+# (//core:aorta_core_ffi_test_seams — the stop-window pause slot + the
+# aorta_test_stop_window_seam C symbol). One Core per binary: this
+# library must NEVER appear alongside :aorta_cpp in one binary (two
+# registries would split the executor handles).
+cc_library(
+    name = "aorta_cpp_test_seams",
+    testonly = True,
+    srcs = [
+        "src/capture.cc",
+        "src/client.cc",
+        "src/contextstore.cc",
+        "src/executor.cc",
+        "src/internal/common.cc",
+        "src/internal/common.h",
+        "src/internal/ffi.h",
+        "src/internal/recycle_pool.h",
+        "src/logging.cc",
+        "src/node.cc",
+        "src/publisher.cc",
+        "src/qos.cc",
+        "src/service.cc",
+        "src/subscriber.cc",
+        "src/time.cc",
+        "src/timer.cc",
+        "src/uuid.cc",
+    ],
+    deps = [
+        ":aorta_cpp_headers",
+        "//core:aorta_core_linkopts",
+        "//core:aorta_ffi_headers",
+        "//message:fbs_schema_aorta_base_cpp_lib",
+        "//core:aorta_core_ffi_test_seams",
+    ],
+    visibility = ["//visibility:private"],
+)
+
+# Mock library for testing
+cc_library(
+    name = "mock_aorta",
+    srcs = ["test/mock/mock_aorta.cc"],
+    hdrs = ["test/mock/mock_aorta.h"],
+    includes = ["test/mock"],
+    deps = [
+        ":aorta_cpp_headers",
+        "//src/third_party/gtest:gtest",
+    ],
+    visibility = ["//cpp/test:__subpackages__"],
+)
+
+# Test-only SDK library that uses mocks instead of real FFI.
+#
+# `src/contextstore.cc` is intentionally NOT in this list: the mock
+# library (cpp/test/mock/mock_aorta.cc) does not provide stubs for the
+# `aorta_ctx_*` C ABI surface yet, so linking it would fail with
+# undefined references for every consumer of `:aorta_cpp_for_testing`.
+# The ContextStore C++ wrapper is exercised against the real FFI via
+# `:contextstore_integration_test` which depends on `:aorta_cpp`. Mock
+# coverage is a follow-up.
+cc_library(
+    name = "aorta_cpp_for_testing",
+    srcs = [
+        "src/client.cc",
+        "src/executor.cc",
+        "src/internal/common.cc",
+        "src/internal/common.h",
+        "src/internal/ffi.h",
+        "src/internal/recycle_pool.h",
+        "src/logging.cc",
+        "src/node.cc",
+        "src/publisher.cc",
+        "src/service.cc",
+        "src/subscriber.cc",
+        "src/time.cc",
+        "src/timer.cc",
+        "src/uuid.cc",
+    ],
+    deps = [
+        ":aorta_cpp_headers",
+        ":mock_aorta",
+        "//message:fbs_schema_aorta_base_cpp_lib",
+    ],
+    # Don't link to real FFI - use mocks instead
+    visibility = ["//cpp/test:__subpackages__"],
+)
+
+cc_test(
+    name = "uuid_test",
+    srcs = ["test/uuid_test.cc"],
+    deps = [
+        ":aorta_cpp_for_testing",
+        ":aorta_cpp_headers",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "schema_meta_test",
+    srcs = ["test/schema_meta_test.cc"],
+    deps = [
+        ":aorta_cpp_headers",
+        "//message:aorta_schema_meta_cpp",
+    ],
+    size = "small",
+)
+
+# Unit tests for basic types (no FFI dependencies)
+cc_test(
+    name = "array_view_test",
+    srcs = ["test/array_view_test.cc"],
+    deps = [
+        ":aorta_cpp_headers",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "status_test",
+    srcs = ["test/status_test.cc"],
+    deps = [
+        ":aorta_cpp_headers",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "all_types_enum_default_test",
+    srcs = ["test/all_types_enum_default_test.cc"],
+    deps = [
+        ":aorta_cpp_headers",
+        "//message:all_types_msg_cc",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "qos_test",
+    srcs = ["test/qos_test.cc"],
+    deps = [
+        ":aorta_cpp_headers",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+# ABI layout lock. Every assertion in this
+# test is a `static_assert(sizeof(...) == ...)` / `offsetof` pair, so
+# any silent layout drift between the Rust source structs and the
+# cbindgen-emitted C header fails the compile. The matching Rust-side
+# lock lives in `core/src/ffi/abi_assert.rs`.
+cc_test(
+    name = "abi_layout_test",
+    srcs = ["test/abi_layout_test.cc"],
+    deps = [
+        ":aorta_cpp_headers",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+# Compile-time noexcept contract for the
+# four extern "C" dispatchers and TypedClientResponse::operator=.
+# Pure static_assert payload — the gtest body is a placeholder so
+# the binary links; the real test runs at compile time. Headers-
+# only dep is enough since static_assert evaluates against the
+# declarations.
+cc_test(
+    name = "dispatcher_noexcept_test",
+    srcs = ["test/dispatcher_noexcept_test.cc"],
+    deps = [
+        ":aorta_cpp_headers",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "options_test",
+    srcs = ["test/options_test.cc"],
+    deps = [
+        ":aorta_cpp_headers",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "types_test",
+    srcs = ["test/types_test.cc"],
+    deps = [
+        ":aorta_cpp_headers",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "executor_test",
+    srcs = ["test/executor_test.cc"],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp_headers",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "header_test",
+    srcs = ["test/header_test.cc"],
+    deps = [
+        ":aorta_cpp_headers",
+        "//message:fbs_schema_aorta_base_cpp_lib",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "subscriber_test",
+    srcs = ["test/subscriber_test.cc"],
+    deps = [
+        ":aorta_cpp_headers",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "logging_test",
+    srcs = ["test/logging_test.cc"],
+    deps = [
+        ":aorta_cpp_for_testing",
+        ":aorta_cpp_headers",
+        ":mock_aorta",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "timer_test",
+    srcs = ["test/timer_test.cc"],
+    deps = [
+        ":aorta_cpp_headers",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "action_test",
+    srcs = ["test/action_test.cc"],
+    deps = [
+        ":aorta_cpp_for_testing",
+        ":aorta_cpp_headers",
+        ":mock_aorta",
+        "//message:flow_resume_probe_msg_cc",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "reentrancy_check_off_test",
+    srcs = ["test/reentrancy_check_off_test.cc"],
+    copts = ["-UNDEBUG"],
+    deps = [
+        ":aorta_cpp_headers",
+        ":mock_aorta",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "reentrancy_check_warn_test",
+    srcs = ["test/reentrancy_check_warn_test.cc"],
+    copts = ["-UNDEBUG"],
+    deps = [
+        ":aorta_cpp_headers",
+        ":mock_aorta",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "reentrancy_check_abort_test",
+    srcs = ["test/reentrancy_check_abort_test.cc"],
+    copts = ["-UNDEBUG"],
+    deps = [
+        ":aorta_cpp_headers",
+        ":mock_aorta",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "reentrancy_live_test",
+    srcs = ["test/reentrancy_live_test.cc"],
+    copts = ["-UNDEBUG"],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp_headers",
+        "//message:flow_resume_probe_msg_cc",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+    timeout = "moderate",
+)
+
+# Regression tests: verifies extern "C" action dispatchers
+# in cpp/include/aorta/action.h catch user-callback exceptions instead of
+# unwinding across the FFI boundary into Rust (UB).
+cc_test(
+    name = "action_throwing_callback_test",
+    srcs = ["test/action_throwing_callback_test.cc"],
+    deps = [
+        ":aorta_cpp_headers",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "action_reentrancy_tls_test",
+    srcs = [
+        "test/action_reentrancy_tls_peer.cc",
+        "test/action_reentrancy_tls_test.cc",
+    ],
+    copts = ["-UNDEBUG"],
+    deps = [
+        ":aorta_cpp_headers",
+        "//message:flow_resume_probe_msg_cc",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+# Regression tests: verifies extern "C" dispatchers in
+# subscriber.cc / timer.cc / service.cc / contextstore.cc catch
+# user-callback exceptions instead of unwinding across the FFI
+# boundary into Rust. Same contract as the action_throwing_callback_test
+# above; the four dispatchers exposed by the non-action SDK wrappers
+# previously had no equivalent regression coverage.
+#
+# Test-only header library exposing the private `CallbackState` of
+# Subscriber / Timer / Service / WatchHandle through one-line friend
+# decls in their public headers. `includes = ["test"]` lets the test
+# files include it as plain "throwing_callback_test_access.h" without
+# needing every cc_test rule to repeat the include path.
+cc_library(
+    name = "throwing_callback_test_access",
+    testonly = True,
+    hdrs = ["test/throwing_callback_test_access.h"],
+    includes = ["test"],
+    deps = [":aorta_cpp_headers"],
+    visibility = ["//cpp:__subpackages__"],
+)
+
+cc_test(
+    name = "subscriber_throwing_callback_test",
+    srcs = ["test/subscriber_throwing_callback_test.cc"],
+    deps = [
+        ":aorta_cpp_for_testing",
+        ":aorta_cpp_headers",
+        ":mock_aorta",
+        ":throwing_callback_test_access",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "timer_throwing_callback_test",
+    srcs = ["test/timer_throwing_callback_test.cc"],
+    deps = [
+        ":aorta_cpp_for_testing",
+        ":aorta_cpp_headers",
+        ":mock_aorta",
+        ":throwing_callback_test_access",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "service_throwing_callback_test",
+    srcs = ["test/service_throwing_callback_test.cc"],
+    deps = [
+        ":aorta_cpp_for_testing",
+        ":aorta_cpp_headers",
+        ":mock_aorta",
+        ":throwing_callback_test_access",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+# Regression tests for the callback/destructor race — the Subscriber/Timer
+# callback dispatchers reserve the in-flight slot under the destructor's mutex
+# and the destructor leaks (rather than reset()s) the CallbackState on drain
+# timeout. Drives a REAL ~Subscriber / ~Timer (built with handle=0 via the
+# *DestructorRaceAccess structs) racing a concurrent dispatcher. size=medium:
+# the leak-on-timeout case waits out the 2s drain window. See the test file's
+# header for the (intentional) TSAN-Tier-3 limitation note.
+cc_test(
+    name = "callback_destructor_race_test",
+    srcs = ["test/callback_destructor_race_test.cc"],
+    deps = [
+        ":aorta_cpp_for_testing",
+        ":aorta_cpp_headers",
+        ":mock_aorta",
+        ":throwing_callback_test_access",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+)
+
+# Contextstore links the real `:aorta_cpp` because the mock layer
+# (`mock_aorta`) does not stub the `aorta_ctx_*` C ABI; the dispatcher
+# itself never reaches into FFI (only the surrounding ContextStore /
+# WatchHandle methods do), but contextstore.cc as a whole pulls those
+# symbols in. Same pattern as `:contextstore_integration_test`.
+cc_test(
+    name = "contextstore_throwing_callback_test",
+    srcs = ["test/contextstore_throwing_callback_test.cc"],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp_headers",
+        ":throwing_callback_test_access",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "node_test",
+    srcs = ["test/node_test.cc"],
+    deps = [
+        ":aorta_cpp_for_testing",
+        ":aorta_cpp_headers",
+        "//message:echo_msg_cc",
+        ":mock_aorta",
+        "//message:demo_chat_msg_cc",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "time_test",
+    srcs = ["test/time_test.cc"],
+    deps = [
+        ":aorta_cpp_for_testing",
+        ":aorta_cpp_headers",
+        ":mock_aorta",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "publisher_test",
+    srcs = ["test/publisher_test.cc"],
+    deps = [
+        ":aorta_cpp_for_testing",
+        ":aorta_cpp_headers",
+        ":mock_aorta",
+        "//message:all_types_msg_cc",
+        "//message:all_types_cpp_vector_union_msg_cc",
+        "//message:demo_chat_msg_cc",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+# Codegen guard-symmetry probes. Each cc_test links
+# two TUs -- one per include order -- against an owner/includer wrapper-header
+# pair. Pair A (guard_action_probe/guard_service_probe) and Pair C
+# (private_tests: the same fixture pair, includer-first) are CROSS-namespace,
+# trait-only conflicts
+# (TypedSubscribeTraits<T> is keyed off each table's own declaring namespace,
+# not the emitting wrapper's); Pair B (guard_fixture_owner/includer) is a
+# SAME-namespace pair covering TABLE_MSG + UNION_MSG (those Msg
+# structs/unions are namespaced by the emitting wrapper's own root
+# namespace, so this class only collides same-namespace). Pre-fix,
+# co-including an owner (unguarded root-local emission) and an includer
+# (guarded re-emission) of the same TypedSubscribeTraits/TABLE_MSG/UNION_MSG
+# symbol is a redefinition error in EITHER order.
+cc_test(
+    name = "wrapper_guard_symmetry_pair_a_test",
+    srcs = [
+        "test/wrapper_guard_symmetry_pair_a_ab_test.cc",
+        "test/wrapper_guard_symmetry_pair_a_ba_test.cc",
+    ],
+    deps = [
+        ":aorta_cpp_headers",
+        "//message:guard_action_probe_msg_cc",
+        "//message:guard_service_probe_msg_cc",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "wrapper_guard_symmetry_pair_b_test",
+    srcs = [
+        "test/wrapper_guard_symmetry_pair_b_ab_test.cc",
+        "test/wrapper_guard_symmetry_pair_b_ba_test.cc",
+    ],
+    deps = [
+        ":aorta_cpp_headers",
+        "//message:guard_fixture_owner_msg_cc",
+        "//message:guard_fixture_includer_msg_cc",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "reordered_goal_fixture_roundtrip_test",
+    srcs = ["test/reordered_goal_fixture_roundtrip_test.cc"],
+    deps = [
+        ":aorta_cpp_headers",
+        "//message:reordered_goal_probe_msg_cc",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "wrapper_guard_symmetry_fixture_test",
+    srcs = [
+        "test/wrapper_guard_symmetry_fixture_ab_test.cc",
+        "test/wrapper_guard_symmetry_fixture_ba_test.cc",
+    ],
+    deps = [
+        ":aorta_cpp_headers",
+        "//message:guard_action_probe_msg_cc",
+        "//message:guard_service_probe_msg_cc",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "wrapper_guard_symmetry_primary_template_fixture_test",
+    srcs = ["test/wrapper_guard_symmetry_primary_template_fixture_test.cc"],
+    deps = [
+        "//message:guard_action_probe_msg_cc",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+# Codegen golden: compile + round-trip proof for the C++ [bool] typed-build fix
+# (std::vector<bool> has no .data()) plus a union member alias and a qualified
+# root_type.
+cc_test(
+    name = "all_types_ext_roundtrip_test",
+    srcs = ["test/all_types_ext_roundtrip_test.cc"],
+    deps = [
+        ":aorta_cpp_headers",
+        "//message:all_types_ext_msg_cc",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+# Example-fixture contract test for the generated C++ typed wrapper. It proves
+# that optional strings preserve absent-versus-empty, non-default enum/scalar
+# values survive the typed build, and AortaHeader injection remains present.
+cc_test(
+    name = "typed_wrapper_field_roundtrip_test",
+    srcs = ["test/typed_wrapper_field_roundtrip_test.cc"],
+    deps = [
+        ":aorta_cpp_headers",
+        "//message:all_types_msg_cc",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "shapes_probe_action_roundtrip_test",
+    srcs = ["test/shapes_probe_action_roundtrip_test.cc"],
+    deps = [
+        ":aorta_cpp_headers",
+        "//message:shapes_probe_msg_cc",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+# Wrapper-only primary-template visibility probe: includes ONLY the
+# guard_action_probe wrapper header (no node.h/action.h) and resolves
+# TypedSubscribeTraits<FunctionInputRequest> (an include-table type) through
+# it alone. Deliberately does NOT dep on `:aorta_cpp_headers` directly
+# (unlike the other probes above) -- every other probe adds it
+# belt-and-suspenders, which would mask a future regression where
+# `aorta_cpp_message_wrapper` (message_bindings.bzl) loses the
+# `//cpp:aorta_cpp_headers` dep it gained alongside these probes. THIS
+# target relies solely on `//message:guard_action_probe_msg_cc` to transitively
+# provide `aorta/typed_subscribe.h` (and `aorta/array_view.h`), so it is the
+# one target that actually proves the wrapper cc_library wiring is correct.
+cc_test(
+    name = "wrapper_guard_symmetry_primary_template_test",
+    srcs = ["test/wrapper_guard_symmetry_primary_template_test.cc"],
+    deps = [
+        "//message:guard_action_probe_msg_cc",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "recycle_pool_test",
+    srcs = [
+        "src/internal/recycle_pool.h",
+        "test/recycle_pool_test.cc",
+    ],
+    includes = ["src"],
+    deps = [
+        "@flatbuffers//:flatbuffers",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "client_test",
+    srcs = ["test/client_test.cc"],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp_headers",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+    timeout = "moderate",
+)
+
+# Integration test fixture library using real Zenoh communication
+cc_library(
+    name = "network_test_fixture",
+    srcs = ["test/integration/network_test_fixture.cc"],
+    hdrs = ["test/integration/network_test_fixture.h"],
+    includes = ["test"],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp_headers",
+        "//src/third_party/gtest:gtest",
+    ],
+    visibility = ["//cpp/test:__subpackages__"],
+)
+
+# Integration tests with real Zenoh network communication
+cc_test(
+    name = "pubsub_integration_test",
+    srcs = [
+        "test/integration/pubsub_integration_test.cc",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp_headers",
+        ":network_test_fixture",
+        "//core:aorta_core_ffi",
+        "//core:aorta_core_linkopts",
+        "//message:all_types_msg_cc",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+    timeout = "moderate",
+    tags = ["integration"],
+)
+
+cc_test(
+    name = "capture_integration_test",
+    srcs = [
+        "test/integration/capture_integration_test.cc",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp_headers",
+        ":network_test_fixture",
+        "//core:aorta_core_ffi",
+        "//core:aorta_core_linkopts",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+    timeout = "moderate",
+    tags = ["integration"],
+)
+
+cc_test(
+    name = "service_client_integration_test",
+    srcs = [
+        "test/integration/service_client_integration_test.cc",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp_headers",
+        ":network_test_fixture",
+        "//core:aorta_core_ffi",
+        "//core:aorta_core_linkopts",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+    timeout = "moderate",
+    tags = ["integration"],
+)
+
+cc_test(
+    name = "contextstore_integration_test",
+    srcs = [
+        "test/integration/contextstore_integration_test.cc",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp_headers",
+        ":network_test_fixture",
+        ":throwing_callback_test_access",
+        "//core:aorta_core_ffi",
+        "//core:aorta_core_linkopts",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+    timeout = "moderate",
+    tags = ["integration"],
+)
+
+# Verifies cross-language consistency of the
+# four QoS preset profiles plus the default profile: that the C-ABI's
+# `aorta_qos_preset` (the full 4-field struct) returns what
+# `core/src/qos.rs` defines, that the C++ wrappers decode them
+# correctly, and that round-tripping a C++ preset back through
+# `ToFfi()` yields the same struct.
+#
+# Lives in cpp_integration_tests (not cpp_unit_tests) because it
+# depends on `//core:aorta_core_ffi` — sanitizer Tier 1 cannot pull
+# that dep into a unit test under UBSAN without hitting the
+# cargo-bazel splice timeout. Network fixture not needed: presets are
+# pure getters.
+cc_test(
+    name = "qos_preset_integration_test",
+    srcs = [
+        "test/integration/qos_preset_integration_test.cc",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp_headers",
+        "//core:aorta_core_ffi",
+        "//core:aorta_core_linkopts",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+    tags = ["integration"],
+)
+
+# Verifies aorta::NewUuidV7() (cpp/src/uuid.cc) against the real Core UUIDv7
+# generator (core/src/uuid_v7.rs) — the unit-tier `:uuid_test` only exercises
+# error propagation against MockAortaFFI and never generates a real UUID.
+# Lives in cpp_integration_tests (not cpp_unit_tests) for the same reason as
+# qos_preset_integration_test: it pulls //core:aorta_core_ffi, which the
+# sanitizer unit tier cannot splice without the cargo-bazel timeout. Network
+# fixture not needed: NewUuidV7() is a pure function.
+cc_test(
+    name = "uuid_integration_test",
+    srcs = [
+        "test/integration/uuid_integration_test.cc",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp_headers",
+        "//core:aorta_core_ffi",
+        "//core:aorta_core_linkopts",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+    tags = ["integration"],
+)
+
+# Step 11: C++ tracing wrapper tests. Links the REAL trace C-ABI
+# (//core:aorta_core_ffi) so the recorded-data assertions read back through
+# `aorta_trace_user_metric_count` against the same process-global engine the
+# Rust core uses — header-only wrapper over the C-ABI, no SDK .cc, no network
+# fixture. Lives in cpp_integration_tests (not cpp_unit_tests) for the same
+# reason as qos_preset_integration_test: it pulls //core:aorta_core_ffi, which
+# the sanitizer unit tier cannot splice without the cargo-bazel timeout.
+cc_test(
+    name = "trace_test",
+    srcs = ["test/trace_test.cc"],
+    deps = [
+        ":aorta_cpp_headers",
+        "//core:aorta_core_ffi",
+        "//core:aorta_core_linkopts",
+        "//src/third_party/gtest:gtest",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+    tags = ["integration"],
+)
+
+# Test suite for all C++ SDK unit tests
+test_suite(
+    name = "cpp_unit_tests",
+    tests = [
+        ":abi_layout_test",
+        ":action_test",
+        ":action_reentrancy_tls_test",
+        ":action_throwing_callback_test",
+        ":array_view_test",
+        ":callback_destructor_race_test",
+        ":client_test",
+        ":contextstore_throwing_callback_test",
+        ":dispatcher_noexcept_test",
+        ":executor_test",
+        ":uuid_test",
+        ":flow_action_test",
+        ":flow_ambient_context_test",
+        ":flow_coroutine_test",
+        ":flow_combinators_test",
+        ":flow_endpoint_tag_test",
+        ":flow_facade_test",
+        ":flow_handle_test",
+        ":flow_lanes_test",
+        ":flow_noexcept_test",
+        ":flow_outcome_test",
+        ":flow_swallow_detection_test",
+        ":flow_readiness_test",
+        ":flow_refusal_log_test",
+        ":flow_runtime_test",
+        ":flow_serial_test",
+        ":flow_serial_diag_log_test",
+        ":flow_serial_matrix_test",
+        ":flow_serial_stopwindow_test",
+        ":flow_subscriber_test",
+        ":flow_when_test",
+        ":lane_runtime_test",
+        ":lanes_test",
+        ":header_test",
+        ":logging_test",
+        ":node_test",
+        ":options_test",
+        ":publisher_test",
+        ":qos_test",
+        ":recycle_pool_test",
+        ":reentrancy_check_abort_test",
+        ":reentrancy_check_off_test",
+        ":reentrancy_check_warn_test",
+        ":reentrancy_live_test",
+        ":reentrancy_lint_test",
+        ":reordered_goal_fixture_roundtrip_test",
+        ":schema_meta_test",
+        ":service_throwing_callback_test",
+        ":status_test",
+        ":subscriber_test",
+        ":subscriber_throwing_callback_test",
+        ":all_types_enum_default_test",
+        ":time_test",
+        ":timer_test",
+        ":timer_throwing_callback_test",
+        ":typed_wrapper_field_roundtrip_test",
+        ":types_test",
+        ":wrapper_guard_symmetry_pair_a_test",
+        ":wrapper_guard_symmetry_pair_b_test",
+        ":wrapper_guard_symmetry_fixture_test",
+        ":wrapper_guard_symmetry_primary_template_fixture_test",
+        ":wrapper_guard_symmetry_primary_template_test",
+    ],
+)
+
+# Test suite for the Flow/lanes layer specifically: the narrow
+# gate for changes touching the C++20 coroutine surface or the C++17
+# lane pool. Every target here is ALSO in :cpp_unit_tests — this suite
+# exists so flow-focused work has one fast, complete gate to point at.
+test_suite(
+    name = "cpp_flow_tests",
+    tests = [
+        ":flow_action_test",
+        ":flow_ambient_context_test",
+        ":flow_combinators_test",
+        ":flow_coroutine_test",
+        ":flow_endpoint_tag_test",
+        # The expect-fail compile suite —
+        # negative TUs against the REAL exported flow headers, gating on the
+        # exact teaching diagnostics, not just "fails to compile".
+        ":flow_expectfail_test",
+        ":flow_facade_test",
+        ":flow_handle_test",
+        ":flow_lanes_test",
+        ":flow_noexcept_test",
+        ":flow_outcome_test",
+        ":flow_resume_lint_fixture_test",
+        ":flow_resume_lint_test",
+        ":flow_swallow_detection_test",
+        ":flow_readiness_test",
+        ":flow_refusal_log_test",
+        ":flow_runtime_test",
+        ":flow_serial_test",
+        ":flow_serial_diag_log_test",
+        ":flow_serial_matrix_test",
+        ":flow_serial_stopwindow_test",
+        ":flow_subscriber_test",
+        ":flow_when_test",
+        ":lane_runtime_test",
+        ":lanes_test",
+    ],
+)
+
+# Real transport lifecycle regression; also run with ASAN/LSan enabled.
+cc_test(
+    name = "log_topic_lifecycle_test",
+    srcs = ["test/log_topic_lifecycle_test.cc"],
+    data = ["test/log_topic_lifecycle.json5"],
+    env = {
+        "AORTA_GROUP": "log_topic_lifecycle_test",
+        "AORTA_LOG_TOPIC_ENABLED": "true",
+        "ZENOH_SESSION_CONFIG_URI": "$(location test/log_topic_lifecycle.json5)",
+    },
+    deps = [
+        ":aorta_cpp",
+        "//src/third_party/gtest:gtest_main",
+    ],
+)
+
+# Test suite for all C++ SDK integration tests
+test_suite(
+    name = "cpp_integration_tests",
+    tests = [
+        ":log_topic_lifecycle_test",
+        ":contextstore_integration_test",
+        ":pubsub_integration_test",
+        ":qos_preset_integration_test",
+        ":service_client_integration_test",
+        ":trace_test",
+        ":uuid_integration_test",
+    ],
+)
+
+# ---------------------------------------------------------------------------
+# Aorta Flow — the opt-in C++20 coroutine surface.
+#
+# A SEPARATE, additive `-std=c++20` layer above the C++17 baseline SDK: the
+# repo-wide C++ standard stays C++17; nothing in :aorta_cpp
+# includes flow.hpp. Header-only over the C ABI, so mixing the two standards
+# in one binary is ABI-safe (the folly/asio precedent). Toolchain gate:
+# GCC >= 11 / Clang >= 13; per-BSP verification is an on-target
+# acceptance item.
+# ---------------------------------------------------------------------------
+
+cc_library(
+    name = "aorta_cpp20_flow",
+    hdrs = [
+        "include/aorta/flow.hpp",
+        "include/aorta/flow_combinators.hpp",
+        "include/aorta/flow_action.hpp",
+        "include/aorta/flow_readiness.hpp",
+        "include/aorta/flow_runtime.hpp",
+        "include/aorta/flow_serial.hpp",
+        "include/aorta/flow_subscriber.hpp",
+        "include/aorta/detail/reentrancy_check.h",
+        "include/aorta/lane_runtime.h",
+        "include/aorta/lanes.hpp",
+        "include/aorta/qos.h",
+    ],
+    includes = ["include"],
+    deps = [
+        "//core:aorta_ffi_headers",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# SerialDomain — the flow-tier family (the stop-window seam rows live
+# in their own binary below, linking the test-seams Core exclusively).
+cc_test(
+    name = "flow_serial_test",
+    srcs = ["test/flow_serial_test.cc"],
+    copts = [
+        "-std=c++20",
+        "-Werror=unused-result",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp20_flow",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+)
+
+# The SerialDomain stop-window rows: links :aorta_cpp_test_seams EXCLUSIVELY
+# (never :aorta_cpp — one Core per binary); AORTA_LANES_TEST_SEAMS
+# additionally enables the router pin seam for the pinned-window row.
+cc_test(
+    name = "flow_serial_stopwindow_test",
+    srcs = ["test/flow_serial_stopwindow_test.cc"],
+    copts = [
+        "-std=c++20",
+        "-Werror=unused-result",
+    ],
+    local_defines = ["AORTA_LANES_TEST_SEAMS"],
+    deps = [
+        ":aorta_cpp_test_seams",
+        ":aorta_cpp20_flow",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+    # no-tsan-xlang: this binary links the SEAMS core
+    # (//core:aorta_core_ffi_test_seams — a bazel rust_static_library);
+    # the tsan-xlang config swaps only the REGULAR core for the
+    # cargo-built TSAN-instrumented staticlib, so here the Rust side is
+    # uninstrumented and tokio's internal synchronization is invisible
+    # to TSAN — 27 false-positive reports on normal task handoff in the
+    # first branch CI run. Same class as the tsan-clang real-Rust-lib
+    # exclusions (.bazelrc). Follow-up to lift: build a cargo
+    # --features test-seams instrumented staticlib + select, mirroring
+    # //core:tsan_xlang.
+    tags = ["no-tsan-xlang"],
+)
+
+# SerialDomain: the diagnostics' REAL log contract (level/count/
+# negative legs) — own binary: it claims the process-wide logging
+# OnceLock with filter="debug".
+cc_test(
+    name = "flow_serial_diag_log_test",
+    srcs = ["test/flow_serial_diag_log_test.cc"],
+    copts = [
+        "-std=c++20",
+        "-Werror=unused-result",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp20_flow",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+)
+
+# SerialDomain: the misuse-matrix sweep (F-3/F-4/F-6 diagnostics,
+# the remaining ready-fast-path rows, the combinator ordering row).
+cc_test(
+    name = "flow_serial_matrix_test",
+    srcs = ["test/flow_serial_matrix_test.cc"],
+    copts = [
+        "-std=c++20",
+        "-Werror=unused-result",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp20_flow",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+)
+
+cc_test(
+    name = "lane_runtime_test",
+    srcs = [
+        "include/aorta/lane_runtime.h",
+        "include/aorta/lanes.hpp",
+        "include/aorta/qos.h",
+        "test/lane_runtime_test.cc",
+    ],
+    copts = ["-std=c++17"],
+    includes = ["include"],
+    deps = [
+        ":aorta_cpp",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "small",
+)
+
+cc_test(
+    name = "lanes_test",
+    srcs = [
+        "include/aorta/lanes.hpp",
+        "test/lanes_test.cc",
+    ],
+    # AORTA_LANES_TEST_SEAMS:
+    # test-only pause seams + marker debug counters inside lanes.hpp,
+    # compiled ONLY into this single-TU gauntlet target — release
+    # builds and every other consumer see the seam-free layout, and no
+    # binary mixes the two.
+    copts = ["-std=c++17"],
+    local_defines = ["AORTA_LANES_TEST_SEAMS"],
+    includes = ["include"],
+    deps = [
+        ":aorta_cpp_headers",
+        ":mock_aorta",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+)
+
+cc_test(
+    name = "flow_facade_test",
+    srcs = ["test/flow_facade_test.cc"],
+    copts = [
+        "-std=c++20",
+        "-Werror=unused-result",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp20_flow",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+)
+
+cc_test(
+    name = "flow_action_test",
+    srcs = ["test/flow_action_test.cc"],
+    copts = [
+        "-std=c++20",
+        "-Werror=unused-result",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp20_flow",
+        "//message:flow_resume_probe_msg_cc",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+)
+
+cc_test(
+    name = "flow_readiness_test",
+    srcs = ["test/flow_readiness_test.cc"],
+    copts = [
+        "-std=c++20",
+        "-Werror=unused-result",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp20_flow",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+)
+
+cc_test(
+    name = "flow_subscriber_test",
+    srcs = ["test/flow_subscriber_test.cc"],
+    copts = [
+        "-std=c++20",
+        "-Werror=unused-result",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp20_flow",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+)
+
+# B2 misuse distinguishability: refused awaits (single-awaiter collision,
+# stale handle) log at ERROR before the generic cancelled_unwind. Own
+# binary: the suite claims the process-wide logging config with a file
+# sink first, then asserts on the file — no ordering dependence on other
+# tests' logging auto-init.
+cc_test(
+    name = "flow_refusal_log_test",
+    srcs = ["test/flow_refusal_log_test.cc"],
+    copts = [
+        "-std=c++20",
+        "-Werror=unused-result",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp20_flow",
+        # The foreign-coroutine ambient action-verb refusal leg
+        # exercises flow_action.hpp with a real generated message type.
+        "//message:flow_resume_probe_msg_cc",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+)
+
+cc_test(
+    name = "flow_combinators_test",
+    srcs = ["test/flow_combinators_test.cc"],
+    copts = [
+        "-std=c++20",
+        "-Werror=unused-result",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp20_flow",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+)
+
+# TaskHandle (joinable spawn): co_await handle → Outcome<T>,
+# take_outcome() after scope close, spawn-admission refusal carry,
+# double-await refusal, teardown resolution of parked awaits.
+cc_test(
+    name = "flow_handle_test",
+    srcs = ["test/flow_handle_test.cc"],
+    copts = [
+        "-std=c++20",
+        "-Werror=unused-result",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp20_flow",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+)
+
+# when_all/when_any over handles, variadic join + join_all,
+# spawn_with lane-plane overload, and the cancelled() wait.
+cc_test(
+    name = "flow_when_test",
+    srcs = ["test/flow_when_test.cc"],
+    copts = [
+        "-std=c++20",
+        "-Werror=unused-result",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp20_flow",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+)
+
+# The Outcome<T>/Stopped contract itself:
+# move-only non-default-constructible payloads, fault code+message
+# fidelity, exact cancel raw_reason preservation, Outcome<void> shapes,
+# the fatal wrong-side-access discipline (both directions), and the
+# zero-T-construction-on-stop guarantee.
+cc_test(
+    name = "flow_outcome_test",
+    srcs = ["test/flow_outcome_test.cc"],
+    copts = [
+        "-std=c++20",
+        "-Werror=unused-result",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp20_flow",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+)
+
+cc_test(
+    name = "flow_swallow_detection_test",
+    srcs = ["test/flow_swallow_detection_test.cc"],
+    copts = [
+        "-std=c++20",
+        "-Werror=unused-result",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp20_flow",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+)
+
+# flow::Runtime: the one setup object; its destructor encodes the
+# stop-then-destroy teardown order (parked frames resolve structurally).
+cc_test(
+    name = "flow_runtime_test",
+    srcs = ["test/flow_runtime_test.cc"],
+    copts = [
+        "-std=c++20",
+        "-Werror=unused-result",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp20_flow",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+)
+
+# Promise-carried context: concept pins, spawn-site
+# stamping (executor-only / lane / Disabled-rollback planes), 3-deep
+# parent→child inheritance, the ambient verb surface (sleep/resume/
+# join/race/timeout/offload/recv), the null-rt refusal unwind, and
+# the owning-Scope-copy + detached-root release semantics. The foreign-
+# coroutine REJECTION side is a compile error by design — proven by the
+# scripted expect-fail TUs in cpp/test/expectfail/, gated in CI as
+# //cpp:flow_expectfail_test (also runnable manually).
+cc_test(
+    name = "flow_ambient_context_test",
+    srcs = ["test/flow_ambient_context_test.cc"],
+    copts = [
+        "-std=c++20",
+        "-Werror=unused-result",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp20_flow",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+)
+
+# B1 hardening: the endpoint-task tag. Positive compile-time pins
+# (static_asserts on is_endpoint_task_v and on the combinator awaiters'
+# legal kind combinations) plus runtime proof that endpoint tasks stay
+# first-class for direct co_await and join(). The rejection side
+# (timeout()/race() over an endpoint verb) is a compile error by design —
+# commented probes in the file reproduce it.
+cc_test(
+    name = "flow_endpoint_tag_test",
+    srcs = ["test/flow_endpoint_tag_test.cc"],
+    copts = [
+        "-std=c++20",
+        "-Werror=unused-result",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp20_flow",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+)
+
+# B7 hardening: the ONE -fno-exceptions TU compiling the Flow headers
+# (flow_action.hpp excluded — its C++17 base action.h is not
+# -fno-exceptions-clean). Green: inclusion + the all-.nothrow() await
+# subset compiles and runs. Red: the commented probes in the file show the
+# dependent static_assert each default (unwinding) await fires there.
+# Plain main(), no gtest: keeps the TU's exception configuration pure.
+cc_test(
+    name = "flow_noexcept_test",
+    srcs = ["test/flow_noexcept_test.cc"],
+    copts = [
+        "-std=c++20",
+        "-fno-exceptions",
+        "-Werror=unused-result",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp20_flow",
+    ],
+    size = "medium",
+)
+
+cc_test(
+    name = "flow_lanes_test",
+    srcs = ["test/flow_lanes_test.cc"],
+    copts = [
+        "-std=c++20",
+        "-Werror=unused-result",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp20_flow",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+)
+
+cc_test(
+    name = "flow_coroutine_test",
+    srcs = ["test/flow_coroutine_test.cc"],
+    copts = [
+        "-std=c++20",
+        # nodiscard smoke: discarding a Flow status is a build error.
+        "-Werror=unused-result",
+    ],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp20_flow",
+        "//src/third_party/gtest:gtest_main",
+    ],
+    size = "medium",
+)
+
+# Flow TCK emitter (test/flow_tck/SCHEMA.md) — the C++ plane's NDJSON
+# event-record producer. test/flow_tck/driver.py runs this alongside the
+# Rust plane (rust/examples/flow_tck_emitter.rs) and diffs both against
+# the expectation files under test/flow_tck/expected/. A plain cc_binary,
+# run manually via test/flow_tck/run_tck.sh or as data of the gating
+# //test/flow_tck:flow_tck sh_test.
+cc_binary(
+    name = "flow_tck_emitter",
+    srcs = ["test/flow_tck_emitter.cc"],
+    copts = [
+        "-std=c++20",
+        "-Werror=unused-result",
+    ],
+    visibility = ["//test/flow_tck:__pkg__"],
+    deps = [
+        ":aorta_cpp",
+        ":aorta_cpp20_flow",
+    ],
+)
+
+# Wires cpp/test/expectfail/run_expectfail.sh
+# (the ~20-TU expect-fail compile suite over the REAL exported flow headers +
+# the real generated action-schema headers) into Bazel/CI instead of leaving
+# it a manual-only script assuming a local `bazel-bin` layout.
+#
+# The script itself keeps its exact needle/check_old_order/abort-lint gating
+# logic (see the file for that — untouched here); this target only supplies
+# the compiler and generated-header locations Bazel-side:
+#   * `toolchains` gives access to the cc toolchain's $(CC) predefined Make
+#     variable — the resolved, executable compiler entry point for whatever
+#     toolchain this invocation configured (default GCC, or Clang under
+#     `--repo_env=CC=clang --repo_env=CXX=clang++`; see aorta-bazel-test.yml).
+#   * `data` brings the compiler's own files, the cbindgen `aorta.h`, the
+#     generated action-schema headers (transitively, via //message:
+#     cpp_generated + the flow_resume_probe_msg.h wrapper), the flatbuffers
+#     runtime headers, and the real `cpp/include/aorta/*` sources into the
+#     runfiles tree the script runs from — Bazel mirrors generated files
+#     there at their logical repo-relative path (no `bazel-bin/` prefix),
+#     which is exactly what AORTA_BAZEL_RUNFILES=1 in the script expects.
+#   * FLATBUFFERS_H_FILE anchors the one path Bazel's runfiles layout can't
+#     give a stable repo-relative guess for (the Bzlmod-canonicalized
+#     `@flatbuffers` repo directory name) — $(location) resolves it
+#     correctly regardless of that name.
+# The AST resume-site lint: every
+# coroutine_handle::resume() in the flow headers must sit inside an
+# inventoried delivery thunk; C-API post symbols are count-pinned.
+# Includes a RED self-test pinning the gate itself. Wiring mirrors
+# :flow_expectfail_test below.
+sh_test(
+    name = "flow_resume_lint_test",
+    srcs = ["lint/run_flow_resume_lint.sh"],
+    data = [
+        "lint/flow_resume_allowlist.txt",
+        "lint/flow_resume_lint.py",
+        "//core:aorta_ffi_header",
+        "//message/bindings/cpp:flow_resume_probe_msg_cc_wrapper_hdr",
+        "//message:cpp_generated",
+        "//message/schemas/action/example:all_schema_meta_cpp",
+        "@flatbuffers//:public_headers",
+        "@flatbuffers//:include/flatbuffers/flatbuffers.h",
+        "@bazel_tools//tools/cpp:current_cc_toolchain",
+    ] + glob(["include/aorta/**"]),
+    toolchains = ["@bazel_tools//tools/cpp:current_cc_toolchain"],
+    env = {
+        "CXX": "$(CC)",
+        "AORTA_BAZEL_RUNFILES": "1",
+        "FLATBUFFERS_H_FILE": "$(location @flatbuffers//:include/flatbuffers/flatbuffers.h)",
+    },
+    # The clang AST-dump over the probe TU (every flow header) grew with
+    # the SerialDomain work; loaded CI runners exceeded medium's 300s
+    # (first branch CI run) — the walk is single-threaded and safe, it
+    # just needs the room.
+    size = "medium",
+    timeout = "eternal",
+)
+
+sh_test(
+    name = "flow_resume_lint_fixture_test",
+    srcs = ["lint/run_flow_resume_lint.sh"],
+    data = [
+        "lint/flow_resume_allowlist.txt",
+        "lint/flow_resume_lint.py",
+        "//core:aorta_ffi_header",
+        "//message/bindings/cpp:flow_resume_probe_msg_cc_wrapper_hdr",
+        "//message:cpp_generated",
+        "//message/schemas/action/example:all_schema_meta_cpp",
+        "@flatbuffers//:public_headers",
+        "@flatbuffers//:include/flatbuffers/flatbuffers.h",
+        "@bazel_tools//tools/cpp:current_cc_toolchain",
+    ] + glob(["include/aorta/**"]),
+    toolchains = ["@bazel_tools//tools/cpp:current_cc_toolchain"],
+    env = {
+        "CXX": "$(CC)",
+        "AORTA_BAZEL_RUNFILES": "1",
+        "FLATBUFFERS_H_FILE": "$(location @flatbuffers//:include/flatbuffers/flatbuffers.h)",
+    },
+    size = "medium",
+    timeout = "eternal",
+)
+
+sh_test(
+    name = "reentrancy_lint_test",
+    srcs = ["lint/run_reentrancy_lint.sh"],
+    data = [
+        "lint/check_reentrancy_guards.py",
+        "lint/run_reentrancy_lint.sh",
+        # The seed list is REGENERATED from the live core sources at run
+        # time (never hand-maintained) — every c_api extern is in scope.
+        "//core:src/ffi/c_api/action_client.rs",
+        "//core:src/ffi/c_api/action_server.rs",
+        "//core:src/ffi/c_api/arbiter.rs",
+        "//core:src/ffi/c_api/capture.rs",
+        "//core:src/ffi/c_api/client.rs",
+        "//core:src/ffi/c_api/contextstore.rs",
+        "//core:src/ffi/c_api/executor.rs",
+        "//core:src/ffi/c_api/flow.rs",
+        "//core:src/ffi/c_api/log_ffi.rs",
+        "//core:src/ffi/c_api/mod.rs",
+        "//core:src/ffi/c_api/node.rs",
+        "//core:src/ffi/c_api/publisher.rs",
+        "//core:src/ffi/c_api/sample.rs",
+        "//core:src/ffi/c_api/service.rs",
+        "//core:src/ffi/c_api/subscriber.rs",
+        "//core:src/ffi/c_api/timer.rs",
+        "//core:src/ffi/c_api/trace_ffi.rs",
+    ] + glob([
+        "src/**",
+        "include/aorta/**",
+    ]),
+    env = {
+        "AORTA_BAZEL_RUNFILES": "1",
+    },
+    size = "small",
+)
+
+sh_test(
+    name = "flow_expectfail_test",
+    srcs = ["test/expectfail/run_expectfail.sh"],
+    data = [
+        "//core:aorta_ffi_header",
+        "//message/bindings/cpp:flow_resume_probe_msg_cc_wrapper_hdr",
+        "//message:cpp_generated",
+        # flow_resume_probe_msg.h itself #includes its schema-meta header,
+        # a SEPARATE generated artifact from flow_resume_probe_generated.h (not
+        # covered by //message:cpp_generated, which only aggregates each
+        # package's `:all_cpp`) — same schemas/action/example directory, so the
+        # existing -I flag already covers it once the file is present.
+        "//message/schemas/action/example:all_schema_meta_cpp",
+        "@flatbuffers//:public_headers",
+        "@flatbuffers//:include/flatbuffers/flatbuffers.h",
+        "@bazel_tools//tools/cpp:current_cc_toolchain",
+    ] + glob([
+        "include/aorta/**",
+        "test/expectfail/*.cc",
+    ]),
+    toolchains = ["@bazel_tools//tools/cpp:current_cc_toolchain"],
+    env = {
+        "CXX": "$(CC)",
+        "AORTA_BAZEL_RUNFILES": "1",
+        "FLATBUFFERS_H_FILE": "$(location @flatbuffers//:include/flatbuffers/flatbuffers.h)",
+    },
+    # The clang AST-dump over the probe TU (every flow header) grew with
+    # the SerialDomain work; loaded CI runners exceeded medium's 300s
+    # (first branch CI run) — the walk is single-threaded and safe, it
+    # just needs the room.
+    size = "medium",
+    timeout = "long",
+)

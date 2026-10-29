@@ -1,0 +1,27 @@
+diff --git a/rust/private/rustc.bzl b/rust/private/rustc.bzl
+--- a/rust/private/rustc.bzl
++++ b/rust/private/rustc.bzl
+@@ -2243,10 +2243,22 @@ def _portable_link_flags(lib, use_pic, ambiguous_libs, get_lib_name, for_window
+                     "-Clink-arg=-l{}".format(artifact.basename),
+                 ]
+         else:
++            # On Linux, passing both `-lstatic=<name>` and `-Clink-arg=-l<name>`
++            # can still pull shared objects into DT_NEEDED when rustc/linker
++            # switches back to dynamic mode for trailing `-l` flags.
++            #
++            # Keep static intent explicit and only pass the static form on
++            # non-Darwin platforms. Keep Darwin behavior unchanged.
++            if for_darwin:
++                return [
++                    "-lstatic=%s" % get_lib_name(artifact),
++                    "-Clink-arg=-l{}".format(get_lib_name(artifact)),
++                ]
++
+             return [
+                 "-lstatic=%s" % get_lib_name(artifact),
+-                "-Clink-arg=-l{}".format(get_lib_name(artifact)),
+             ]
++
+     elif _is_dylib(lib):
+         return [
+             "-ldylib=%s" % get_lib_name(artifact),

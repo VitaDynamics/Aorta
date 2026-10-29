@@ -1,0 +1,256 @@
+common --enable_bzlmod
+build --spawn_strategy=local
+build --sandbox_add_mount_pair=/tmp
+build --cxxopt=-std=c++17
+
+# Local Python build tools must not write bytecode through source runfile links.
+build --action_env=PYTHONDONTWRITEBYTECODE=1
+
+# crate_universe: reuse the host CARGO_HOME instead of an output-base-isolated
+# one, so the git-pinned `zenoh` dependency (MODULE.bazel + Cargo.toml) is
+# ~/.cargo on GHA + local) and reused across runs rather than re-cloned from
+# github.com on every cold crate_universe splice. That cold re-clone is what
+# produced the transient CI failures ("fetch-pack: unexpected disconnect /
+# early EOF / invalid index-pack output" → "revision ... not found") when
+# github.com hiccupped mid-fetch. Cargo's package-cache lock serializes
+# concurrent access to the shared self-hosted CARGO_HOME, so cross-job
+# contention is safe (no corruption). Applies to build/test/run/coverage,
+# which inherit `build` options.
+build --repo_env=CARGO_BAZEL_ISOLATED=false
+
+# ── Version stamping ─────────────────────────────────────────────
+# Git commit / dirty flag / rustc identity for `--stamp` builds, consumed by
+# `rustc_env` on //tools/aorta-cli:aorta and //tools/zenohd:zenohd. Without
+# `--stamp` the script's output is never read and the binaries report the
+# explicit `0.0.0+unstamped` placeholder.
+build --workspace_status_command=tools/bazel/workspace_status.sh
+
+# ── Release profile (portable) ───────────────────────────────────
+# Usage: bazel build --config=release //target
+#
+# Enables full optimisation for both Rust and C++ targets:
+#   Rust : opt-level=3, fat LTO, codegen-units=1, panic=unwind, strip
+#   C++  : -O3 + LTO (fat objects)
+#          GCC -flto was previously disabled due to ClassicLocale static-member
+#          issues, but FlatBuffers runtime_cc (v25.9.23+) no longer pulls util.h
+#          into our include chain, so -flto is safe for our code.
+#
+# panic=unwind (not abort): required for the FFI panic guards `ffi_guard` /
+# `ffi_guard_void` (core/src/ffi/guard.rs) — `catch_unwind` is a no-op
+# under panic=abort, so our ~110 wrapped extern entry points and 5
+# user-callback dispatch sites would all fail to isolate Rust-side panics
+# in release builds. The cost is ~5-10% binary size (unwind tables) and
+# <1% runtime on the typical hot path; that's the right trade for
+# guaranteeing that a Rust panic never unwinds across the C ABI in
+# production. For absolutely-binary-size-constrained builds, layer on a
+# separate `--config=release_nopanic` (does not currently exist; add when
+# the use case appears).
+#
+# No CPU-specific tuning is enabled here so this config remains portable
+# across x86_64 dev machines, generic aarch64, and the robot. For Cortex-A78
+# tuning compose with `--config=a78_tuning` (see below).
+build:release -c opt
+build:release --@rules_rust//rust/settings:lto=fat
+build:release --@rules_rust//rust/settings:codegen_units=1
+build:release --@rules_rust//rust/settings:extra_rustc_flag=-Cpanic=unwind
+build:release --@rules_rust//rust/settings:extra_rustc_flag=-Cstrip=symbols
+# P4: Override -O2 (from -c opt) with -O3 for C++ — enables auto-vectorization
+# and more aggressive inlining.
+build:release --copt=-O3
+# P6: GCC LTO for C++ — enables cross-TU inlining into the publish hot path.
+# Uses -ffat-lto-objects so non-LTO consumers still work.
+# Disable FLATBUFFERS_LOCALE_INDEPENDENT to avoid ClassicLocale static-member
+# linker errors with GCC LTO (we don't use locale-dependent FlatBuffers APIs).
+build:release --copt=-flto=auto
+build:release --copt=-ffat-lto-objects
+build:release --copt=-DFLATBUFFERS_LOCALE_INDEPENDENT=0
+build:release --linkopt=-flto=auto
+build:release --linkopt=-O3
+
+# ── Release without C++ LTO (for A/B testing LTO impact, portable) ───
+# Strips -flto=auto and -ffat-lto-objects from C++, and uses thin Rust LTO.
+# Use: bazel build --config=release_nolto //target
+build:release_nolto -c opt
+build:release_nolto --@rules_rust//rust/settings:lto=thin
+build:release_nolto --@rules_rust//rust/settings:codegen_units=1
+# panic=unwind: see release config above for rationale (FFI panic guards).
+build:release_nolto --@rules_rust//rust/settings:extra_rustc_flag=-Cpanic=unwind
+build:release_nolto --@rules_rust//rust/settings:extra_rustc_flag=-Cstrip=symbols
+build:release_nolto --copt=-O3
+build:release_nolto --copt=-DFLATBUFFERS_LOCALE_INDEPENDENT=0
+build:release_nolto --linkopt=-O3
+
+# ── Cortex-A78 tuning overlay (NON-PORTABLE) ─────────────────────
+# Compose with one of the release configs above for the target robot compute
+# (Cortex-A78AE), whose cores benefit from NEON memcpy sequences, instruction
+# scheduling, and branch prediction hints tuned for this microarchitecture.
+#
+# Example: bazel build --config=release --config=a78_tuning //target
+#
+# WARNING: Binaries built with this overlay may emit instructions that are
+# not portable to older ARM cores (Cortex-A53/A55/A72/A73) and will fail
+# entirely on x86_64. Do NOT use in CI default jobs or on dev workstations.
+build:a78_tuning --copt=-mcpu=cortex-a78
+build:a78_tuning --@rules_rust//rust/settings:extra_rustc_flag=-Ctarget-cpu=cortex-a78
+
+build:profile -c opt
+build:profile --@rules_rust//rust/settings:lto=thin
+build:profile --@rules_rust//rust/settings:codegen_units=1
+# panic=unwind: see release config above for rationale (FFI panic guards).
+build:profile --@rules_rust//rust/settings:extra_rustc_flag=-Cpanic=unwind
+build:profile --@rules_rust//rust/settings:extra_rustc_flag=-Cdebuginfo=2
+build:profile --copt=-g
+build:profile --strip=never
+
+# ── AddressSanitizer (C++ only — Rust ASAN requires nightly toolchain) ──
+# Usage: bazel test --config=asan //cpp/...
+#
+# Catches: heap-use-after-free, heap-buffer-overflow, double-free,
+# stack-use-after-return.
+#
+# Used to validate memory-safety regressions such as:
+#   - StopHandle u64 registry — double-free regression
+#   - Service in-flight wait — destructor use-after-free regression
+#
+# Notes:
+#   - Tests run ~2-3x slower under ASAN.
+#   - Rust side is built with the stable toolchain so this is C++-only
+#     ASAN. For Rust ASAN coverage, use `cargo +nightly miri test` or
+#     switch the project to nightly Rust.
+build:asan --copt=-fsanitize=address
+build:asan --copt=-fno-omit-frame-pointer
+build:asan --copt=-fno-optimize-sibling-calls
+build:asan --copt=-g
+build:asan --copt=-O1
+build:asan --linkopt=-fsanitize=address
+build:asan --strip=never
+build:asan --test_env=ASAN_OPTIONS=halt_on_error=1:abort_on_error=1:print_summary=1
+# Increase test timeout because ASAN slows binaries ~2-3x. The 4-tuple
+# (short,moderate,long,eternal) raises short 60→300 without flattening the
+# larger categories: a single-value --test_timeout=300 would override a
+# target's `timeout = "long"` and kill legitimately slow tests at 300s
+# (this hit //cpp:flow_resume_lint_test under tsan-xlang).
+build:asan --test_timeout=300,300,900,3600
+
+# ── ThreadSanitizer (C++ only) ───────────────────────────────────
+# Usage: bazel test --config=tsan //cpp/...
+#
+# Catches: data races, lock-order inversions, misuse of pthread APIs.
+# Used to validate the concurrent callback dispatch path (Service in-flight wait).
+# Mutually exclusive with ASAN.
+build:tsan --copt=-fsanitize=thread
+build:tsan --copt=-fno-omit-frame-pointer
+build:tsan --copt=-g
+build:tsan --copt=-O1
+build:tsan --linkopt=-fsanitize=thread
+build:tsan --strip=never
+build:tsan --test_env=TSAN_OPTIONS=halt_on_error=1:abort_on_error=1
+# 4-tuple, not a single value — see the asan note above.
+build:tsan --test_timeout=300,300,900,3600
+
+# ── ThreadSanitizer with clang/compiler-rt (Tier 3) ──────────────
+# Usage: bazel test --config=tsan-clang //cpp/...
+#
+# Why clang and not the default gcc-11. gcc-11's libtsan does NOT model
+# `condition_variable::wait` releasing its mutex, so it false-reports a data
+# race / "double lock" on CORRECT mutex+CV code (e.g. GoalHandle::WaitResult,
+# in_flight_cv) — confirmed empirically. clang/compiler-rt
+# models it correctly, so the C++ TSAN signal is trustworthy. clang's TSAN
+# runtime also tolerates high-entropy ASLR more robustly.
+#
+# REQUIRES clang + the compiler-rt TSAN runtime (e.g. `clang` +
+# `libclang-rt-dev` / `compiler-rt`) on the builder. `--repo_env=CC` steers
+# bazel's auto-detected `@local_config_cc` toolchain to clang; `--action_env`
+# makes the compile/link actions use it too.
+build:tsan-clang --config=tsan
+build:tsan-clang --repo_env=CC=clang
+build:tsan-clang --repo_env=CXX=clang++
+build:tsan-clang --action_env=CC=clang
+build:tsan-clang --action_env=CXX=clang++
+
+# ── Cross-language TSAN (Tier 3, single-process Rust + C++) ───────
+# Usage: bazel test --config=tsan-xlang //cpp:client_test \
+#            //cpp:contextstore_throwing_callback_test //cpp:executor_test
+#
+# The only config that sees C++<->Rust data races: compiles C++ with clang
+# -fsanitize=thread AND swaps `aorta_cpp`'s FFI dep (via the //core:tsan_xlang
+# select) to the cargo-built, TSAN-instrumented FFI staticlib that
+# aorta-tsan-xlang.yml produces — so BOTH languages share one TSAN runtime in
+# one process. (The mock-only tsan-clang job above leaves the Rust side
+# uninstrumented, which is why those 3 real-Rust-lib tests are excluded there.)
+#
+# clang-22, NOT the default clang-14: the C++ compiler-rt TSAN runtime must
+# match rustc nightly's LLVM-22 instrumentation ABI. clang-14 is 8 majors behind
+# and empirically incompatible (the planted-race probe fails to detect — see
+# tools/ci/tsan_xlang_probe/). Needs clang-22 + libclang-rt-22-dev on the runner.
+build:tsan-xlang --config=tsan-clang
+build:tsan-xlang --define=aorta_tsan_xlang=1
+# Tests tagged no-tsan-xlang link a Rust core OUTSIDE the //core:tsan_xlang
+# select (e.g. the SEAMS core rust_static_library) — an uninstrumented Rust
+# side makes tokio's internal synchronization invisible to TSAN and every
+# normal task handoff reads as a race. Excluded here exactly like the
+# tsan-clang real-Rust-lib exclusions above.
+test:tsan-xlang --test_tag_filters=-no-tsan-xlang
+build:tsan-xlang --repo_env=CC=clang-22
+build:tsan-xlang --repo_env=CXX=clang++-22
+build:tsan-xlang --action_env=CC=clang-22
+build:tsan-xlang --action_env=CXX=clang++-22
+
+# ── UndefinedBehaviorSanitizer (C++ only) ────────────────────────
+# Usage: bazel test --config=ubsan //cpp/...
+#
+# Catches: integer overflow, null deref, alignment violations, invalid
+# enum values, function pointer mismatch — all relevant to the FFI
+# boundary where Rust ↔ C++ ABI contracts can drift silently
+# (the cbindgen-generated C ABI).
+#
+# `vptr` is disabled (`-fno-sanitize=vptr`) ONLY because gtest's internal
+# TestFactory template (`testing::internal::ValueHolderFactory`) trips
+# false positives on libstdc++ 13. The use-after-destroy class of bugs
+# that vptr would catch (polymorphic state objects)
+# is more reliably caught by **ASAN**, which tracks heap object lifetime
+# directly rather than relying on vtable identity. With ASAN in the
+# sanitizer tiers, vptr provides no
+# additional detection over ASAN. A runtime UBSAN suppressions file
+# would also work, but Bazel sandboxes complicate the path resolution;
+# revisit when Tier 3 nightly is set up.
+build:ubsan --copt=-fsanitize=undefined
+# Disable `vptr` and `alignment` checks — both are false-positive sources
+# inside gtest's `TestFactory` template on libstdc++ 11/13:
+#   - vptr: gtest's polymorphic factory triggers "member call on address
+#     which does not point to an object of type X" inside ~unique_ptr.
+#   - alignment: gtest stores pointers in 4-byte-aligned slots that ubsan
+#     wants 8-byte aligned. The actual access pattern is safe per the
+#     C++ standard but ubsan's check is purely address-based.
+# Both check classes are covered for the FFI boundary by ASAN in Tier 2
+# (which tracks heap object lifetime and
+# alignment more reliably). Keep all other UBSAN checks (integer
+# overflow, null, bounds, enum, function pointer signature, etc.) which
+# are the ones most relevant to the C ABI boundary.
+build:ubsan --copt=-fno-sanitize=vptr,alignment
+build:ubsan --copt=-fno-omit-frame-pointer
+build:ubsan --copt=-g
+build:ubsan --copt=-O1
+build:ubsan --linkopt=-fsanitize=undefined
+build:ubsan --linkopt=-fno-sanitize=vptr,alignment
+build:ubsan --strip=never
+# UBSAN_OPTIONS: standard "fail on UB" gating. We probed a dedicated
+# test run to confirm UBSAN itself isn't producing false positives once vptr +
+# alignment are off. Eight mock-linked tests used to segfault (exit
+# 139) during static-destructor teardown — root-caused to
+# a duplicate gmock compilation (`//cpp:gmock_impl` built alongside
+# gtest's already-bundled gmock) that double-destroyed gmock's static
+# singletons at exit. That library was deleted (see cpp/BUILD.bazel),
+# so the tests are UBSAN-clean and no longer excluded from the suite.
+build:ubsan --test_env=UBSAN_OPTIONS=halt_on_error=1:abort_on_error=1:print_stacktrace=1:symbolize=1:report_error_type=1
+# 4-tuple, not a single value — see the asan note above.
+build:ubsan --test_timeout=300,300,900,3600
+
+# Nested-bazel tests (nested_package_census_test, canonical_tree_sha_strictness_test)
+# run an inner bazel with its own output base; without pass-through they cannot
+# see the runner's caches and re-fetch external repos over the network. Inherit
+# the ambient cache env vars when the outer client has them set (CI exports
+# BAZEL_REPOSITORY_CACHE/BAZEL_DISK_CACHE); when unset the variables are simply
+# absent from the test env and the scripts fall back to the default path.
+test --test_env=BAZEL_REPOSITORY_CACHE
+test --test_env=BAZEL_DISK_CACHE

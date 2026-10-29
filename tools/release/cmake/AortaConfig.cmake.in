@@ -1,0 +1,76 @@
+include(CMakeFindDependencyMacro)
+
+get_filename_component(_AORTA_PREFIX "${CMAKE_CURRENT_LIST_DIR}/../../.." ABSOLUTE)
+
+# The bundle vendors the exact FlatBuffers headers Aorta compiled against; the
+# generated headers static_assert on that version, and no Ubuntu 22.04 package
+# provides it. Resolve the vendored copy unless the consumer explicitly points
+# FlatBuffers_DIR at their own -- in which case it must be the same version.
+if(NOT DEFINED FlatBuffers_DIR)
+  set(FlatBuffers_DIR "${_AORTA_PREFIX}/share/cmake/FlatBuffers")
+endif()
+
+find_dependency(FlatBuffers CONFIG REQUIRED)
+find_dependency(Threads REQUIRED)
+# Rendered by //core:core_abi from AORTA_ABI_VERSION (core/src/ffi/c_api/mod.rs).
+set(Aorta_VERSION "@AORTA_CORE_ABI_VERSION@.0.0")
+set(Aorta_CORE_ABI_VERSION @AORTA_CORE_ABI_VERSION@)
+
+if(APPLE)
+  set(_AORTA_CORE_SHARED "${_AORTA_PREFIX}/lib/libaorta_core.dylib")
+  set(_AORTA_CPP_SHARED "${_AORTA_PREFIX}/lib/libaorta_cpp.dylib")
+elseif(WIN32)
+  set(_AORTA_CORE_SHARED "${_AORTA_PREFIX}/lib/aorta_core.dll")
+  set(_AORTA_CPP_SHARED "${_AORTA_PREFIX}/lib/aorta_cpp.dll")
+else()
+  set(_AORTA_CORE_SHARED "${_AORTA_PREFIX}/lib/libaorta_core.so.@AORTA_CORE_ABI_VERSION@")
+  set(_AORTA_CPP_SHARED "${_AORTA_PREFIX}/lib/libaorta_cpp.so")
+endif()
+
+foreach(_AORTA_FILE IN ITEMS
+    "${_AORTA_CORE_SHARED}"
+    "${_AORTA_CPP_SHARED}"
+    "${_AORTA_PREFIX}/lib/libaorta_cpp.a")
+  if(NOT EXISTS "${_AORTA_FILE}")
+    set(Aorta_FOUND FALSE)
+    set(Aorta_NOT_FOUND_MESSAGE "Aorta SDK bundle is missing ${_AORTA_FILE}")
+    return()
+  endif()
+endforeach()
+
+if(NOT TARGET Aorta::core_ffi)
+  add_library(Aorta::core_ffi SHARED IMPORTED)
+  set_target_properties(Aorta::core_ffi PROPERTIES
+    IMPORTED_LOCATION "${_AORTA_CORE_SHARED}"
+    INTERFACE_INCLUDE_DIRECTORIES "${_AORTA_PREFIX}/include")
+endif()
+
+if(NOT TARGET Aorta::cpp_shared)
+  add_library(Aorta::cpp_shared SHARED IMPORTED)
+  set_target_properties(Aorta::cpp_shared PROPERTIES
+    IMPORTED_LOCATION "${_AORTA_CPP_SHARED}"
+    INTERFACE_INCLUDE_DIRECTORIES "${_AORTA_PREFIX}/include"
+    INTERFACE_LINK_LIBRARIES "Aorta::core_ffi;flatbuffers::flatbuffers;Threads::Threads")
+endif()
+
+if(NOT TARGET Aorta::cpp_static)
+  add_library(Aorta::cpp_static STATIC IMPORTED)
+  set_target_properties(Aorta::cpp_static PROPERTIES
+    IMPORTED_LOCATION "${_AORTA_PREFIX}/lib/libaorta_cpp.a"
+    INTERFACE_INCLUDE_DIRECTORIES "${_AORTA_PREFIX}/include"
+    INTERFACE_LINK_LIBRARIES "Aorta::core_ffi;flatbuffers::flatbuffers;Threads::Threads")
+endif()
+
+if(NOT TARGET Aorta::cpp)
+  add_library(Aorta::cpp INTERFACE IMPORTED)
+  set_property(TARGET Aorta::cpp PROPERTY INTERFACE_LINK_LIBRARIES Aorta::cpp_shared)
+endif()
+
+# Schema imported targets ship alongside Aorta::cpp / Aorta::core_ffi.
+# Middleware base schema only; product schema packages supply their own targets.
+include("${CMAKE_CURRENT_LIST_DIR}/AortaSchemaTargets.cmake")
+
+unset(_AORTA_CORE_SHARED)
+unset(_AORTA_CPP_SHARED)
+unset(_AORTA_FILE)
+unset(_AORTA_PREFIX)

@@ -1,0 +1,17 @@
+// Schema-meta fixture — field NAMED `aorta_header` whose type is
+// NOT aorta.sys.AortaHeader (header-type defect): the old check matched
+// the field NAME alone, so this schema wrongly got HAS_AORTA_HEADER=true.
+// Single namespace on purpose — isolates the header-type defect from the
+// mid-file-namespace defect (midns.fbs).
+namespace fixmeta.hdr;
+
+table NotTheHeader {
+  publish_stamp_ns: ulong;
+}
+
+table WrongMsg {
+  aorta_header: NotTheHeader;
+  payload: int;
+}
+
+root_type WrongMsg;

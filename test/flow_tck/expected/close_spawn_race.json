@@ -1,0 +1,34 @@
+[
+  {
+    "scenario": "close_spawn_race",
+    "seq": 0,
+    "op": "scope.close",
+    "event": "counter",
+    "name": "iterations",
+    "value": 50
+  },
+  {
+    "scenario": "close_spawn_race",
+    "seq": 1,
+    "op": "scope.close",
+    "event": "counter",
+    "name": "admitted_lost",
+    "value": 0
+  },
+  {
+    "scenario": "close_spawn_race",
+    "seq": 2,
+    "op": "scope.close",
+    "event": "counter",
+    "name": "refused_unresolved",
+    "value": 0
+  },
+  {
+    "scenario": "close_spawn_race",
+    "seq": 3,
+    "op": "scope.close",
+    "event": "counter",
+    "name": "close_incomplete",
+    "value": 0
+  }
+]

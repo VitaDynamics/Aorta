@@ -1,0 +1,20 @@
+// EDU external-root fixture: a request/response service schema. Both root
+// types come from ONE schema, so both share one bfbs and one schema hash.
+include "schemas/system/aorta_base.fbs";
+include "edu_demo_units.fbs";
+
+namespace edu.demo;
+
+table EduDemoServiceRequest {
+  aorta_header: aorta.sys.AortaHeader;
+  message: string;
+  unit: EduDemoUnit;
+}
+
+table EduDemoServiceResponse {
+  aorta_header: aorta.sys.AortaHeader;
+  echoed_message: string;
+  unit: EduDemoUnit;
+}
+
+root_type EduDemoServiceRequest;

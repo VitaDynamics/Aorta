@@ -1,0 +1,128 @@
+[package]
+name = "aorta_sdk"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+autoexamples = false
+publish = false
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+aorta_core = { path = "../core" }
+bytes = "1.10.1"
+flatbuffers = "25.12.19"
+tokio = { workspace = true, features = ["signal", "macros", "rt-multi-thread"] }
+tracing = "0.1.44"
+
+[dev-dependencies]
+libc = "0.2"
+
+[features]
+examples = []
+
+[[example]]
+name = "flow_demo"
+path = "examples/flow_demo.rs"
+required-features = ["examples"]
+
+[[example]]
+name = "flow_recv_demo"
+path = "examples/flow_recv_demo.rs"
+required-features = ["examples"]
+
+[[example]]
+name = "flow_tck_emitter"
+path = "examples/flow_tck_emitter.rs"
+required-features = ["examples"]
+
+[[example]]
+name = "control_loop"
+path = "examples/control_loop.rs"
+required-features = ["examples"]
+
+[[example]]
+name = "sched_inversion_demo"
+path = "examples/sched_inversion_demo.rs"
+required-features = ["examples"]
+
+[[example]]
+name = "late_joiner"
+path = "examples/late_joiner.rs"
+required-features = ["examples"]
+
+[[example]]
+name = "listener"
+path = "examples/listener.rs"
+required-features = ["examples"]
+
+[[example]]
+name = "navigation_service_client"
+path = "examples/navigation_service_client.rs"
+required-features = ["examples"]
+
+[[example]]
+name = "navigation_service_server"
+path = "examples/navigation_service_server.rs"
+required-features = ["examples"]
+
+[[example]]
+name = "echo_server"
+path = "examples/echo_server.rs"
+required-features = ["examples"]
+
+[[example]]
+name = "echo_client"
+path = "examples/echo_client.rs"
+required-features = ["examples"]
+
+[[example]]
+name = "perf_listener"
+path = "examples/perf_listener.rs"
+required-features = ["examples"]
+
+[[example]]
+name = "perf_talker"
+path = "examples/perf_talker.rs"
+required-features = ["examples"]
+
+[[example]]
+name = "performance_demo"
+path = "examples/performance_demo.rs"
+required-features = ["examples"]
+
+[[example]]
+name = "sensor_publisher"
+path = "examples/sensor_publisher.rs"
+required-features = ["examples"]
+
+[[example]]
+name = "sensor_subscriber"
+path = "examples/sensor_subscriber.rs"
+required-features = ["examples"]
+
+[[example]]
+name = "simple_timer_publish"
+path = "examples/simple_timer_publish.rs"
+required-features = ["examples"]
+
+[[example]]
+name = "talker"
+path = "examples/talker.rs"
+required-features = ["examples"]
+
+[[example]]
+name = "timer_demo"
+path = "examples/timer_demo.rs"
+required-features = ["examples"]
+
+[[example]]
+name = "unified_publish_demo"
+path = "examples/unified_publish_demo.rs"
+required-features = ["examples"]
+
+[[example]]
+name = "ctx_aggregator_mirror"
+path = "examples/ctx_aggregator_mirror.rs"
+required-features = ["examples"]

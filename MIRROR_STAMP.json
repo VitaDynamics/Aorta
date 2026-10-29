@@ -1,0 +1,13 @@
+{
+  "aorta_sha": "1d9cbc94d7ab80c9be9f1173acacbf98f112fd5d",
+  "artifact": "aorta-public-mirror",
+  "exporter_version": 1,
+  "mirror_manifest_sha256": "7cdccba8e62d099441e6f834d860a138f5392380e4d33e53de73730018ef96fc",
+  "mirror_tree_sha256": "5cf9a9de1837c84ac11c0688e3cbb58de4f34ee7e207f6746a3998b36dee8e07",
+  "oss_tree_sha256": "070bb6724fa88082f8bd3653c3051ebb6f7d79aa6871a96a38108558f00471d9",
+  "private_tag": "v2026.10.28-r.1",
+  "public_version": "0.1.0",
+  "registry_projection_sha256": "4932ba93674bf5e768bea72a2007a2fb25099bc70b4bd323eb79077b0ee44278",
+  "schema_sha": "none",
+  "schema_tag": null
+}

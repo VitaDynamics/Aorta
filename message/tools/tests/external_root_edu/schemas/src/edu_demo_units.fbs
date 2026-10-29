@@ -1,0 +1,10 @@
+// EDU external-root fixture: an INCLUDE-ONLY schema (no root type). It gets a
+// registered item with every flag false — there is no implicit
+// "include-only files need no item" exception table.
+namespace edu.demo;
+
+enum EduDemoUnit : byte {
+  UNKNOWN = 0,
+  METERS = 1,
+  SECONDS = 2,
+}

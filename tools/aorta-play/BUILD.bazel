@@ -1,0 +1,100 @@
+load("@aorta_crates//:defs.bzl", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
+
+rust_library(
+    name = "aorta_play",
+    srcs = glob(["src/**/*.rs"]),
+    crate_name = "aorta_play",
+    edition = "2021",
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(normal = True) + [
+        "//core:aorta_core",
+    ],
+)
+
+rust_binary(
+    name = "aorta-play",
+    srcs = ["src/main.rs"],
+    crate_name = "aorta_play_bin",
+    edition = "2021",
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(normal = True) + [
+        ":aorta_play",
+    ],
+)
+
+rust_test(
+    name = "aorta_play_test",
+    crate = ":aorta_play",
+    args = ["--test-threads=1"],
+)
+
+rust_library(
+    name = "aorta_play_fault_injection",
+    srcs = glob(["src/**/*.rs"]),
+    crate_name = "aorta_play",
+    crate_features = ["fault-injection"],
+    edition = "2021",
+    testonly = True,
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(normal = True) + [
+        "//core:aorta_core",
+    ],
+)
+
+rust_binary(
+    name = "aorta-play-fault-injection",
+    srcs = ["src/main.rs"],
+    crate_name = "aorta_play_fault_bin",
+    edition = "2021",
+    testonly = True,
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(normal = True) + [
+        ":aorta_play_fault_injection",
+    ],
+)
+
+rust_test(
+    name = "aorta_play_fault_injection_test",
+    crate = ":aorta_play_fault_injection",
+    args = ["--test-threads=1"],
+    crate_features = ["fault-injection"],
+    testonly = True,
+)
+
+sh_test(
+    name = "aorta_play_e2e_test",
+    srcs = ["tests/play_e2e.sh"],
+    args = [
+        "--play-bin=$(location :aorta-play)",
+        "--cli-bin=$(location //tools/aorta-cli:aorta)",
+        "--record-bin=$(location //tools/aorta-record:aorta-record)",
+        "--talker-bin=$(location //rust/examples:cli_talker)",
+        "--play-fault-bin=$(location :aorta-play-fault-injection)",
+        "--cli-fault-bin=$(location //tools/aorta-cli:aorta-fault-injection)",
+        "--profile=full",
+    ],
+    data = [
+        ":aorta-play",
+        "//tools/aorta-cli:aorta",
+        "//tools/aorta-record:aorta-record",
+        "//rust/examples:cli_talker",
+        ":aorta-play-fault-injection",
+        "//tools/aorta-cli:aorta-fault-injection",
+    ],
+    tags = [
+        "no-sandbox",
+    ],
+    timeout = "long",
+)
+
+# Expose `Cargo.toml` to Bazel so `crate.from_cargo(manifests=[...])`
+# (MODULE.bazel) can read this workspace member when resolving
+# `workspace = true` tokio inheritance.
+exports_files(["Cargo.toml"])
+
+filegroup(
+    name = "license_workspace_sources",
+    srcs = glob(["**/*"]),
+    visibility = ["//tools/release:__pkg__"],
+)

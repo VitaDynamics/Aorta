@@ -1,0 +1,26 @@
+[package]
+name = "aorta-tui"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[[bin]]
+name = "aorta-tui"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+arboard = "3"
+aorta_core = { path = "../../core" }
+aorta-introspect = { path = "../aorta-introspect" }
+crossterm = "0.29"
+nucleo = "0.5"
+ratatui = { version = "0.30", default-features = false, features = ["crossterm"] }
+ratatui-interact = "0.4.2"
+serde_json = "1"
+tokio = { workspace = true, features = ["rt-multi-thread"] }
+zenoh = { workspace = true, features = ["shared-memory", "unstable"] }

@@ -1,0 +1,379 @@
+load("@aorta_crates//:defs.bzl", "all_crate_deps")
+load("@rules_cc//cc:defs.bzl", "cc_import", "cc_library", "cc_test")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_shared_library", "rust_static_library", "rust_test")
+load(":tools/core_abi.bzl", "core_abi_render")
+
+# Bazel deps are sourced from `core/Cargo.toml` via `all_crate_deps`
+# (rules_rust crate_universe). Adding a new `[dependencies]` entry to
+# `core/Cargo.toml` therefore propagates automatically — eliminating the
+# hand-maintained-list footgun that previously required mirroring every
+# Cargo dep into a Bazel deps array (cf. unicode-ident / unicode-
+# normalization scramble during the keyexpr relaxation work).
+rust_library(
+    name = "aorta_core",
+    srcs = glob(["src/**/*.rs", "test/**/*.rs", "ffi/**/*.rs"], allow_empty = True),
+    crate_name = "aorta_core",
+    edition = "2021",
+    deps = all_crate_deps(normal = True) + ["//sync:aorta_sync"],
+    visibility = ["//visibility:public"],
+)
+
+# :aorta_core_ffi and :aorta_core_cdylib compile the same crate name as
+# "final" artifacts, for which rules_rust passes no `-C metadata`. rustc then
+# derives one stable crate id for both and names their codegen-unit temp
+# objects identically (`aorta_core.aorta_core.<id>-cgu.N.rcgu.o`) in this
+# package's shared out-dir; with the repo's `--spawn_strategy=local` the two
+# actions clobber each other's objects whenever they run at the same time
+# (truncated / empty / bad-.eh_frame objects at the link step). A distinct
+# metadata string per artifact gives each its own crate id and file names.
+# It only feeds the Rust symbol hash, never the `#[no_mangle]` C-ABI surface.
+rust_static_library(
+    name = "aorta_core_ffi",
+    srcs = glob(["src/**/*.rs", "test/**/*.rs", "ffi/**/*.rs"], allow_empty = True),
+    crate_name = "aorta_core",
+    edition = "2021",
+    rustc_flags = ["-Cmetadata=aorta_core_ffi"],
+    deps = all_crate_deps(normal = True) + ["//sync:aorta_sync"],
+    visibility = ["//visibility:public"],
+)
+
+# Executor stop-window seam Core: the ONLY target that enables
+# the `test-seams` cargo feature (the stop-window pause slot + the
+# `aorta_test_stop_window_seam` C symbol). Seam-test binaries link THIS
+# target EXCLUSIVELY — never alongside `:aorta_core_ffi` (one Core per
+# binary; two registries would split the executor handles). testonly
+# keeps it out of every release artifact's dependency closure.
+rust_static_library(
+    name = "aorta_core_ffi_test_seams",
+    testonly = True,
+    srcs = glob(["src/**/*.rs", "test/**/*.rs", "ffi/**/*.rs"], allow_empty = True),
+    # A DISTINCT crate_name so the staticlib artifact (libaorta_core_seams.a)
+    # cannot collide with :aorta_core_ffi's libaorta_core.a in one build
+    # graph. The C-ABI surface is #[no_mangle] extern "C" — the crate
+    # name never reaches the linker interface.
+    crate_name = "aorta_core_seams",
+    crate_features = ["test-seams"],
+    edition = "2021",
+    deps = all_crate_deps(normal = True) + ["//sync:aorta_sync"],
+    visibility = ["//visibility:public"],
+)
+
+# `AORTA_ABI_VERSION` (src/ffi/c_api/mod.rs) is the only declaration of the
+# Core C-ABI generation. This parser is how every artifact that names the ABI
+# -- the Linux DT_SONAME below, the SDK bundle's members, CMake package and
+# asset name under //tools/release -- derives the number instead of restating
+# it (a hand-copied 10 once shipped while Core was at 12).
+py_library(
+    name = "core_abi_lib",
+    srcs = ["tools/core_abi.py"],
+    imports = ["tools"],
+    visibility = ["//visibility:public"],
+)
+
+py_binary(
+    name = "core_abi",
+    srcs = ["tools/core_abi.py"],
+    main = "tools/core_abi.py",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "aorta_core_abi_source",
+    srcs = ["src/ffi/c_api/mod.rs"],
+    visibility = ["//visibility:public"],
+)
+
+# rustc reads `@file` argument files; the SONAME flag is rendered from the
+# constant so a Core ABI bump re-stamps the library with no edit here.
+core_abi_render(
+    name = "aorta_core_soname_rustc_args",
+    out = "aorta_core_soname.rustc-args",
+    text = "-Clink-arg=-Wl,-soname,libaorta_core.so.@AORTA_CORE_ABI_VERSION@",
+)
+
+# Python SDK (L3) binds the L2 C-ABI through this cdylib via ctypes —
+# see spec/Aorta_Python_SDK_Design_Proposal.md §2/§4. crate_name "aorta_core"
+# yields libaorta_core.{so,dylib}, the name the loader (python/aorta/_ffi)
+# searches for. A cdylib carries no libpython linkage, so one artifact per
+# arch serves every CPython version and cross-compiles to linux aarch64
+# (the robot target) cleanly. macOS dev links the same frameworks the
+# staticlib FFI tests use (:aorta_core_linkopts).
+rust_shared_library(
+    name = "aorta_core_cdylib",
+    srcs = glob(["src/**/*.rs", "test/**/*.rs", "ffi/**/*.rs"], allow_empty = True),
+    compile_data = [":aorta_core_soname_rustc_args"],
+    crate_name = "aorta_core",
+    edition = "2021",
+    # `-Cmetadata`: see :aorta_core_ffi — distinct temp object names.
+    rustc_flags = ["-Cmetadata=aorta_core_cdylib"] + select({
+        "@platforms//os:linux": ["@$(location :aorta_core_soname_rustc_args)"],
+        "@platforms//os:macos": ["-Clink-arg=-Wl,-install_name,@rpath/libaorta_core.dylib"],
+        "//conditions:default": [],
+    }),
+    # Mirror the lib/staticlib deps (incl. //sync:aorta_sync used by
+    # core/src/service.rs) + the macOS linkopts.
+    deps = all_crate_deps(normal = True) + ["//sync:aorta_sync", ":aorta_core_linkopts"],
+    visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "aorta_core_test",
+    crate = ":aorta_core",
+    args = [
+        "--skip",
+        "cross_session_",
+        "--skip",
+        "integration_tests::qos_integration_tests::",
+        "--skip",
+        "service_client_integration_tests::",
+        "--skip",
+        "timer_integration_tests::timer_integration_tests::",
+        "--skip",
+        "performance_tests::performance_tests::",
+        "--test-threads=1",
+    ],
+    env = {
+        "AORTA_SCHEMA_ATTACH": "never",
+        "AORTA_TRACE_AUTO_INIT": "0",
+    },
+    timeout = "long",
+    tags = ["no-sandbox"],
+)
+
+rust_test(
+    name = "aorta_core_integration_test",
+    crate = ":aorta_core",
+    args = [
+        "--test-threads=1",
+        "integration_tests::qos_integration_tests::",
+    ],
+    env = {
+        "AORTA_SCHEMA_ATTACH": "never",
+        "AORTA_TRACE_AUTO_INIT": "0",
+    },
+    size = "medium",
+    timeout = "moderate",
+    tags = ["no-sandbox"],
+)
+
+rust_test(
+    name = "aorta_core_service_client_integration_test",
+    crate = ":aorta_core",
+    args = [
+        "--test-threads=1",
+        "service_client_integration_tests::",
+    ],
+    env = {
+        "AORTA_SCHEMA_ATTACH": "never",
+        "AORTA_TRACE_AUTO_INIT": "0",
+    },
+    size = "medium",
+    timeout = "long",
+    tags = ["no-sandbox"],
+)
+
+rust_test(
+    name = "aorta_core_timer_integration_test",
+    crate = ":aorta_core",
+    args = [
+        "--test-threads=1",
+        "timer_integration_tests::timer_integration_tests::",
+    ],
+    env = {
+        "AORTA_SCHEMA_ATTACH": "never",
+        "AORTA_TRACE_AUTO_INIT": "0",
+    },
+    size = "medium",
+    timeout = "moderate",
+    tags = ["no-sandbox"],
+)
+
+rust_test(
+    name = "aorta_core_performance_test",
+    crate = ":aorta_core",
+    args = [
+        "--test-threads=1",
+        "performance_tests::performance_tests::",
+    ],
+    env = {
+        "AORTA_SCHEMA_ATTACH": "never",
+        "AORTA_TRACE_AUTO_INIT": "0",
+    },
+    size = "medium",
+    timeout = "moderate",
+    tags = ["no-sandbox"],
+)
+
+rust_test(
+    name = "aorta_core_cross_session_test",
+    crate = ":aorta_core",
+    args = ["--test-threads=1", "cross_session_"],
+    env = {
+        "AORTA_SCHEMA_ATTACH": "never",
+        "AORTA_TRACE_AUTO_INIT": "0",
+    },
+    size = "medium",
+    timeout = "moderate",
+    tags = ["no-sandbox"],
+)
+
+# The Session::open auto-init hook mutates process env + global init state, so
+# it runs `#[ignore]`d in its OWN process here (single-threaded, deterministic
+# order) and deliberately WITHOUT the AORTA_TRACE_AUTO_INIT=0 hygiene env the
+# other suites use — the test drives that variable itself.
+rust_test(
+    name = "aorta_core_trace_runtime_test",
+    crate = ":aorta_core",
+    args = [
+        "--test-threads=1",
+        "--ignored",
+        "trace_runtime_tests::",
+    ],
+    env = {
+        "AORTA_SCHEMA_ATTACH": "never",
+    },
+    size = "medium",
+    timeout = "moderate",
+    tags = ["no-sandbox"],
+)
+
+genrule(
+    name = "aorta_ffi_header",
+    # The driver (//tools/aorta-cbindgen) parses `core/src/lib.rs` directly via
+    # cbindgen's `Builder::with_src`, so this action needs the crate's own
+    # sources and nothing else — no cargo, no rustc, no workspace manifests.
+    #
+    # It used to call `Builder::with_crate`, which shells out to
+    # `cargo metadata`. cbindgen 0.29 no longer passes `--no-deps` there (see
+    # the note atop its `cargo/cargo_metadata.rs`), so every invocation did a
+    # FULL dependency resolve — downloading and extracting the entire graph
+    # (~1.1 GB) into the throwaway per-action `CARGO_HOME`. That cost ~3 min on
+    # a mirrored builder and ~40 min on a proxied cloud runner, on every cache
+    # miss, to produce a header derived from
+    # `core/src/**` alone. `cbindgen.toml` sets `parse.parse_deps = false`, so
+    # the dependency graph was never used for anything.
+    srcs = ["cbindgen.toml"] + glob(["src/**/*.rs", "ffi/**/*.rs"], allow_empty = True),
+    outs = ["include/aorta.h"],
+    # Scoped (not public) visibility: the intended public API is the
+    # `:aorta_ffi_headers` cc_library wrapper below. //cpp needs the raw
+    # generated file directly (not the cc_library) so the expect-fail
+    # sh_test (cpp/BUILD.bazel :flow_expectfail_test) can pull it into its
+    # runfiles via `data` — a cc_library's `hdrs` are compile-time only and
+    # are not copied into a consuming sh_test's runfiles tree.
+    visibility = ["//cpp:__pkg__"],
+    tools = ["//tools/aorta-cbindgen:aorta_cbindgen"],
+    cmd = "set -e; "
+        + "config_rel=$(location cbindgen.toml); "
+        + "crate_dir=$$(cd \"$$(dirname \"$$config_rel\")\" && pwd); "
+        + "config_path=$$crate_dir/$$(basename \"$$config_rel\"); "
+        + "$(execpath //tools/aorta-cbindgen:aorta_cbindgen) --crate-dir $$crate_dir "
+        + "--config $$config_path --out $@",
+)
+
+cc_test(
+    name = "aorta_ffi_smoke_test",
+    srcs = ["test/ffi_smoke.c"],
+    deps = [
+        ":aorta_core_ffi",
+        ":aorta_core_linkopts",
+        ":aorta_ffi_headers",
+    ],
+    size = "small",
+    tags = ["no-sandbox"],
+)
+
+cc_test(
+    name = "aorta_ffi_client_test",
+    srcs = ["test/ffi_client_test.c"],
+    deps = [
+        ":aorta_core_ffi",
+        ":aorta_core_linkopts",
+        ":aorta_ffi_headers",
+    ],
+    size = "small",
+    tags = ["no-sandbox"],
+)
+
+cc_library(
+    name = "aorta_ffi_headers",
+    hdrs = [":aorta_ffi_header"],
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "aorta_ffi_public_header",
+    srcs = [":aorta_ffi_header"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "aorta_core_linkopts",
+    linkopts = select({
+        "@platforms//os:macos": [
+            "-framework",
+            "CoreFoundation",
+            "-framework",
+            "IOKit",
+            "-framework",
+            "Security",
+        ],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+)
+
+# ── Cross-language TSAN (Tier 3, single-process Rust + C++) ───────────────────
+# `aorta-tsan-xlang.yml` builds the FFI as a TSAN-instrumented staticlib with
+# cargo `-Zbuild-std -Zsanitizer=thread` (rules_rust 0.68 can't -Zbuild-std) into
+# core/tsan_xlang/ BEFORE `bazel test --config=tsan-xlang`, which flips the define
+# below so `//cpp:aorta_cpp` links this prebuilt instead of the uninstrumented
+# rules_rust :aorta_core_ffi. Both sides then share one TSAN runtime in one
+# process. `manual` keeps the prebuilt out of the normal `//...` build (which has
+# no such file and must not require it).
+config_setting(
+    name = "tsan_xlang",
+    values = {"define": "aorta_tsan_xlang=1"},
+    visibility = ["//visibility:public"],
+)
+
+cc_import(
+    name = "_aorta_core_ffi_tsan_archive",
+    static_library = "tsan_xlang/libaorta_core_tsan.a",
+    tags = ["manual"],
+)
+
+cc_library(
+    name = "aorta_core_ffi_tsan_prebuilt",
+    # rules_rust adds Rust std's link-time system deps automatically for
+    # :aorta_core_ffi; the bare prebuilt archive needs them spelled out.
+    linkopts = [
+        "-lpthread",
+        "-ldl",
+        "-lm",
+        "-lrt",
+    ],
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+    deps = [":_aorta_core_ffi_tsan_archive"],
+)
+
+exports_files([
+    "Cargo.toml",
+    "Cargo.lock",
+    "fuzz/Cargo.lock",
+])
+
+# The reentrancy-guard completeness lint (//cpp:reentrancy_lint_test)
+# regenerates its guarded-entry seed list from these sources at run time.
+exports_files(
+    glob(["src/ffi/c_api/*.rs"]),
+    visibility = ["//cpp:__pkg__"],
+)
+
+filegroup(
+    name = "license_workspace_sources",
+    srcs = glob(["**/*"]),
+    visibility = ["//tools/release:__pkg__"],
+)

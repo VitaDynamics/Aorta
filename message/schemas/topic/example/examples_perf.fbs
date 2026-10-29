@@ -1,0 +1,95 @@
+// Examples - Performance Testing Schemas
+//
+// This schema defines message types for performance benchmarking and late joiner examples.
+
+include "schemas/system/aorta_base.fbs";
+
+namespace examples.perf;
+
+// Simple test message for latency/throughput testing
+// Includes timing information for round-trip measurements
+table TestMessage {
+  aorta_header: aorta.sys.AortaHeader;
+  
+  // Send timestamp in nanoseconds (for latency calculation)
+  send_timestamp_ns: ulong;
+  
+  // Payload size identifier for variable size testing
+  payload_size: uint;
+  
+  // Optional: Actual test payload data
+  payload: [ubyte];
+  
+  // Test identifier for correlation
+  test_id: string;
+}
+
+// Robot status for late joiner demonstration
+// This message type benefits from TransientLocal durability
+table RobotStatus {
+  aorta_header: aorta.sys.AortaHeader;
+  
+  // Battery level percentage (0-100)
+  battery_level: float;
+  
+  // Operating mode: "IDLE", "NAVIGATING", "CHARGING", "TASK_EXECUTING", "STANDBY"
+  mode: string;
+  
+  // Robot position [x, y, z]
+  position_x: float;
+  position_y: float;
+  position_z: float;
+  
+  // Error/warning count
+  error_count: uint;
+  
+  // System uptime in seconds
+  uptime_seconds: ulong;
+  
+  // Last error message (if any)
+  last_error: string;
+}
+
+// Performance metrics aggregation
+// Used by performance_demo to report benchmark results
+table PerformanceMetrics {
+  aorta_header: aorta.sys.AortaHeader;
+  
+  // Test name/identifier
+  test_name: string;
+  
+  // QoS configuration used
+  qos_preset: string;
+  
+  // Total messages sent
+  messages_sent: ulong;
+  
+  // Total messages received
+  messages_received: ulong;
+  
+  // Messages lost (sent - received)
+  messages_lost: ulong;
+  
+  // Minimum latency in microseconds
+  min_latency_us: ulong;
+  
+  // Maximum latency in microseconds
+  max_latency_us: ulong;
+  
+  // Average latency in microseconds
+  avg_latency_us: ulong;
+  
+  // Standard deviation of latency
+  latency_stddev_us: ulong;
+  
+  // Test duration in milliseconds
+  test_duration_ms: ulong;
+  
+  // Throughput in messages per second
+  throughput_mps: float;
+  
+  // Throughput in megabytes per second
+  throughput_mbps: float;
+}
+
+root_type TestMessage;

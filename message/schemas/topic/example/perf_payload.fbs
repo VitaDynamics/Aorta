@@ -1,0 +1,23 @@
+include "schemas/system/aorta_base.fbs";
+
+namespace perf;
+
+enum PayloadKind : byte {
+  UNKNOWN = 0,
+  CONTROL = 1,
+  LIDAR = 2,
+  IMAGE = 3,
+  CUSTOM = 4
+}
+
+table PerfPayload {
+  aorta_header: aorta.sys.AortaHeader;
+  payload_type: PayloadKind = UNKNOWN;
+  payload: [ubyte];
+  tag: string;
+  t_build_start_ns: ulong;
+  t_build_end_ns: ulong;
+  t_publish_call_ns: ulong;
+}
+
+root_type PerfPayload;

@@ -1,0 +1,21 @@
+// Minimal single-action schema exercising aorta_action_library (Tier-2 / local
+// action codegen). Only the three domain tables are declared by hand; the 8
+// protocol wrapper tables and the aggregate MapUploadAction traits struct are
+// generated.
+include "schemas/shared/action_common/action_common.fbs";
+
+namespace aorta.action.slam;
+
+table MapUploadGoal {
+  map_name: string;
+}
+
+table MapUploadResult {
+  success: bool;
+}
+
+table MapUploadFeedbackData {
+  progress_pct: ubyte;
+}
+
+root_type MapUploadGoal;

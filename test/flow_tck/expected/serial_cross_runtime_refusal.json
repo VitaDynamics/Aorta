@@ -1,0 +1,11 @@
+[
+ {
+  "scenario": "serial_cross_runtime_refusal",
+  "seq": 0,
+  "op": "task.take_outcome",
+  "event": "stopped",
+  "kind": "cancelled",
+  "reason": "shutdown",
+  "raw_reason": 3
+ }
+]

@@ -1,0 +1,12 @@
+// Foreign root table for the mixed-namespace
+// shape. `mixedroot_consumer` declares LOCAL types in one namespace but sets its
+// `root_type` to THIS type in a DIFFERENT deep namespace, so flatc emits TWO
+// pub-mod nests in one file — the local types' leaf and (here) the root helpers'
+// leaf in `mrforeign.deep`, which reference `ForeignRoot` BARE. Example/test only.
+namespace mrforeign.deep;
+
+table ForeignRoot {
+  payload : int (id: 0);
+}
+
+root_type ForeignRoot;

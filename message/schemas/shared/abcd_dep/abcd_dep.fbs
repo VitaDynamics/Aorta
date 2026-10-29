@@ -1,0 +1,10 @@
+// Foreign-root fixture combining a same-namespace type name with an identical
+// file-identifier string. Type rewriting must not alter the string literal.
+// Example/test only; do NOT consume downstream.
+namespace deep;
+
+table ABCD {
+  v : int (id: 0);
+}
+
+root_type ABCD;

@@ -1,0 +1,39 @@
+load("@aorta_crates//:defs.bzl", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
+
+# Off-device CHUNK → Perfetto (Chrome JSON) converter. Reuses the committed
+# CHUNK binding via //core:aorta_core (one schema, one binding).
+rust_library(
+    name = "aorta_trace2perfetto",
+    srcs = glob(["src/lib.rs", "src/tests.rs"]),
+    crate_name = "aorta_trace2perfetto",
+    edition = "2021",
+    deps = all_crate_deps(normal = True) + [
+        "//core:aorta_core",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+rust_binary(
+    name = "aorta-trace2perfetto",
+    srcs = ["src/main.rs"],
+    edition = "2021",
+    deps = all_crate_deps(normal = True) + [
+        ":aorta_trace2perfetto",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "aorta_trace2perfetto_test",
+    crate = ":aorta_trace2perfetto",
+)
+
+# Expose Cargo.toml so MODULE.bazel's crate.from_cargo can read this member.
+exports_files(["Cargo.toml"])
+
+filegroup(
+    name = "license_workspace_sources",
+    srcs = glob(["**/*"]),
+    visibility = ["//tools/release:__pkg__"],
+)

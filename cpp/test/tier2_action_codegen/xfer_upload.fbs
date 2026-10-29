@@ -1,0 +1,19 @@
+include "schemas/shared/action_common/action_common.fbs";
+include "xfer_types.fbs";
+
+namespace aorta.action.xfer;
+
+table XferUploadGoal {
+  name: string;
+}
+
+table XferUploadResult {
+  success: bool;
+}
+
+table XferUploadFeedbackData {
+  phase: XferPhase;
+  progress_pct: ubyte;
+}
+
+root_type XferUploadGoal;

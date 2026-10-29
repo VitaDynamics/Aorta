@@ -1,0 +1,72 @@
+package(default_visibility = ["//visibility:public"])
+
+# Cargo workspace root. Pinned single source of truth for the
+# Zenoh git rev. `MODULE.bazel`'s `crate.from_cargo(...)` references
+# `//:Cargo.toml` + `//:Cargo.bazel.lock` so Bazel's crate_universe can resolve
+# `workspace = true` in member manifests without mutating Cargo's lockfile.
+exports_files([
+    "LICENSE",
+    "NOTICE",
+    "THIRD_PARTY_LICENSES/foxglove-sdk.LICENSE",
+    ".bazelignore",
+    ".bazelversion",
+    ".github/actions/collect-license-evidence/action.yml",
+    ".github/workflows/aorta-lint.yml",
+    ".github/workflows/aorta-sdk-bundles.yml",
+    ".github/workflows/aorta-python-wheels.yml",
+    ".github/workflows/aorta-release-impl.yml",
+    ".github/workflows/aorta-release.yml",
+    ".github/workflows/aorta-rust-release-publish.yml",
+    "Cargo.bazel.lock",
+    "Cargo.toml",
+    "Cargo.lock",
+    "MODULE.bazel",
+    "MODULE.bazel.lock",
+    "QUICKSTART.md",
+    "WORKSPACE",
+    "docs/licensing.md",
+])
+
+sh_test(
+    name = "bazel_cargo_lockfile_test",
+    size = "small",
+    srcs = ["//tools/ci:check_bazel_cargo_lockfile.sh"],
+    data = [
+        "Cargo.bazel.lock",
+        "Cargo.lock",
+    ],
+)
+
+sh_binary(
+    name = "refresh_rust_project",
+    srcs = ["//tools/rust:generate_rust_project.sh"],
+    args = ["$(location @rules_rust//tools/rust_analyzer:gen_rust_project)"],
+    data = [
+        "@rules_rust//tools/rust_analyzer:gen_rust_project",
+    ],
+)
+
+alias(
+    name = "core",
+    actual = "//core:aorta_core",
+)
+
+alias(
+    name = "rust_sdk",
+    actual = "//rust:aorta_sdk",
+)
+
+alias(
+    name = "schemas",
+    actual = "//message:schemas",
+)
+
+alias(
+    name = "flatc",
+    actual = "//message:flatc",
+)
+
+alias(
+    name = "zenohd",
+    actual = "//tools/zenohd:zenohd",
+)

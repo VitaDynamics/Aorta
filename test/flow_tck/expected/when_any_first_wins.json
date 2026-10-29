@@ -1,0 +1,9 @@
+[
+  {
+    "scenario": "when_any_first_wins",
+    "seq": 0,
+    "op": "when_any",
+    "event": "value",
+    "value": "0:9"
+  }
+]

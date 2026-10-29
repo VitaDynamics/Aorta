@@ -1,0 +1,8 @@
+# Workspace-wide clippy tuning.
+#
+# `too-many-arguments-threshold = 8` accommodates the 4 boundary functions in
+# `core/src/{telemetry,timer,ffi}/...` that legitimately take exactly 8 args
+# (Bazel options bundles, telemetry build helpers). Functions at 9+ remain
+# flagged — those are a real "needs Options struct" signal that we want to
+# keep visible until the C-ABI module is split further.
+too-many-arguments-threshold = 8

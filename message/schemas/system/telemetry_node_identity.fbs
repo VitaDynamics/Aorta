@@ -1,0 +1,45 @@
+// Telemetry: node_identity family wire schema (telemetry V2).
+//
+// NOTE: like the other `telemetry_*.fbs` families, this schema is
+// intentionally NOT registered in
+// `message/schemas/registry.bzl`. The Rust bindings and the BFBS bytes are
+// produced by `core/build.rs` (Cargo-only) and committed as
+// `core/src/telemetry/telemetry_node_identity_generated.rs` (constant
+// `TELEMETRY_NODE_IDENTITY_BFBS`). The core runtime publishes the BFBS to the
+// schema-by-hash store and attaches the hash to each telemetry put, so
+// recorders embed the schema in MCAP without pre-generated bindings in other
+// SDKs. If a future Python or C++ tool needs to parse this offline, register
+// the schema in `registry.bzl` and switch core to the Bazel-emitted binding.
+//
+// Shape MUST mirror `NodeIdentityTelemetry` in `core/src/telemetry/schema.rs`;
+// a roundtrip test in `core/src/telemetry/fb.rs` guards the two against drift.
+
+include "telemetry_common.fbs";
+
+namespace aorta.telemetry;
+
+table NodeIdentity {
+  telemetry_version: uint;
+  sequence: ulong;
+  timestamp_ns: ulong;
+  node_id: string;
+  node_name: string;
+  group: string;
+  host_id: string;
+  host_name: string;
+  process_start_time_ns: ulong;
+  pid: uint;
+  executable: string;
+  language: string;
+  sdk_name: string;
+  sdk_version: string;
+  session_zid: string;
+  connected_router_zids: [string];
+  // Optional in the Rust struct (Option<String>): absent (null) == None.
+  container_id: string;
+  build_id: string;
+  // Sorted key/value pairs mirroring the BTreeMap<String, String>.
+  labels: [KeyValue];
+}
+
+root_type NodeIdentity;

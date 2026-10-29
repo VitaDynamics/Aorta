@@ -1,0 +1,11 @@
+[
+  {
+    "scenario": "when_all_fault",
+    "seq": 0,
+    "op": "when_all",
+    "event": "stopped",
+    "kind": "fault",
+    "code": -5,
+    "message": "tck-when-fault"
+  }
+]

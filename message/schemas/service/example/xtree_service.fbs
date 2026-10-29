@@ -1,0 +1,21 @@
+// Service fixture spanning three namespace trees: aorta.services.xvln,
+// aorta.sys, and aorta.xtree.common. It exercises cross-tree Rust module
+// assembly when multiple dependencies share the aorta root.
+// Example/test only; do NOT consume downstream.
+include "schemas/system/aorta_base.fbs";
+include "schemas/shared/service_common/status.fbs";
+include "schemas/shared/xtree_common/xtree_common.fbs";
+
+namespace aorta.services.xvln;
+
+table ControlFollowingRequest {
+  aorta_header : aorta.sys.AortaHeader                     (id: 0);
+  phase        : aorta.xtree.common.XtreePhase = UNKNOWN   (id: 1);   // third tree (E0433 site)
+}
+
+table ControlFollowingResponse {
+  aorta_header : aorta.sys.AortaHeader                (id: 0);
+  status       : aorta.services.common.ServiceStatus (id: 1);   // status tree
+}
+
+root_type ControlFollowingRequest;

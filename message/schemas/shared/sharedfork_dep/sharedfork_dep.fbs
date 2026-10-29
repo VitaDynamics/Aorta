@@ -1,0 +1,17 @@
+// Foreign types for the shared-prefix fork
+// shape. The consumer's local namespace `sfork.leaf` and the foreign root's
+// namespace `sfork.mid.leaf` share the prefix `sfork`, so flatc emits two modules
+// both ending in `leaf`. A first-match leaf search injects the local alias into
+// the wrong branch; placement must descend by the full
+// namespace path. Example/test only; do NOT consume downstream.
+namespace sfork.mid.leaf;
+
+table ForeignRoot {
+  payload : int (id: 0);
+}
+
+namespace sfork.leaf;
+
+table LocalDep {
+  d : int (id: 0);
+}

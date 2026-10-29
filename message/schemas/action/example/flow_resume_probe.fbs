@@ -1,0 +1,33 @@
+// Flow Action resume/compile-contract fixture. Example/test only.
+
+include "schemas/shared/action_common/action_common.fbs";
+include "schemas/system/aorta_base.fbs";
+
+namespace aorta.action.example;
+
+table ProbePreset {
+  path : string (id: 0);
+  args : [string] (id: 1);
+}
+
+union ProbeInput { ProbePreset }
+
+table FlowResumeProbeGoal {
+  command : string       (id: 0);
+  wait    : bool = false (id: 1);
+  source  : string       (id: 2);
+  input   : ProbeInput   (id: 4);
+}
+
+table FlowResumeProbeResult {
+  duration_ms : ulong (id: 0);
+}
+
+table FlowResumeProbeFeedbackData {
+  current_node   : string (id: 0);
+  completed_nodes: uint   (id: 1);
+  total_nodes    : uint   (id: 2);
+  progress_pct   : ubyte  (id: 3);
+}
+
+root_type FlowResumeProbeGoal;

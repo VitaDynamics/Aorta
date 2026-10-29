@@ -1,0 +1,72 @@
+[package]
+name = "aorta_core"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+# The C-ABI header generator (cbindgen, MPL-2.0) lives in
+# //tools/aorta-cbindgen, not here: the library never uses it, and a
+# `[dependencies]` entry would put cbindgen and its transitive crates into
+# libaorta_core's Bazel/Cargo closure, the released manifest, and every
+# per-artifact license notice.
+[dependencies]
+# First-party leaf crate of loom-verified concurrency primitives (e.g.
+# `InFlightCounter` behind the service drain handshake). Isolated into its own
+# tokio-free crate so `RUSTFLAGS="--cfg loom"` can model-check it without
+# forcing tokio into its loom configuration. See //sync.
+aorta_sync = { path = "../sync" }
+bytes = "1.10.1"
+crossbeam-channel = "0.5"
+flatbuffers = "25.12.19"
+flatbuffers-reflection = "0.1.0"
+libc = "0.2"
+arc-swap = "1"
+parking_lot = "0.12"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10.8"
+smallbox = "0.8"
+tokio = { workspace = true, features = ["signal"] }
+time = "0.3"
+tracing = "0.1.44"
+tracing-appender = "0.2"
+tracing-subscriber = { version = "0.3.22", features = ["env-filter", "json"] }
+# Key-expression segment validation needs:
+# - `unicode-ident` for `is_xid_start`/`is_xid_continue` (the same set Rust
+#   uses for identifiers — letters of any script, digits, marks, `_`).
+# - `unicode-normalization` for NFC canonicalization at validator entry, so
+#   `café` (precomposed) and `café` (decomposed) collapse to the same
+#   bytes before being handed to Zenoh. Without this two visually identical
+#   user-typed topic names route to different Zenoh keys.
+unicode-ident = "1.0"
+unicode-normalization = "0.1"
+uuid = { version = "1.11", features = ["v4"] }
+zenoh = { workspace = true, features = ["shared-memory", "stats", "transport_serial", "unstable"] }
+# Trace CHUNK compression (trace file sink). Already in the dependency graph
+# via zenoh, so this direct dep adds no new vendored crate. zstd level 1 reaches
+# ~5.4x on the trace chunk encoding at low CPU.
+zstd = "0.13"
+
+[features]
+# Tracing (core/src/trace/) is always compiled and runtime-gated OFF by default
+# (see trace::set_trace_enabled). These optional features set a COMPILE-TIME
+# verbosity floor: trace call sites strictly below the selected level fold to a
+# constant `false` and are dead-code-eliminated (true zero cost). Select at most
+# one; the default (none selected) compiles all levels in. Distinct from the
+# telemetry and logging env switches — tracing has its own gate.
+aorta_trace_max_level_debug = []
+aorta_trace_max_level_info = []
+aorta_trace_max_level_warn = []
+aorta_trace_max_level_error = []
+aorta_trace_max_level_off = []
+# Executor stop-flag-window seam (TEST-ONLY): a callback slot in
+# the two executor stop paths (between the stop-flag store and the lane
+# on_stop bridge) plus the `aorta_test_stop_window_seam` C symbol. Wired
+# into Bazel EXCLUSIVELY via //core:aorta_core_ffi_test_seams (linked
+# only by seam-test binaries, one Core per binary); release artifacts
+# never enable it.
+test-seams = []

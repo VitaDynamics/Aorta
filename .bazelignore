@@ -1,0 +1,13 @@
+# Upstream googletest self-test packages are not part of Aorta's own build/test
+# surface. Exclude them so `bazel build //...` and `bazel test //...` cover the
+# Aorta workspace instead of vendored third-party test suites.
+src/third_party/gtest/googletest/googletest/test
+src/third_party/gtest/googletest/googlemock/test
+
+
+
+# The disposable schema-module fixture that the schema-decoupling case driver
+# (message/tools/tests/schema_decoupling_cases_test.py) overrides per case is
+# its own Bazel module (dev dependency of the root, see MODULE.bazel); keep the
+# top-level //... walk out of it.
+message/tools/tests/schema_module_fixture

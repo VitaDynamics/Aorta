@@ -1,0 +1,75 @@
+# flow resume lint allowlist.
+#
+# FULLY QUALIFIED enclosing contexts whose bodies may resume a
+# coroutine handle: exactly the inventory of routed DELIVERY thunks
+# (lambda trampolines inside a thunk carry an explicit `(lambda)`
+# segment). A new resumption path must either call detail::route_resume
+# or be added here in the same change that introduces it. Unqualified or
+# foreign-namespace same-name functions do NOT pass.
+#
+# I-2 ArbiterFrame:
+aorta::flow::detail::ArbiterFrame::deliver_plain
+aorta::flow::detail::ArbiterFrame::deliver_torn
+# I-4 call (thunk + its executor trampoline lambda, plus the bound
+# member channels — run resumes plainly in the domain slice, drop stamps
+# the teardown first):
+aorta::flow::call::deliver_unbound_thunk
+aorta::flow::call::deliver_unbound_thunk::(lambda)
+aorta::flow::call::deliver_bound_run_thunk
+aorta::flow::call::deliver_bound_drop_thunk
+# I-5 action (same bound channels):
+aorta::flow::detail::action_ctx_awaiter::deliver_unbound_thunk
+aorta::flow::detail::action_ctx_awaiter::deliver_unbound_thunk::(lambda)
+aorta::flow::detail::action_ctx_awaiter::deliver_bound_run_thunk
+aorta::flow::detail::action_ctx_awaiter::deliver_bound_drop_thunk
+# I-6 offload:
+aorta::flow::detail::offload_awaiter::deliver_run_unbound
+aorta::flow::detail::offload_awaiter::deliver_drop_unbound
+# I-3 (explicit + ambient):
+aorta::flow::resume_on_lane::deliver_unbound_thunk
+aorta::flow::resume_on_lane::deliver_cancel_thunk
+aorta::flow::resume::deliver_unbound_thunk
+aorta::flow::resume::deliver_cancel_thunk
+# I-8 / I-9:
+aorta::flow::resume_on::deliver_unbound_thunk
+aorta::flow::sleep_on::deliver_unbound_thunk
+# I-1 initial dispatch (+ the bound-start channels: run resumes
+# the root; drop stamps the pre-start cancel then resumes — the wrapper
+# link refuses the user child):
+aorta::flow::detail::deliver_address_resume
+aorta::flow::detail::bound_start::run
+aorta::flow::detail::bound_start::drop
+# Bound activation: the router's OWN gate-CLOSED inline
+# resume (the stamped last resort — the one sanctioned
+# resumption inside the funnel itself), and the I-3 bound member run
+# thunks (in-domain dispatch delivers OK and resumes inside the strand's
+# drain slice):
+aorta::flow::detail::route_resume
+aorta::flow::resume_on_lane::deliver_bound_run_thunk
+aorta::flow::resume::deliver_bound_run_thunk
+#
+# Supplementary text scan: comment-stripped, word-boundary CALL
+# TOKEN (`sym(`) counts over EVERY header in include/aorta — a nonzero
+# count without a pin fails (zero-count files need no lines; new files
+# cannot drift in silently), and a stale pin fails too. Re-check against
+# the delivery-thunk inventory above before updating any pin.
+countpin flow.hpp aorta_executor_post_resume_after 1
+# (+1: the bound rollback leg posts via
+# bound_start<P>::trampoline so a stop-drain delivery stamps the
+# pre-start cancel.)
+countpin flow.hpp aorta_executor_post_resume 8
+# (+1: the enabled-ST no-op-domain leg lane-posts the
+# bound_start channels.)
+countpin flow.hpp post_resume_class 5
+countpin flow_action.hpp aorta_executor_post_resume 1
+countpin flow_combinators.hpp aorta_executor_post_resume 1
+countpin lane_runtime.h post_resume_item 3
+countpin lane_runtime.h post_resume_class 1
+# post_resume_marker = its definition + the resume-domain
+# enqueue_drain call; post_resume_item gained the marker's delegation.
+countpin lanes.hpp post_resume_item 2
+countpin lanes.hpp post_resume_marker 2
+# The member intake — definition in lanes.hpp; the
+# router's two entry points (route_resume + route_arm) in flow.hpp.
+countpin lanes.hpp post_resume_member 1
+countpin flow.hpp post_resume_member 2

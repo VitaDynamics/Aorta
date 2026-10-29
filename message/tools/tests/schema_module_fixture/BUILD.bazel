@@ -1,0 +1,4 @@
+load(":python_wheels.bzl", "fixture_wheels")
+exports_files(["LICENSE"])
+
+fixture_wheels()

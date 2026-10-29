@@ -1,0 +1,69 @@
+load("@aorta_crates//:defs.bzl", "all_crate_deps")
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+load(
+    "//tools/aorta-introspect:rust_link_flags.bzl",
+    "aorta_introspect_linux_rustc_tail_flags",
+)
+
+rust_library(
+    name = "aorta_introspect",
+    srcs = glob(["src/**/*.rs"]),
+    crate_name = "aorta_introspect",
+    edition = "2021",
+    deps = all_crate_deps(normal = True) + [
+        "//core:aorta_core",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "aorta_introspect_test",
+    crate = ":aorta_introspect",
+    # Make `flatc` reachable inside the bazel test sandbox so reflect.rs
+    # fixture tests (build_fixture_*_bfbs) actually run instead of silently
+    # skipping. resolve_flatc() in reflect.rs checks $FLATC first; the
+    # rootpath substitution is workspace-relative within runfiles, which
+    # the test's CWD resolves correctly.
+    data = ["//message:flatc"],
+    env = {"FLATC": "$(rootpath //message:flatc)"},
+    deps = [":aorta_introspect_ffi_impl"],
+    rustc_flags = aorta_introspect_linux_rustc_tail_flags(),
+)
+
+cc_library(
+    name = "aorta_introspect_ffi_impl",
+    srcs = [
+        "ffi/fb_reflect.cc",
+        "ffi/json_to_fb.cc",
+    ],
+    hdrs = [
+        "ffi/fb_reflect.h",
+        "ffi/json_to_fb.h",
+    ],
+    includes = ["ffi"],
+    linkstatic = True,
+    deps = ["@flatbuffers//:flatbuffers"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "aorta_introspect_ffi",
+    alwayslink = True,
+    deps = [
+        ":aorta_introspect_ffi_impl",
+        "@flatbuffers//:flatbuffers",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Expose `Cargo.toml` to Bazel so `crate.from_cargo(manifests=[...])`
+# (MODULE.bazel) can read this workspace member when resolving
+# `workspace = true` zenoh inheritance.
+exports_files(["Cargo.toml"])
+
+filegroup(
+    name = "license_workspace_sources",
+    srcs = glob(["**/*"]),
+    visibility = ["//tools/release:__pkg__"],
+)

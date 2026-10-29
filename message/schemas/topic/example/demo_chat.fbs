@@ -1,0 +1,10 @@
+include "schemas/system/aorta_base.fbs";
+
+namespace demo;
+
+table Chat {
+  aorta_header: aorta.sys.AortaHeader;
+  text: string;
+}
+
+root_type Chat;

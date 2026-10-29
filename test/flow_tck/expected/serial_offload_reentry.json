@@ -1,0 +1,23 @@
+[
+ {
+  "scenario": "serial_offload_reentry",
+  "seq": 0,
+  "op": "task.body",
+  "event": "lifecycle",
+  "phase": "before_offload_in_domain"
+ },
+ {
+  "scenario": "serial_offload_reentry",
+  "seq": 1,
+  "op": "task.body",
+  "event": "lifecycle",
+  "phase": "closure_off_domain"
+ },
+ {
+  "scenario": "serial_offload_reentry",
+  "seq": 2,
+  "op": "task.body",
+  "event": "lifecycle",
+  "phase": "continuation_in_domain"
+ }
+]

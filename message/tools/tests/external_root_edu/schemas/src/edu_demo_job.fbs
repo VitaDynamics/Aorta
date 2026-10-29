@@ -1,0 +1,23 @@
+// EDU external-root fixture: a minimal action schema (goal/result/feedback
+// only). gen_action_wrapper expands it into the full 8-table action protocol,
+// and the typed C++ binding gets the aggregate EduDemoJobAction traits with
+// the explicit routing name from the fragment's `action_name`.
+include "schemas/shared/action_common/action_common.fbs";
+include "schemas/system/aorta_base.fbs";
+
+namespace edu.demo;
+
+table EduDemoJobGoal {
+  aorta_header: aorta.sys.AortaHeader;
+  target: string;
+  repeats: uint32;
+}
+
+table EduDemoJobResult {
+  duration_ms: ulong;
+  completed: uint32;
+}
+
+table EduDemoJobFeedbackData {
+  progress_pct: ubyte;
+}

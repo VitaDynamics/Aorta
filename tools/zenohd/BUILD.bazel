@@ -1,0 +1,44 @@
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+rust_binary(
+    name = "zenohd",
+    srcs = ["src/main.rs"],
+    crate_name = "aorta_zenohd",
+    edition = "2021",
+    rustc_env = {
+        "AORTA_RELEASE_VERSION": "{BUILD_EMBED_LABEL}",
+        "RUSTC_VERSION": "{STABLE_RUSTC_VERSION}",
+        "STABLE_GIT_COMMIT": "{STABLE_GIT_COMMIT}",
+    },
+    stamp = -1,
+    deps = [
+        "@aorta_crates//:clap",
+        "@aorta_crates//:json5",
+        "@aorta_crates//:tracing",
+        "@aorta_crates//:tracing-subscriber",
+        "@aorta_crates//:zenoh",
+        "@aorta_crates//:zenoh-config",
+        "@aorta_crates//:zenoh-util",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# `zenohd --version` reports the same stamped release identity as the aorta
+# CLI. Runs the real binary, so the clap version wiring is covered too.
+sh_test(
+    name = "zenohd_version_test",
+    srcs = ["tests/version_test.sh"],
+    args = ["--bin=$(location :zenohd)"],
+    data = [":zenohd"],
+)
+
+# Expose `Cargo.toml` to Bazel so `crate.from_cargo(manifests=[...])`
+# (MODULE.bazel) can read this workspace member when resolving
+# `workspace = true` zenoh inheritance.
+exports_files(["Cargo.toml"])
+
+filegroup(
+    name = "license_workspace_sources",
+    srcs = glob(["**/*"]),
+    visibility = ["//tools/release:__pkg__"],
+)

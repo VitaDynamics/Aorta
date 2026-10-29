@@ -1,0 +1,59 @@
+# Payload-only wheels, before their license files are added.
+#
+# py_wheel names its output after the distribution tags
+# (`aorta_sdk-<version>-py3-none-<platform>.whl`), and Bazel output paths are
+# per package, so the finished wheel — the one with `.dist-info/licenses/` and
+# `License-File` metadata, published from //python — can only keep that
+# canonical name if the unfinished stage lives elsewhere. Nothing here is a
+# release artifact: the targets are visible to the finishing rules only.
+
+load("@rules_python//python:packaging.bzl", "py_wheel")
+
+package(default_visibility = [
+    "//message/tools:__pkg__",
+    "//python:__pkg__",
+])
+
+# Per-arch platform wheel. Distribution name `aorta_sdk` / import package
+# `aorta`, py3-none-linux_{x86_64,aarch64} (Q7-ratified; NOT `any` — it carries a
+# native cdylib). manylinux/auditwheel repair is a separate later gate. The host
+# (macOS) tag is a dev-build smoke only; the shippable linux wheels come from CI
+# building each arch (aarch64 via --config=robot). strip_path_prefixes drops the
+# `python/` BUILD-package dir so files land at the import root (aorta/…, tracing).
+py_wheel(
+    name = "aorta_sdk_wheel",
+    distribution = "aorta_sdk",
+    homepage = "https://github.com/VitaDynamics/Aorta",
+    project_urls = {"Repository": "https://github.com/VitaDynamics/Aorta"},
+    platform = select({
+        "//python:linux_aarch64": "linux_aarch64",
+        "//python:linux_x86_64": "linux_x86_64",
+        "//python:macos_aarch64": "macosx_11_0_arm64",
+        "//python:macos_x86_64": "macosx_10_12_x86_64",
+        "//conditions:default": "linux_x86_64",
+    }),
+    # Pure-Python ctypes (no C-ext) -> one py3 wheel per arch serves all CPython,
+    # but the SDK is only supported/tested on 3.10+ (proposal Q7). Declare the
+    # floor so pip refuses to install on < 3.10 instead of failing at runtime.
+    python_requires = ">=3.10",
+    python_tag = "py3",
+    requires = ["flatbuffers"],
+    strip_path_prefixes = ["python"],
+    version = "{BUILD_EMBED_LABEL}",  # release version via --stamp --embed_label; 0.0.0 when un-stamped
+    deps = ["//python:aorta_pkg"],
+)
+
+py_wheel(
+    name = "aorta_msgs_wheel",
+    distribution = "aorta_msgs",
+    homepage = "https://github.com/VitaDynamics/Aorta",
+    project_urls = {"Repository": "https://github.com/VitaDynamics/Aorta"},
+    python_requires = ">=3.10",
+    python_tag = "py3",
+    requires = ["flatbuffers==25.12.19"],
+    # Root the assembled tree at the import root (demo/…, aorta/sys/…, the
+    # schema-meta module land at top level).
+    strip_path_prefixes = ["python/aorta_msgs_tree"],
+    version = "{BUILD_EMBED_LABEL}",  # release version via --stamp --embed_label; 0.0.0 when un-stamped
+    deps = ["//python:aorta_msgs_pkg"],
+)

@@ -1,0 +1,189 @@
+// Aorta System Monitor — host snapshot.
+//
+// Publisher: the Aorta system-monitor daemon (`aorta-sysmon`).
+//
+// One root message per `interval_ms` tick. Carries:
+//   - host identity + kernel knobs
+//   - per-family runtime capability rows (so consumers see why something is
+//     "Unavailable" without guessing)
+//   - cumulative-then-delta host CPU / memory / disk / network metrics
+//   - PSI rows when available
+//   - bounded per-process detail rows (truncated by `max_listed`)
+//
+// This schema version carries no transport-topology or Aorta-correlation
+// fields. Evolution is append-only, which keeps wire compatibility.
+//
+// All scalar fields default to 0 / empty / first-enum-variant; consumers
+// must not infer "field missing" from value 0 — use the `capabilities`
+// rows to decide whether a family is `Active` / `Unavailable` / `Degraded`.
+
+include "schemas/system/aorta_base.fbs";
+
+namespace aorta.sysmon;
+
+// User intent for a metric family (mirrors config: on | off | auto).
+enum ConfiguredMode: ubyte {
+  ON = 0,
+  OFF = 1,
+  AUTO = 2,
+}
+
+// Outcome of the runtime capability probe for a family.
+enum RuntimeStatus: ubyte {
+  ACTIVE = 0,
+  UNAVAILABLE = 1,
+  DEGRADED = 2,
+}
+
+table MetricCapability {
+  family:               string         (id: 0);  // "cpu" | "memory" | "psi_io" | ...
+  configured_mode:      ConfiguredMode = AUTO    (id: 1);
+  runtime_status:       RuntimeStatus  = UNAVAILABLE (id: 2);
+  degraded_reason:      string         (id: 3);  // empty when status == ACTIVE
+  perf_event_name:      string         (id: 4);  // perf only; empty otherwise
+  perf_raw_count:       ulong = 0      (id: 5);
+  perf_time_enabled_ns: ulong = 0      (id: 6);
+  perf_time_running_ns: ulong = 0      (id: 7);
+}
+
+table CollectorError {
+  family:        string  (id: 0);
+  detail:        string  (id: 1);
+  observed_at_ns:ulong = 0 (id: 2);
+}
+
+table HostCpu {
+  usage_percent_total:      float = 0     (id: 0);
+  usage_percent_per_core:   [float]       (id: 1);
+  context_switches_per_sec: ulong = 0     (id: 2);
+  procs_running:            uint = 0      (id: 3);
+  procs_blocked:            uint = 0      (id: 4);
+}
+
+table HostMemory {
+  total_bytes:        ulong = 0 (id: 0);
+  available_bytes:    ulong = 0 (id: 1);
+  free_bytes:         ulong = 0 (id: 2);
+  buffers_bytes:      ulong = 0 (id: 3);
+  cached_bytes:       ulong = 0 (id: 4);
+  swap_total_bytes:   ulong = 0 (id: 5);
+  swap_free_bytes:    ulong = 0 (id: 6);
+  pgfault_per_sec:    ulong = 0 (id: 7);
+  pgmajfault_per_sec: ulong = 0 (id: 8);
+  oom_kill_count:     ulong = 0 (id: 9);
+  huge_pages_total:   ulong = 0 (id: 10);
+  huge_pages_free:    ulong = 0 (id: 11);
+}
+
+// All throughput math uses fixed 512-byte sector accounting from
+// /proc/diskstats; `logical_block_size` is reported for
+// device introspection only and is NOT used in the byte-rate formulas.
+table DiskStat {
+  device:                 string         (id: 0);
+  read_bytes_per_sec:     ulong = 0      (id: 1);
+  write_bytes_per_sec:    ulong = 0      (id: 2);
+  read_ios_per_sec:       ulong = 0      (id: 3);
+  write_ios_per_sec:      ulong = 0      (id: 4);
+  discard_bytes_per_sec:  ulong = 0      (id: 5);
+  discard_ios_per_sec:    ulong = 0      (id: 6);
+  inflight_reads:         ulong = 0      (id: 7);
+  inflight_writes:        ulong = 0      (id: 8);
+  await_ms:               float = 0      (id: 9);
+  util_percent:           float = 0      (id: 10); // 0..100, capped
+  avg_queue_length:       float = 0      (id: 11);
+  logical_block_size:     uint  = 512    (id: 12);
+}
+
+table NetIfStat {
+  ifname:             string     (id: 0);
+  rx_bytes_per_sec:   ulong = 0  (id: 1);
+  rx_packets_per_sec: ulong = 0  (id: 2);
+  tx_bytes_per_sec:   ulong = 0  (id: 3);
+  tx_packets_per_sec: ulong = 0  (id: 4);
+  rx_errors:          ulong = 0  (id: 5);
+  rx_drop:            ulong = 0  (id: 6);
+  tx_errors:          ulong = 0  (id: 7);
+  tx_drop:            ulong = 0  (id: 8);
+  oper_state:         string     (id: 9);   // "up" / "down" / "unknown"
+  mtu:                uint  = 0  (id: 10);
+  speed_mbps:         int   = -1 (id: 11);  // -1 for virtual / down
+}
+
+table PsiLine {
+  resource:        string     (id: 0);   // "cpu" | "memory" | "io"
+  line:            string     (id: 1);   // "some" | "full"
+  avg10:           float = 0  (id: 2);
+  avg60:           float = 0  (id: 3);
+  avg300:          float = 0  (id: 4);
+  total_us:        ulong = 0  (id: 5);
+  total_delta_us:  ulong = 0  (id: 6);
+  stall_ratio:     float = 0  (id: 7);   // delta / window (0..1)
+}
+
+// Per-process row. `cpu_user_us_delta + cpu_kernel_us_delta` is the
+// process-only CPU delta (cols 14/15 of /proc/[pid]/stat).
+// `cpu_children_us_delta` carries waited-for child CPU (cols 16/17)
+// separately so reaping short-lived children does not spike the parent.
+table ProcessStat {
+  pid:                                 int       (id: 0);
+  comm:                                string    (id: 1);
+  cmdline:                             string    (id: 2);
+  exe:                                 string    (id: 3);
+  cgroup_path:                         string    (id: 4);
+  state:                               string    (id: 5);
+  starttime_ticks:                     ulong = 0 (id: 6);
+  thread_count:                        uint  = 0 (id: 7);
+  cpu_user_us_delta:                   ulong = 0 (id: 8);
+  cpu_kernel_us_delta:                 ulong = 0 (id: 9);
+  cpu_children_us_delta:               ulong = 0 (id: 10);
+  cpu_percent_host:                    float = 0 (id: 11);
+  cpu_percent_per_core:                float = 0 (id: 12);
+  vss_bytes:                           ulong = 0 (id: 13);
+  rss_bytes:                           ulong = 0 (id: 14);
+  rss_hwm_bytes:                       ulong = 0 (id: 15);
+  minor_faults_per_sec:                ulong = 0 (id: 16);
+  major_faults_per_sec:                ulong = 0 (id: 17);
+  voluntary_ctxt_switches_per_sec:     ulong = 0 (id: 18);
+  nonvoluntary_ctxt_switches_per_sec:  ulong = 0 (id: 19);
+  read_bytes_per_sec:                  ulong = 0 (id: 20);
+  write_bytes_per_sec:                 ulong = 0 (id: 21);
+  cancelled_write_bytes:               ulong = 0 (id: 22);
+  fd_count:                            long  = -1 (id: 23);  // -1 = unknown / EACCES
+  oom_score:                           int   = 0 (id: 24);
+  oom_score_adj:                       int   = 0 (id: 25);
+  exit_marker:                         bool  = false (id: 26);
+}
+
+// Root snapshot. `aorta_header` (id: 0) is the SDK auto-injected header;
+// all other fields carry the payload.
+//
+// `schema_version` is bumped only for breaking semantic changes that
+// cannot be expressed via FlatBuffers append-only evolution; wire
+// compatibility itself is carried by FlatBuffers field IDs.
+table SysmonSnapshot {
+  aorta_header:          aorta.sys.AortaHeader (id: 0);
+  schema_version:        uint  = 1            (id: 1);
+  host_name:             string               (id: 2);
+  host_id:               string               (id: 3);
+  kernel:                string               (id: 4);
+  preempt_model:         string               (id: 5);   // "voluntary"|"preempt"|"preempt_rt"|"preempt_dynamic"
+  cgroup_version:        ubyte = 0            (id: 6);
+  online_cpus:           uint  = 0            (id: 7);
+  monotonic_ns:          ulong = 0            (id: 8);
+  interval_ms:           uint  = 0            (id: 9);
+  sequence:              ulong = 0            (id: 10);
+
+  capabilities:          [MetricCapability]   (id: 11);
+  collector_errors:      [CollectorError]     (id: 12);
+
+  cpu:                   HostCpu              (id: 13);
+  memory:                HostMemory           (id: 14);
+  disks:                 [DiskStat]           (id: 15);
+  net_ifs:               [NetIfStat]          (id: 16);
+  psi:                   [PsiLine]            (id: 17);
+  processes:             [ProcessStat]        (id: 18);
+
+  // ----- Append-only extension point: added fields take id 19 and up.
+}
+
+root_type SysmonSnapshot;

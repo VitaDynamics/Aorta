@@ -1,0 +1,13 @@
+// Schema-meta fixture — DIRECT include level (the only --src edge
+// the schema-meta genrules pass; its own include below is the GRANDCHILD
+// edge the old regex path never saw).
+// Mid struct layout (flatc ground truth): leaf:Leaf(16,align8) at 0,
+// c:int at 16, pad to 24 -> bytesize 24, alignment 8.
+include "grandchild_leaf.fbs";
+
+namespace fixmeta;
+
+struct Mid {
+  leaf: Leaf;
+  c: int;
+}

@@ -1,0 +1,5 @@
+namespace perturb.inc;
+
+table IncATable {
+  value: int32 (id: 0);
+}

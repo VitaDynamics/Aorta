@@ -1,0 +1,46 @@
+load("@aorta_crates//:defs.bzl", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
+load("//tools/aorta-introspect:rust_link_flags.bzl", "aorta_introspect_linux_rustc_flags")
+
+rust_library(
+    name = "aorta_tui",
+    srcs = glob(["src/**/*.rs"]),
+    crate_name = "aorta_tui",
+    edition = "2021",
+    deps = all_crate_deps(normal = True) + [
+        "//core:aorta_core",
+        "//tools/aorta-introspect:aorta_introspect",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+rust_binary(
+    name = "aorta-tui",
+    srcs = ["src/main.rs"],
+    crate_name = "aorta_tui_bin",
+    edition = "2021",
+    rustc_flags = aorta_introspect_linux_rustc_flags(),
+    deps = all_crate_deps(normal = True) + [
+        ":aorta_tui",
+        "//tools/aorta-introspect:aorta_introspect_ffi",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "aorta_tui_test",
+    crate = ":aorta_tui",
+    deps = ["//tools/aorta-introspect:aorta_introspect_ffi"],
+    rustc_flags = aorta_introspect_linux_rustc_flags(),
+)
+
+# Expose `Cargo.toml` to Bazel so `crate.from_cargo(manifests=[...])`
+# (MODULE.bazel) can read this workspace member when resolving
+# `workspace = true` zenoh inheritance.
+exports_files(["Cargo.toml"])
+
+filegroup(
+    name = "license_workspace_sources",
+    srcs = glob(["**/*"]),
+    visibility = ["//tools/release:__pkg__"],
+)

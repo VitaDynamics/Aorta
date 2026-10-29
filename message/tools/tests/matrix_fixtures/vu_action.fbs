@@ -1,0 +1,37 @@
+// Type-support matrix wiring fixture: a minimal ACTION whose Result
+// carries a vector-of-union field. Expanded via gen_action_wrapper, compiled to
+// bfbs, then fed to write_cpp (with an --action-name override) to prove the C++
+// action COPY HELPER rejects vector<union> -- C++ typed_build DOES support it
+// (all_types_cpp_vector_union.fbs round-trips it), so the copy helper is the
+// single C++-specific UNSUPPORTED cell.
+
+include "schemas/shared/action_common/action_common.fbs";
+
+namespace mtx.action;
+
+table Leaf {
+  id : uint (id: 0);
+}
+
+table Node {
+  n : int (id: 0);
+}
+
+union Choice {
+  Leaf,
+  Node,
+}
+
+table VuGoal {
+  x : int (id: 0);
+}
+
+table VuFeedbackData {
+  y : int (id: 0);
+}
+
+table VuResult {
+  picks : [Choice] (id: 1);   // vector<union> in Result -> copy helper rejects
+}
+
+root_type VuGoal;

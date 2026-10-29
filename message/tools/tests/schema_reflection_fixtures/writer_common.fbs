@@ -1,0 +1,30 @@
+namespace fx_write;
+enum Mode : byte { ZERO, ONE }
+struct MotorCmd {
+  mode: ubyte;
+  q: float;
+  dq: float;
+  tau: float;
+  kp: float;
+  kd: float;
+}
+struct EnumCommand (force_align: 16) {
+  mode: Mode;
+  value: float;
+  counter: ulong;
+}
+struct AllScalar (force_align: 16) {
+  enabled: bool;
+  signed8: byte;
+  unsigned8: ubyte;
+  signed16: short;
+  unsigned16: ushort;
+  signed32: int;
+  unsigned32: uint;
+  signed64: long;
+  unsigned64: ulong;
+  real32: float;
+  real64: double;
+}
+struct Nested { command: MotorCmd; }
+struct Fixed { values: [int:3]; }

@@ -1,0 +1,26 @@
+[
+  {
+    "scenario": "budget_expiry_queued_server",
+    "seq": 0,
+    "op": "call",
+    "event": "lifecycle",
+    "phase": "request_sent"
+  },
+  {
+    "scenario": "budget_expiry_queued_server",
+    "seq": 1,
+    "op": "call",
+    "event": "stopped",
+    "kind": "cancelled",
+    "reason": "deadline",
+    "raw_reason": 2
+  },
+  {
+    "scenario": "budget_expiry_queued_server",
+    "seq": 2,
+    "op": "service.stats",
+    "event": "counter",
+    "name": "request_dropped_deadline",
+    "value": 1
+  }
+]

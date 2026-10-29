@@ -1,0 +1,25 @@
+// Regression fixture: struct names with consecutive capitals.
+// flatc 25.9.23 named the struct creator `CreateBBox2D` but emitted
+// `CreateBbox2D(...)` from the object-API `BBox2DT.Pack()`, so packing any
+// table holding such a struct raised NameError (google/flatbuffers#8791).
+namespace fx_object_api;
+
+struct BBox2D {
+  center_x: float;
+  center_y: float;
+  width: float;
+  height: float;
+}
+
+struct UBytePair {
+  first: ubyte;
+  second: ubyte;
+}
+
+table Detection {
+  bbox: BBox2D;
+  pair: UBytePair;
+  boxes: [BBox2D];
+}
+
+root_type Detection;

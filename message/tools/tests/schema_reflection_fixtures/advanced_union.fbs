@@ -1,0 +1,28 @@
+// schema_reflection loader fixture: exercises the
+// `AdvancedUnionFeatures` advanced_features bit (a vector-of-union field).
+// NOT a real Aorta message schema (not registered in
+// message/schemas/registry.bzl) — used only by schema_reflection_test.py.
+
+namespace fx;
+
+table A {
+  v: int32 (id: 0);
+}
+
+table B {
+  v: int32 (id: 0);
+}
+
+union MyUnion {
+  A,
+  B,
+}
+
+table Foo {
+  // id 0 is reserved for the flatc-synthesized `items_type` discriminator
+  // vector (must be id 1 - 1); see guard_fixture_owner.fbs for the same
+  // convention on a scalar (non-vector) union field.
+  items: [MyUnion] (id: 1);
+}
+
+root_type Foo;

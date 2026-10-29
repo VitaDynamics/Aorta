@@ -1,0 +1,9 @@
+[
+  {
+    "scenario": "when_all_multi",
+    "seq": 0,
+    "op": "when_all",
+    "event": "value",
+    "value": "[1,2,3]"
+  }
+]

@@ -1,0 +1,22 @@
+# Optional China registry mirrors for manual fallback only.
+# [source.ustc]
+# registry = "sparse+https://mirrors.ustc.edu.cn/crates.io-index/"
+# [source.rsproxy]
+# registry = "sparse+https://rsproxy.cn/index/"
+# [source.tuna]
+# registry = "sparse+https://mirrors.tuna.tsinghua.edu.cn/crates.io-index/"
+
+[source.crates-io]
+registry = "sparse+https://index.crates.io/"
+
+[net]
+git-fetch-with-cli = true
+
+[env]
+# Keep the Session::open tracing auto-init hook out of cargo-run test suites:
+# rust lib test binaries mix session-opening tests with trace-state assertions
+# in one parallel process, and cargo (unlike bazel) gives them no per-test
+# TMPDIR isolation for the sink files. Bazel test targets set this per-target;
+# bazel-built production binaries are unaffected. To trace a cargo-run example,
+# override with AORTA_TRACE_AUTO_INIT=1 or call trace::runtime::init() yourself.
+AORTA_TRACE_AUTO_INIT = "0"

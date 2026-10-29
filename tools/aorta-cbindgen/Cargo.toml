@@ -1,0 +1,23 @@
+[package]
+name = "aorta-cbindgen"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+# Build-time C header generator for the L2 C-ABI (core/include/aorta.h via
+# //core:aorta_ffi_header). It parses `core/src/**` with cbindgen and is the
+# only workspace member that depends on cbindgen (MPL-2.0). Keeping it out of
+# `aorta_core`'s `[dependencies]` keeps cbindgen and its transitive crates out
+# of libaorta_core's linked closure, the released `aorta_core` manifest, and
+# the per-artifact license notices.
+
+[[bin]]
+name = "aorta_cbindgen"
+path = "src/main.rs"
+
+[dependencies]
+cbindgen = "0.29.0"

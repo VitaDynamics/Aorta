@@ -1,0 +1,12 @@
+// A genuinely root-only schema (no
+// `include` statements at all) used to prove `message_bindings.bzl`'s now-
+// required `schema_deps` migration for the legitimate root-only case —
+// passing `[]` (not omitting the arg) must still build cleanly. See
+// //message/tools/tests/root_only_migration:BUILD.bazel.
+namespace root_only_migration;
+
+table RootOnlyData {
+  value: int32;
+}
+
+root_type RootOnlyData;

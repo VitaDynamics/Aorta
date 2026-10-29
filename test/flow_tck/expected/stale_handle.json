@@ -1,0 +1,23 @@
+[
+  {
+    "scenario": "stale_handle",
+    "seq": 0,
+    "op": "task.spawn",
+    "event": "lifecycle",
+    "phase": "spawned"
+  },
+  {
+    "scenario": "stale_handle",
+    "seq": 1,
+    "op": "task.take_outcome",
+    "event": "value",
+    "value": "7"
+  },
+  {
+    "scenario": "stale_handle",
+    "seq": 2,
+    "op": "task.take_outcome",
+    "event": "lifecycle",
+    "phase": "second_take_empty"
+  }
+]

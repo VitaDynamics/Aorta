@@ -1,0 +1,19 @@
+namespace aorta.sys;
+
+enum SchemaKind: byte { Topic = 0, Service = 1, Param = 2 }
+
+table SchemaByKey {
+  kind: SchemaKind;
+  // Topic/Param use hash + bfbs.
+  hash_hex: string;   // SHA-256 hex string (64 bytes).
+  bfbs: [ubyte];      // FlatBuffers Binary Schema.
+  // Service uses a single schema and explicit request/response root types.
+  service_hash_hex: string;
+  service_bfbs: [ubyte];
+  request_root_type: string;
+  response_root_type: string;
+  // Fully-qualified root table name for Topic/Param entries; optional; absent on legacy publishers.
+  topic_root_type: string;
+}
+
+root_type SchemaByKey;

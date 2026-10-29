@@ -1,0 +1,23 @@
+// Enum-shadow fixture in `same.pkg` that
+//   - declares a LOCAL enum whose variant is named `ABCD`, and
+//   - has a field referencing the SAME-namespace foreign table `same.pkg.ABCD`.
+// flatc emits the local enum-variant DEFINITION `pub const ABCD: Self = Self(1);`
+// (a value, not a type) and the string `"ABCD"` (the enum-name mapping) in the
+// SAME file as the same-namespace bare type reference `ABCD` (which MUST be
+// rewritten to the absolute dependency path). Rewriting only genuine type
+// positions leaves the variant definition and string unchanged.
+// Example/test only; do NOT consume downstream.
+include "schemas/system/aorta_base.fbs";
+include "schemas/shared/enum_abcd_dep/enum_abcd_dep.fbs";
+
+namespace same.pkg;
+
+enum Local : byte { NONE = 0, ABCD = 1, OTHER = 2 }
+
+table EnumShadow {
+  aorta_header : aorta.sys.AortaHeader (id: 0);
+  choice       : Local (id: 1);
+  nested       : ABCD  (id: 2);
+}
+
+root_type EnumShadow;

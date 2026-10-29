@@ -1,0 +1,62 @@
+"""#375 regression: Tier-1 Rust message binding for a schema whose namespace has
+a letter->digit component boundary (`namespace p05.probe;`).
+
+flatc's Rust namer snake_cases every namespace component, so the modules it
+generates for this schema are `p_05::probe`, not `p05::probe`. The wrapper
+generator used to build its Rust paths (and the top-level module re-export)
+with a raw `.` -> `::` replacement, which emitted references to a module that
+does not exist. `bazel build` of the `rust_library` below succeeding IS the
+assertion: the wrapper only compiles if every emitted path went through
+`schema_include_utils.flatc_rust_namespace_path` /
+`flatc_rust_namespace_segment`.
+
+Modeled on ../root_only_migration/BUILD.bazel (self-contained, root-only, no
+registry entry: this is a codegen fixture, not a product schema).
+"""
+
+load("//message/tools:message_bindings.bzl", "aorta_rust_message_binding")
+load("//message/tools:schema_codegen.bzl", "aorta_define_schema_targets")
+load("@rules_rust//rust:defs.bzl", "rust_test")
+
+package(default_visibility = ["//visibility:private"])
+
+_SCHEMA_PKG = "//message/tools/tests/digit_ns_binding"
+
+aorta_define_schema_targets(
+    stem = "digit_ns_probe",
+    root_fbs = "digit_ns_probe.fbs",
+    bfbs = True,
+    rust = True,
+    schema_meta_rust = True,
+)
+
+# `rust_module_targets` passed explicitly (as every registry-driven caller
+# does) so codegen uses the --rust-local-module-prefix emission path rather
+# than the relative-`#[path=...]` fallback, which assumes a
+# `schemas/<category>/<domain>` package depth this fixture package lacks --
+# same note as root_only_migration.
+aorta_rust_message_binding(
+    name = "digit_ns_probe_rust_binding",
+    schema_pkg = _SCHEMA_PKG,
+    schema_stem = "digit_ns_probe",
+    rust_module_targets = [
+        "//message/schemas/system:aorta_base_rust",
+        ":digit_ns_probe_rust",
+    ],
+    schema_deps = [],
+)
+
+# Keeps the fixture a continuous compile gate: the Bazel test workflow runs
+# `bazel test //... --build_tests_only`, which only builds what a test depends
+# on (same reason as rust/BUILD.bazel `vln_242_reporter_roundtrip_test`).
+rust_test(
+    name = "digit_ns_probe_test",
+    srcs = ["digit_ns_probe_test.rs"],
+    edition = "2021",
+    deps = [
+        ":digit_ns_probe_rust_binding",
+        "//core:aorta_core",
+        "//message/tools:flatbuffers_rust",
+    ],
+    size = "small",
+)

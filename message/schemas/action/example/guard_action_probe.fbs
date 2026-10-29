@@ -1,0 +1,24 @@
+// Cross-namespace wrapper guard includer fixture. Example/test only.
+
+include "schemas/shared/action_common/action_common.fbs";
+include "schemas/system/aorta_base.fbs";
+include "schemas/service/example/guard_service_probe.fbs";
+
+namespace aorta.action.example;
+
+table GuardActionProbeGoal {
+  label   : string                                                   (id: 0);
+  input : aorta.services.fixture_guard.GuardPayload (id: 3);
+  resources : [aorta.services.fixture_guard.GuardResource] (id: 4);
+  request : aorta.services.fixture_guard.GuardServiceProbeRequest   (id: 1);
+}
+
+table GuardActionProbeResult {
+  accepted : bool = false (id: 0);
+}
+
+table GuardActionProbeFeedbackData {
+  progress : ubyte (id: 0);
+}
+
+root_type GuardActionProbeGoal;

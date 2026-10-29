@@ -1,0 +1,12 @@
+// Foreign-root-only schema. It declares no local
+// types of its own; its `root_type` points at a table pulled in from an INCLUDE
+// (aorta.nestdep.common.NestedRoot). Generated root helpers live in that
+// multi-segment namespace and refer to the foreign type by its bare name.
+// A root-level dependency import is insufficient, so the bare reference must
+// be rewritten to the absolute dependency path.
+//
+// Example/test only; do NOT consume downstream.
+include "schemas/system/aorta_base.fbs";
+include "schemas/shared/nested_dep/nested_dep.fbs";
+
+root_type aorta.nestdep.common.NestedRoot;

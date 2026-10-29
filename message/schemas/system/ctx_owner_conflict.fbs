@@ -1,0 +1,14 @@
+namespace aorta.ctx;
+
+table OwnerConflictEvent {
+  key: string;
+  self_node: string;
+  self_instance_id: string;
+  foreign_node: string;
+  foreign_instance_id: string;
+  foreign_stamp: ulong;
+  foreign_seq: ulong;
+  observed_at: ulong;
+}
+
+root_type OwnerConflictEvent;

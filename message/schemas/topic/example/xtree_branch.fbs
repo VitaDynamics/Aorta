@@ -1,0 +1,21 @@
+// Two providers sharing a sub-namespace branch.
+//
+// Root namespace `zzz` (disjoint from aorta) reaching aorta.sys AND two
+// distinct provider crates that BOTH declare types in aorta.xtree.common
+// (xtree_common -> XtreePhase, xtree_common_extra -> XtreeExtra). Flat
+// per-provider root imports make the shared branch ambiguous. A recursive
+// module tree emits each shared branch once and re-exports provider types at
+// the leaf. Example/test only; do NOT consume downstream.
+include "schemas/system/aorta_base.fbs";
+include "schemas/shared/xtree_common/xtree_common.fbs";
+include "schemas/shared/xtree_common/xtree_common_extra.fbs";
+
+namespace zzz;
+
+table ZzzBranch {
+  aorta_header : aorta.sys.AortaHeader              (id: 0);
+  phase        : aorta.xtree.common.XtreePhase = UNKNOWN (id: 1);   // provider 1
+  extra        : aorta.xtree.common.XtreeExtra = NONE    (id: 2);   // provider 2 (same sub-namespace)
+}
+
+root_type ZzzBranch;

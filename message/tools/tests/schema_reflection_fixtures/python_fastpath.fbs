@@ -1,0 +1,23 @@
+namespace fx_fastpath;
+
+enum Mode : byte { ZERO = 0, ONE = 1 }
+struct Command (force_align: 16) {
+  mode: Mode;
+  value: float;
+  counter: ulong;
+}
+
+table ScalarDefaults {
+  ulong_max: ulong = 18446744073709551615;
+  negative_float: float = -0.0;
+  negative_double: double = -0.0;
+  nan_float: float = nan;
+  optional_float: float = null;
+  enabled: bool = true;
+  mode: Mode = ONE;
+  foo__bar: int = 3;
+  GPS_position: int = 5;
+  deprecated_value: int (deprecated);
+  commands: [Command];
+}
+root_type ScalarDefaults;

@@ -1,0 +1,15 @@
+Aorta message bindings (aorta_msgs)
+Copyright 2026 VitaDynamics
+
+Licensed under the Apache License, Version 2.0. See LICENSE.
+This applies to VitaDynamics' schemas and the Python code generated from them
+in this distribution.
+
+Part of the generated code derives from FlatBuffers schemas converted or
+adapted from the foxglove-sdk (https://github.com/foxglove/foxglove-sdk,
+`schemas/flatbuffer`), Copyright (c) Foxglove Technologies Inc, MIT License.
+THIRD_PARTY_NOTICES.md names the affected schemas and generated modules;
+THIRD_PARTY_LICENSES/foxglove-sdk.LICENSE is the verbatim upstream license.
+
+The `flatbuffers` Python package is a declared dependency (Requires-Dist),
+installed separately under its own license; it is not part of this wheel.

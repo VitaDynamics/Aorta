@@ -1,0 +1,38 @@
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+# Exported so //core:aorta_ffi_header's cbindgen genrule can include this
+# member manifest in its `cargo metadata` sandbox (same as the other workspace
+# members — see that genrule's srcs).
+exports_files(["Cargo.toml"])
+
+# Loom-verified concurrency primitives (tokio-/zenoh-free leaf crate; see
+# src/loom_sync.rs for why isolation from tokio is required to run loom). The
+# exhaustive loom proofs run under cargo (`RUSTFLAGS="--cfg loom" cargo test -p
+# aorta_sync`); Bazel builds only the normal `std`-atomic configuration and
+# runs the single-threaded behavioural tests.
+#
+# No `--check-cfg` is supplied: rules_rust does not enable rustc check-cfg here
+# (same as //core, which carries `cfg(has_fresh_bfbs)` + `cfg(test)` without
+# declaring them), so the inactive `#[cfg(loom)]` code raises no warning. The
+# cargo build — where check-cfg IS on by default — declares `loom` via
+# sync/build.rs.
+
+rust_library(
+    name = "aorta_sync",
+    srcs = glob(["src/**/*.rs"]),
+    crate_name = "aorta_sync",
+    edition = "2021",
+    visibility = ["//visibility:public"],
+)
+
+rust_test(
+    name = "aorta_sync_test",
+    crate = ":aorta_sync",
+    size = "small",
+)
+
+filegroup(
+    name = "license_workspace_sources",
+    srcs = glob(["**/*"]),
+    visibility = ["//tools/release:__pkg__"],
+)

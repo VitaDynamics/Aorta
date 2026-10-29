@@ -1,0 +1,65 @@
+[workspace]
+resolver = "2"
+members = [
+    "core",
+    "rust",
+    "sync",
+    "tools/aorta-cbindgen",
+    "tools/aorta-cli",
+    "tools/aorta-foxglove-bridge",
+    "tools/aorta-introspect",
+    "tools/aorta-play",
+    "tools/aorta-record",
+    "tools/aorta-sysmon",
+    "tools/aorta-trace-tui",
+    "tools/aorta-trace2perfetto",
+    "tools/aorta-tui",
+    "tools/zenohd",
+]
+# The cargo-fuzz harness is a standalone cargo crate that
+# depends on `aorta_core` by path but lives outside the workspace. It uses
+# `libfuzzer-sys` which only builds under the `--release -Zsanitizer`-aware
+# `cargo +nightly fuzz` driver; pulling it into the workspace would make
+# every `cargo build` try to compile libfuzzer for stable. Excluded here
+# (and not listed in `members`) so plain `cargo build` ignores it but
+# `cargo +nightly fuzz run -p aorta_core --fuzz-dir core/fuzz <target>`
+# still resolves the path dep.
+exclude = ["core/fuzz"]
+
+# Workspace-wide MSRV pin (the repository toolchain: edition 2021, Rust
+# 1.92.0). Members opt in via `[package] rust-version.workspace = true`
+# so `cargo build` fails the moment somebody invokes a stale toolchain
+# instead of producing a confusing compile error halfway through the
+# tree.
+[workspace.package]
+repository = "https://github.com/VitaDynamics/Aorta"
+homepage = "https://github.com/VitaDynamics/Aorta"
+rust-version = "1.92.0"
+
+# Single source of truth for the Zenoh git pin. All SDK consumer crates
+# inherit via
+# `zenoh = { workspace = true, features = [...] }` and may add their
+# own features; they MUST NOT override the rev.
+#
+# `zenoh-config` and `zenoh-util` are the daemon-only sibling crates
+# `tools/zenohd` consumes. They live in the same upstream git repo as
+# `zenoh` and must move in lockstep — declaring them here closes the
+# "zenohd bumps `zenoh` but forgets `zenoh-config`" drift hole that
+# `deny.toml`'s URL-only `[sources]` check can't catch.
+[workspace.dependencies]
+zenoh = { git = "https://github.com/BOURBONCASK/zenoh.git", rev = "99ae7b413e0414ea02ba4bbd8aaf94df87a4a862" }
+zenoh-config = { git = "https://github.com/BOURBONCASK/zenoh.git", rev = "99ae7b413e0414ea02ba4bbd8aaf94df87a4a862" }
+zenoh-util = { git = "https://github.com/BOURBONCASK/zenoh.git", rev = "99ae7b413e0414ea02ba4bbd8aaf94df87a4a862" }
+
+# Single source of truth for the tokio pin. Every member crate references
+# `tokio = { workspace = true, ... }`, so removing this block breaks the
+# build with `dependency.tokio was not found in workspace.dependencies`.
+#
+# Minor-level pin (`"1.52"`, which is `^1.52` → >=1.52.0,<2.0.0)
+# matches the version Cargo.lock already resolves to and lets
+# patch upgrades flow automatically. Members opt in to the
+# features they need:
+#     tokio = { workspace = true, features = ["signal"] }
+# `optional = true` is supported on the consumer side too — see
+# `tools/aorta-sysmon/Cargo.toml`'s `sdk-publish` feature gate.
+tokio = { version = "1.52" }

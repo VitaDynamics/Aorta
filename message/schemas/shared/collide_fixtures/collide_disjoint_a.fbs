@@ -1,0 +1,10 @@
+// Disjoint-root fixture, provider 1 of 2. Its root
+// segment `xfoo` matches the SHARED-tree sub-segment (aorta.xfoo.common), so
+// the disjoint synth's top-level `pub mod xfoo` must not be skipped by a loose
+// match against the nested one. Example/test only; do NOT consume downstream.
+namespace xfoo;
+
+enum CollideDisjA : ubyte {
+  UNKNOWN = 0,
+  X       = 1,
+}
